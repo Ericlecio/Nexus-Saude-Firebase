@@ -51,12 +51,10 @@ export default {
             </div>
         </div>
 
-        <!-- Botão para Voltar ao Topo -->
         <div class="back-to-top">
             <a href="#" @click.prevent="scrollToTop"><i class="bi bi-arrow-up-circle"></i> Voltar ao topo</a>
         </div>
 
-        <!-- Direitos Autorais -->
         <div class="text-center mt-3 copyright">
             © 2024 Nexus Saúde. Todos os direitos reservados.
         </div>
@@ -64,7 +62,6 @@ export default {
 </template>
 
 <style scoped>
-/* Estilos do Footer */
 footer {
     background-color: #1a1a3c;
     color: #fff;

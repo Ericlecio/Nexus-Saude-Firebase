@@ -1,36 +1,11 @@
-<script>
-export default {
-    data() {
-        return {
-            scrolled: false,
-            isCollapsed: true
-        };
-    },
-    mounted() {
-        window.addEventListener('scroll', this.handleScroll);
-    },
-    beforeDestroy() {
-        window.removeEventListener('scroll', this.handleScroll);
-    },
-    methods: {
-        handleScroll() {
-            this.scrolled = window.scrollY > 50;
-        },
-        toggleNavbar() {
-            this.isCollapsed = !this.isCollapsed;
-        }
-    }
-};
-</script>
-
 <template>
-    <nav :class="['navbar navbar-expand-lg', { scrolled: scrolled }]">
+    <nav class="navbar navbar-expand-lg" :class="{ scrolled: isScrolled }">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Nexus Saúde" style="height: 40px;">
+                <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Nexus Saúde" style="height: 55px" />
             </a>
-            <button class="navbar-toggler" @click="toggleNavbar" :class="{ collapsed: isCollapsed }" type="button"
-                aria-controls="navbarNav" aria-expanded="!isCollapsed" aria-label="Toggle navigation">
+            <button class="navbar-toggler" :class="{ collapsed: isCollapsed }" type="button" @click="toggleCollapse"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }" id="navbarNav">
@@ -60,8 +35,32 @@ export default {
     </nav>
 </template>
 
+<script>
+export default {
+    data() {
+        return {
+            isScrolled: false,
+            isCollapsed: true,
+        };
+    },
+    methods: {
+        handleScroll() {
+            this.isScrolled = window.scrollY > 50;
+        },
+        toggleCollapse() {
+            this.isCollapsed = !this.isCollapsed;
+        },
+    },
+    mounted() {
+        window.addEventListener("scroll", this.handleScroll);
+    },
+    beforeDestroy() {
+        window.removeEventListener("scroll", this.handleScroll);
+    },
+};
+</script>
+
 <style scoped>
-/* Ajustes da Navbar */
 .navbar {
     background: transparent;
     color: white;
@@ -74,7 +73,9 @@ export default {
 }
 
 .navbar.scrolled {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(240, 240, 240, 0.9));
+    background: linear-gradient(90deg,
+            rgba(255, 255, 255, 0.9),
+            rgba(240, 240, 240, 0.9));
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -87,6 +88,7 @@ export default {
         opacity: 0;
         transform: translateX(-50px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -94,13 +96,13 @@ export default {
 }
 
 .navbar-nav .nav-link {
-    color: #53BA83;
+    color: #53ba83;
     font-weight: bold;
     transition: color 0.4s ease, transform 0.4s ease;
 }
 
 .navbar-nav .nav-link:hover {
-    color: #53BA83;
+    color: #53ba83;
     text-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
     transform: scale(1.05);
     font-weight: bold;
@@ -112,7 +114,7 @@ export default {
 }
 
 .bi-person-circle {
-    color: #53BA83;
+    color: #53ba83;
     font-size: 1.5rem;
     transition: color 0.3s ease;
 }
@@ -131,6 +133,7 @@ export default {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

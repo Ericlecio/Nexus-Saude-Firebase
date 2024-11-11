@@ -11,16 +11,6 @@ const router = createRouter({
       name: 'home',
       component: HomeView
     },
-    {
-      path: '/navbar',
-      name: 'navbar',
-      component: Navbar
-    },
-    {
-      path: '/footer',
-      name: 'footer',
-      component: Footer
-    }
   ]
 })
 

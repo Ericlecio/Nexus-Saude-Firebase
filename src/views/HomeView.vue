@@ -25,17 +25,14 @@ export default {
     Footer
   }
 };
-
-
 </script>
 
 <template>
     <div>
-        <!-- Navbar -->
         <Navbar />
 
         <!-- Banner Principal -->
-        <section class="banner" style="background-image: url('img/Fundo.png')">
+        <section class="banner" style="background-image: url('/img/Fundo.png')">
             <div class="text-center">
                 <h1>Cuide da sua Saúde com Profissionais de Confiança</h1>
                 <p>Consultas rápidas e seguras ao alcance de um clique</p>
@@ -49,7 +46,7 @@ export default {
             <div class="row text-center">
                 <div class="col-md-4">
                     <div class="card service-card">
-                        <img src="#" class="card-img-top" alt="Clínica Geral" />
+                        <img src="/src/assets/img/clinico_geral.webp" class="card-img-top" alt="Clínica Geral" style="height: 30%; border-radius: 10%;" />
                         <div class="card-body">
                             <h5 class="card-title">Clínica Geral</h5>
                             <p class="card-text">
@@ -58,24 +55,27 @@ export default {
                         </div>
                     </div>
                 </div>
+
+
                 <div class="col-md-4">
                     <div class="card service-card">
-                        <img src="#" class="card-img-top" alt="Cardiologia" />
-                        <div class="card-body">
-                            <h5 class="card-title">Cardiologia</h5>
-                            <p class="card-text">
-                                Cuide da saúde do seu coração com nossos especialistas.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card service-card">
-                        <img src="#" class="card-img-top" alt="Dermatologia" />
+                        <img src="/src/assets/img/dermatologia.webp" class="card-img-top" alt="Dermatologia" style="height: 30%; border-radius: 10%;" />
                         <div class="card-body">
                             <h5 class="card-title">Dermatologia</h5>
                             <p class="card-text">
                                 Tratamentos para uma pele saudável e bonita.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card service-card">
+                        <img src="/src/assets/img/cardiologia.webp" class="card-img-top" alt="Cardiologia" style="height: 30%; border-radius: 10%;" />
+                        <div class="card-body">
+                            <h5 class="card-title">Cardiologia</h5>
+                            <p class="card-text">
+                                Cuide da saúde do seu coração com nossos especialistas.
                             </p>
                         </div>
                     </div>
@@ -147,9 +147,7 @@ export default {
             </div>
         </section>
 
-        <!-- Footer -->
         <Footer />
-
     </div>
 </template>
 
@@ -167,7 +165,8 @@ html {
     background-size: cover;
     background-position: center;
     height: 100vh;
-    color: white;
+    color: #0C0636;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
