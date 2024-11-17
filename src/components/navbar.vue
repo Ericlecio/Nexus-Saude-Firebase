@@ -11,7 +11,7 @@
             <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">Home</a>
+                        <a class="nav-link active" href="/">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">Quem Somos</a>
@@ -25,6 +25,7 @@
                         <i class="bi bi-person-circle"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/login">Login</a></li>
                         <li><a class="dropdown-item" href="#">Perfil</a></li>
                         <li><a class="dropdown-item" href="#">Consultas</a></li>
                         <li><a class="dropdown-item" href="#">Sair</a></li>
