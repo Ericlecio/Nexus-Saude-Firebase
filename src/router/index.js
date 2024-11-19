@@ -3,7 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import LoginMedicoView from '@/views/LoginMedicoView.vue'
 
-// https://nexus-saude-e8cb6.web.app
+// https://nexus-saude-app.web.app
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
