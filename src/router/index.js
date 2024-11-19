@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
+import LoginMedicoView from '@/views/LoginMedicoView.vue'
 
 // https://nexus-saude-e8cb6.web.app
 
@@ -16,6 +17,11 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView
+    },
+    {
+      path: '/loginMedico',
+      name: 'loginMedico',
+      component: LoginMedicoView
     },
   ]
 })
