@@ -8,21 +8,16 @@ export default {
     Navbar,
     Footer,
   },
+  data() {
+    return {
+      showPassword: false,
+    };
+  },
   methods: {
     togglePassword() {
-      const passwordInput = document.getElementById('password');
-      const toggleIcon = document.querySelector('.toggle-password');
-      if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        toggleIcon.classList.remove('fa-eye');
-        toggleIcon.classList.add('fa-eye-slash');
-      } else {
-        passwordInput.type = 'password';
-        toggleIcon.classList.remove('fa-eye-slash');
-        toggleIcon.classList.add('fa-eye');
-      }
+      this.showPassword = !this.showPassword;
     },
-  },
+  }
 };
 </script>
 
@@ -39,12 +34,12 @@ export default {
           <!-- Campo de E-mail -->
           <div class="input-group">
             <i class="fas fa-user"></i>
-            <input type="email" placeholder="E-mail" required />
+            <input type="email" placeholder="E-mail" required class="input-field" />
           </div>
           <!-- Campo de CRM -->
           <div class="input-group">
             <i class="fas fa-id-card"></i>
-            <input type="text" placeholder="CRM" required />
+            <input type="text" placeholder="CRM" required class="input-field"/>
           </div>
           <!-- Campo de Senha -->
           <div class="input-group">
@@ -87,7 +82,7 @@ html,
 body {
   font-family: Arial, sans-serif;
   height: 100%;
-  background: url('@/assets/img/img_fundo.png') no-repeat center center fixed; /* Certifique-se de que a imagem está nesse local */
+  background: url('@/assets/img/img_fundo.png') no-repeat center center fixed; 
   background-size: cover; /* Faz com que a imagem cubra todo o fundo */
 }
 
@@ -96,6 +91,20 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 40px;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-container {
@@ -118,7 +127,7 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
 }
 
 h2 {
@@ -160,8 +169,25 @@ h1 {
 
 .input-group .toggle-password {
   cursor: pointer;
-  padding-right: 15px;
+  padding-right: 10px;
 }
+
+.input-field {
+  width: 100%;
+  padding: 15px 15px 15px 40px;
+  border: none;
+  border-radius: 20px;
+  background-color: #fff;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-field:focus {
+  border: 2px solid #53ba83;
+  box-shadow: 0 0 5px #53ba83;
+}
+
 
 .options {
   display: flex;
@@ -192,6 +218,11 @@ h1 {
   cursor: pointer;
   margin-bottom: 20px;
 }
+.btn:hover {
+  background-color: #53ba83;
+  color: white;
+}
+
 
 .create-account {
   display: block;
@@ -200,6 +231,7 @@ h1 {
   text-decoration: none;
   font-size: 16px;
 }
+
 
 .logo {
   flex: 1;
