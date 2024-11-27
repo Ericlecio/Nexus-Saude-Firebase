@@ -1,6 +1,7 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
+import { useRouter } from "vue-router";
 
 export default {
   name: "LoginScreen",
@@ -10,12 +11,16 @@ export default {
   },
   data() {
     return {
+      userType: "paciente",
       showPassword: false,
     };
   },
   methods: {
     togglePassword() {
       this.showPassword = !this.showPassword;
+    },
+    goToCadastro() {
+      this.$router.push("/cadastro");
     },
   },
 };
@@ -30,42 +35,71 @@ export default {
           <h2>Bem-Vindo</h2>
           <h1>Nexus Saúde</h1>
         </div>
+        <!-- Seleção de tipo de usuário -->
+        <div class="user-type-selector">
+          <label>
+            <input type="radio" name="userType" value="paciente" v-model="userType" />
+            Paciente
+          </label>
+          <label>
+            <input type="radio" name="userType" value="medico" v-model="userType" />
+            Médico
+          </label>
+        </div>
+        <!-- Formulário dinâmico -->
         <form>
-          <div class="input-group">
-            <i class="fas fa-user"></i>
-            <input type="email" placeholder="E-mail" required class="input-field" />
+          <div v-if="userType === 'paciente'">
+            <!-- Campos para Paciente -->
+            <div class="input-group">
+              <i class="fas fa-user"></i>
+              <input type="email" placeholder="E-mail" required class="input-field" />
+            </div>
+            <div class="input-group">
+              <i class="fas fa-lock"></i>
+              <input :type="showPassword ? 'text' : 'password'" placeholder="Senha" required class="input-field" />
+            </div>
+            <!-- Mostrar Senha -->
+            <div class="show-password" @click="togglePassword">
+              <span>{{ showPassword ? 'Ocultar Senha' : 'Mostrar Senha' }}</span>
+            </div>
           </div>
-          <div class="input-group">
-            <i class="fas fa-lock"></i>
-            <input :type="showPassword ? 'text' : 'password'" placeholder="Senha" required class="input-field" />
-            <i class="fas" :class="showPassword ? 'fa-eye-slash' : 'fa-eye'" @click="togglePassword"></i>
+          <div v-if="userType === 'medico'">
+            <!-- Campos para Médico -->
+            <div class="input-group">
+              <i class="fas fa-user"></i>
+              <input type="email" placeholder="E-mail" required class="input-field" />
+            </div>
+            <div class="input-group">
+              <i class="fas fa-id-card"></i>
+              <input type="text" placeholder="CRM" required class="input-field" />
+            </div>
+            <div class="input-group">
+              <i class="fas fa-lock"></i>
+              <input :type="showPassword ? 'text' : 'password'" placeholder="Senha" required class="input-field" />
+            </div>
+            <!-- Mostrar Senha -->
+            <div class="show-password" @click="togglePassword">
+              <span>{{ showPassword ? 'Ocultar Senha' : 'Mostrar Senha' }}</span>
+            </div>
           </div>
           <div class="options">
-            <label> <input type="checkbox" /> Lembrar Sempre </label>
+            <label><input type="checkbox" /> Lembrar Sempre</label>
             <a href="#">Esqueceu a Senha</a>
           </div>
           <div class="btn-container">
             <button type="submit" class="btn">Entrar</button>
           </div>
-          <a href="#" class="create-account">Criar Conta</a>
-          <div class="social-login">
-            <p>Ou entre com:</p>
-            <button class="social-btn google-btn">
-              <i class="fab fa-google"></i> Google
-            </button>
-            <button class="social-btn facebook-btn">
-              <i class="fab fa-facebook-f"></i> Facebook
-            </button>
-          </div>
         </form>
       </div>
-      <div class="logo">
+      <div class="logo-container">
         <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" />
+        <a href="#" class="create-account" @click.prevent="goToCadastro">Criar Conta</a>
       </div>
     </div>
   </div>
   <Footer />
 </template>
+
 
 <style scoped>
 /* Estilos gerais */
@@ -83,7 +117,6 @@ body {
   background-size: cover;
 }
 
-/* Animação no carregamento */
 .main-container {
   height: 100vh;
   display: flex;
@@ -116,9 +149,23 @@ body {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
+/* Ajuste no layout para garantir que o formulário e logo fiquem separados */
 .login-form {
   flex: 1;
   padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.logo-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 20px;
+  background-color: white;
 }
 
 .header {
@@ -126,7 +173,7 @@ body {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 0px;
 }
 
 h2 {
@@ -136,14 +183,25 @@ h2 {
 }
 
 h1 {
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   font-size: 32px;
   color: white;
 }
 
+.user-type-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.user-type-selector label {
+  margin: 0 10px;
+}
+
 .input-group {
   position: relative;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .input-group i {
@@ -154,12 +212,9 @@ h1 {
 }
 
 .input-group .fas.fa-user,
-.input-group .fas.fa-lock {
+.input-group .fas.fa-lock,
+.input-group .fas.fa-id-card {
   left: 10px;
-}
-
-input {
-  border-radius: 10px !important;
 }
 
 .input-group .fas {
@@ -170,7 +225,7 @@ input {
 .input-field {
   width: 100%;
   padding: 15px 15px 15px 40px;
-  border: none;
+  border: 2px solid transparent;
   border-radius: 20px;
   background-color: #fff;
   font-size: 16px;
@@ -178,16 +233,31 @@ input {
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Estilo para quando o input está em foco */
 .input-field:focus {
-  border: 2px solid #53ba83;
+  border-color: #53ba83;
   box-shadow: 0 0 5px #53ba83;
 }
 
+/* Mostrar Senha */
+.show-password {
+  text-align: center;
+  margin-top: 5px;
+  color: #53ba83;
+  cursor: pointer;
+}
+
+.show-password span {
+  font-size: 14px;
+}
+
+/* Opções de Lembrar Sempre e Esqueci a Senha */
 .options {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
   margin-bottom: 20px;
+  color: #fff;
 }
 
 .options a {
@@ -197,11 +267,6 @@ input {
 
 .options a:hover {
   text-decoration: underline;
-}
-
-.options label {
-  color: white;
-  font-size: 14px;
 }
 
 .btn-container {
@@ -219,7 +284,6 @@ input {
   font-size: 18px;
   cursor: pointer;
   margin-bottom: 20px;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .btn:hover {
@@ -227,55 +291,15 @@ input {
   color: white;
 }
 
-.social-login {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.social-login p {
-  color: white;
-  font-size: 14px;
-}
-
-.social-btn {
-  display: inline-block;
-  margin: 5px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.google-btn {
-  background-color: #db4437;
-  color: white;
-}
-
-.google-btn:hover {
-  background-color: #c33d2f;
-  transform: scale(1.05);
-}
-
-.facebook-btn {
-  background-color: #3b5998;
-  color: white;
-}
-
-.facebook-btn:hover {
-  background-color: #334b87;
-  transform: scale(1.05);
-}
-
 .create-account {
   display: block;
   text-align: center;
-  color: white;
+  color: rgb(255, 255, 255);
   text-decoration: none;
+  background-color: #000524;
   font-size: 16px;
   transition: background-color 0.1s ease, color 0.1s ease;
-  padding: 1px;
+  padding: 20px;
   border-radius: 20px;
 }
 
@@ -284,16 +308,10 @@ input {
   color: white;
 }
 
-.logo {
-  flex: 1;
-  background-color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.logo img {
+.logo-container img {
   max-width: 80%;
   height: auto;
+  margin-bottom: 20px;
 }
+
 </style>

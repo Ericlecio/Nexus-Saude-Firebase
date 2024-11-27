@@ -14,10 +14,10 @@
                         <a class="nav-link active" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Quem Somos</a>
+                        <a class="nav-link" href="/sobre">Quem Somos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Fale Conosco</a>
+                        <a class="nav-link" href="/contato">Fale Conosco</a>
                     </li>
                 </ul>
                 <div class="dropdown ms-3">
@@ -62,6 +62,7 @@ export default {
 </script>
 
 <style scoped>
+/* Navbar Principal */
 .navbar {
     background: transparent;
     color: white;
@@ -69,15 +70,14 @@ export default {
     top: 0;
     width: 100%;
     z-index: 10;
-    transition: background-color 0.5s ease, box-shadow 0.5s ease;
+    transition: background-color 0.4s ease, box-shadow 0.4s ease, padding 0.3s ease;
     box-shadow: none;
+    padding: 15px 0;
 }
 
 .navbar.scrolled {
-    background: linear-gradient(90deg,
-            rgba(255, 255, 255, 0.9),
-            rgba(240, 240, 240, 0.9));
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .navbar-brand {
@@ -96,37 +96,44 @@ export default {
     }
 }
 
+/* Links de Navegação */
 .navbar-nav .nav-link {
-    color: #53ba83;
-    font-weight: bold;
-    transition: color 0.4s ease, transform 0.4s ease;
+    color: #2c3e50; /* Cor padrão */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 12px 18px;
+    border-radius: 30px;
+    transition: color 0.3s ease, transform 0.3s ease;
+    background: none; /* Remover o fundo do link */
 }
 
-.navbar-nav .nav-link:hover {
-    color: #53ba83;
-    text-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
-    transform: scale(1.05);
-    font-weight: bold;
-}
-
+.navbar-nav .nav-link:hover,
 .navbar-nav .nav-link.active {
-    border-bottom: 3px solid #000524;
-    padding-bottom: 2px;
+    color: #53ba83; /* Cor verde do site */
+    text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
 }
 
+/* Ícone de Usuário */
 .bi-person-circle {
     color: #53ba83;
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     transition: color 0.3s ease;
 }
 
+.bi-person-circle:hover {
+    color: #000524;
+}
+
+/* Menu Dropdown */
 .dropdown-menu {
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 8px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
     backdrop-filter: blur(10px);
     border: none;
-    padding: 10px;
-    animation: fadeIn 0.5s ease-in-out;
+    padding: 12px 16px;
+    animation: fadeIn 0.4s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -141,6 +148,18 @@ export default {
     }
 }
 
+.dropdown-menu .dropdown-item {
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: #f1f1f1;
+    transform: scale(1.05);
+}
+
+/* Navbar Toggler */
 .navbar-toggler-icon {
     transition: 0.3s ease;
 }

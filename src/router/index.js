@@ -1,11 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
-import LoginMedicoView from '@/views/LoginMedicoView.vue'
-import CadastroMedicoView from '@/views/CadastroMedicoView.vue'
+import CadastroView from '@/views/CadastroView.vue'
 import ConsultasView from '@/views/ConsultasView.vue'
-
-// https://nexus-saude-app.web.app
+import ContatoView from '@/views/ContatoView.vue'  
+import SobreView from '@/views/SobreView.vue'    
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,20 +14,25 @@ const router = createRouter({
       name: 'home',
       component: HomeView
     },
-    {
+    { 
       path: '/login',
       name: 'login',
       component: LoginView
     },
     {
-      path: '/loginMedico',
-      name: 'loginMedico',
-      component: LoginMedicoView
+      path: '/cadastro',
+      name: 'Cadastro',
+      component: CadastroView
     },
     {
-      path: '/cadastromedico',
-      name: 'CadastroMedico',
-      component: CadastroMedicoView
+      path: '/contato',
+      name: 'contato',
+      component: ContatoView
+    },
+    {
+      path: '/sobre',
+      name: 'sobre',
+      component: SobreView  
     },
     {
       path: '/consultas',
