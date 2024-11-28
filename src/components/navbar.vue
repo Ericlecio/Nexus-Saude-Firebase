@@ -29,6 +29,7 @@
                         <li><a class="dropdown-item" href="#">Perfil</a></li>
                         <li><a class="dropdown-item" href="#">Consultas</a></li>
                         <li><a class="dropdown-item" href="#">Sair</a></li>
+                        <li><a class="dropdown-item" href="/medicos">lista de Medicos</a></li>
                     </ul>
                 </div>
             </div>
