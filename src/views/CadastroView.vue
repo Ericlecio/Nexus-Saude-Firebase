@@ -27,10 +27,9 @@ export default {
         telefone: "",
         email: "",
         senha: "",
-        tipo: "", // medico, paciente, admin
+        tipo: "",
       },
-      // Controlar qual etapa do formulário está sendo exibida
-      currentStep: 1, // 1 = primeira parte, 2 = segunda parte
+      currentStep: 1,
     };
   },
   methods: {
@@ -51,7 +50,6 @@ export default {
 
     async submitForm() {
       try {
-        // Organize os dados para envio ao Firestore
         const usuarioData = {
           nomeCompleto: this.form.nomeCompleto,
           email: this.form.email,
@@ -68,21 +66,24 @@ export default {
           const medicoData = {
             crm: this.form.crm,
             especialidade: this.form.especialidade,
-            experiencia: this.form.experiencia,  // Nova chave para experiência
-            precoConsulta: this.form.precoConsulta,  // Nova chave para preço da consulta
-            diasAtendimento: this.diasAtendimento, // Horários de atendimento
+            experiencia: this.form.experiencia, 
+            precoConsulta: this.form.precoConsulta, 
+            diasAtendimento: this.diasAtendimento, 
+            usuarioId: docId,
           };
           const medicoDao = new DAOService("medicos");
           await medicoDao.insert(medicoData);
         } else if (this.form.tipo === "paciente") {
           const pacienteData = {
             telefone: this.form.telefone,
+            usuarioId: docId, 
           };
           const pacienteDao = new DAOService("pacientes");
           await pacienteDao.insert(pacienteData);
         } else if (this.form.tipo === "admin") {
           const adminData = {
-            permissao: "full", // Exemplo de permissões de administrador
+            permissao: "full", 
+            usuarioId: docId,
           };
           const adminDao = new DAOService("admins");
           await adminDao.insert(adminData);
@@ -90,7 +91,7 @@ export default {
 
         // Sucesso
         alert("Usuário cadastrado com sucesso!");
-        this.$router.push("/");  // Redireciona para a página inicial
+        this.$router.push("/");
       } catch (error) {
         console.error("Erro ao cadastrar usuário: ", error);
         alert("Ocorreu um erro ao cadastrar o usuário. Tente novamente.");
@@ -100,8 +101,7 @@ export default {
     nextStep() {
       this.currentStep++;
     },
-}
-
+  },
 };
 </script>
 
@@ -110,16 +110,13 @@ export default {
     <Navbar />
     <div class="container py-5 mt-5"> 
       <div class="row justify-content-center align-items-center">
-        <!-- Card Principal -->
         <div class="col-lg-10">
           <div class="card shadow-lg border-0 rounded-3">
             <div class="row g-0">
-              <!-- Formulário -->
               <div class="col-md-8 bg text-light p-4" style="background-color: #000524;">
                 <h1 class="text-center mb-3">Nexus Saúde</h1>
                 <h3 class="text-center mb-4">Cadastro de Usuário</h3>
                 <form @submit.prevent="submitForm">
-                  <!-- Primeira Parte do Formulário -->
                   <div v-if="currentStep === 1">
                     <div class="row mb-3">
                       <div class="col-md-12">
@@ -132,7 +129,6 @@ export default {
                         </select>
                       </div>
                     </div>
-
                     <div class="row mb-3">
                       <div class="col-md-6">
                         <label for="nomeCompleto" class="form-label">Nome Completo</label>
@@ -143,20 +139,17 @@ export default {
                         <input v-model="form.email" type="email" id="email" class="form-control rounded-3" placeholder="seuemail@dominio.com" required />
                       </div>
                     </div>
-
                     <div class="row mb-3">
                       <div class="col-md-6">
                         <label for="senha" class="form-label">Senha</label>
                         <input v-model="form.senha" type="password" id="senha" class="form-control rounded-3" placeholder="Digite sua senha" required />
                       </div>
                     </div>
-
                     <div class="text-center">
                       <button type="button" class="btn btn-primary rounded-3 btn-lg" @click="nextStep">Próximo</button>
                     </div>
                   </div>
 
-                  <!-- Segunda Parte do Formulário (Aparece quando currentStep == 2) -->
                   <div v-if="currentStep === 2">
                     <div v-if="form.tipo === 'medico'">
                       <div class="row mb-3">
@@ -172,8 +165,6 @@ export default {
                           </select>
                         </div>
                       </div>
-
-                      <!-- Horários de Atendimento -->
                       <div class="mb-3">
                         <label class="form-label">Horários de Atendimento</label>
                         <div class="row">
@@ -191,7 +182,6 @@ export default {
                         </div>
                       </div>
 
-                      <!-- Campo para Experiência -->
                       <div class="row mb-3">
                         <div class="col-md-12">
                           <label for="experiencia" class="form-label">Experiência</label>
@@ -199,7 +189,6 @@ export default {
                         </div>
                       </div>
 
-                      <!-- Campo para Preço da Consulta -->
                       <div class="row mb-3">
                         <div class="col-md-12">
                           <label for="precoConsulta" class="form-label">Preço da Consulta</label>
@@ -208,26 +197,34 @@ export default {
                       </div>
                     </div>
 
-                    <!-- Campos Condicionais para Paciente -->
                     <div v-if="form.tipo === 'paciente'">
-                      <p>Campos para o paciente...</p>
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label for="telefone" class="form-label">Telefone</label>
+                          <input v-model="form.telefone" type="text" id="telefone" class="form-control rounded-3" placeholder="Digite seu telefone" required />
+                        </div>
+                      </div>
                     </div>
 
-                    <!-- Campos Condicionais para Admin -->
                     <div v-if="form.tipo === 'admin'">
-                      <p>Campos para o administrador...</p>
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label for="permissao" class="form-label">Permissões</label>
+                          <select v-model="form.permissao" id="permissao" class="form-select rounded-3" required>
+                            <option value="full">Administrador completo</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
 
                     <div class="text-center">
-                      <button type="submit" class="btn btn-primary rounded-3 btn-lg">Criar Conta</button>
+                      <button type="submit" class="btn btn-success rounded-3 btn-lg">Cadastrar</button>
                     </div>
                   </div>
                 </form>
               </div>
-
-              <!-- Logo -->
-              <div class="col-md-4 bg-light d-flex justify-content-center align-items-center">
-                <img src="@/assets/img/NexusSaude_vertical.png" alt="Nexus Saúde" class="img-fluid logo" />
+              <div class="col-md-4 d-none d-md-block">
+                <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem do cadastro" class="img-fluid rounded-end" />
               </div>
             </div>
           </div>
@@ -237,41 +234,3 @@ export default {
     <Footer />
   </div>
 </template>
-
-
-<style scoped>
-.container {
-  max-width: 90%; /* Diminuir a largura */
-  margin-top: 50px; /* Margem superior */
-}
-
-.bg-dark {
-  background-color: #000524;
-}
-
-.card {
-  border-radius: 15px; /* Borda arredondada para o card */
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1); /* Adicionando sombra */
-}
-
-.btn-dark {
-  background-color: #000524;
-  border-color: #000524;
-  color: white;
-}
-
-.btn-dark:hover {
-  background-color: #53ba83;
-  border-color: #53ba83;
-  color: #fff;
-}
-
-.form-select,
-.form-control {
-  border-radius: 8px;
-}
-
-.input-group select {
-  width: 50%;
-}
-</style>

@@ -93,6 +93,67 @@ class DAOService {
       throw new Error("Error searching documents");
     }
   }
+
+  // Método para buscar médicos específicos (usuários do tipo "medico")
+  async getMedicos() {
+    try {
+      // Buscar todos os usuários com tipo "medico"
+      const medicos = await this.search("tipo", "medico");
+      const medicosComDetalhes = [];
+
+      // Para cada médico, buscar mais detalhes na coleção "medicos"
+      for (let medico of medicos) {
+        const medicoDetails = await this.getFromCollection("medicos", medico.id); // Busca os detalhes específicos do médico
+        medicosComDetalhes.push({ ...medico, ...medicoDetails });
+      }
+
+      return medicosComDetalhes;
+    } catch (error) {
+      console.error("Error getting medicos: ", error);
+      throw new Error("Error getting medicos");
+    }
+  }
+
+  // Método para buscar pacientes específicos (usuários do tipo "paciente")
+  async getPacientes() {
+    try {
+      // Buscar todos os usuários com tipo "paciente"
+      const pacientes = await this.search("tipo", "paciente");
+      return pacientes;
+    } catch (error) {
+      console.error("Error getting pacientes: ", error);
+      throw new Error("Error getting pacientes");
+    }
+  }
+
+  // Método para buscar administradores específicos (usuários do tipo "admin")
+  async getAdmins() {
+    try {
+      // Buscar todos os usuários com tipo "admin"
+      const admins = await this.search("tipo", "admin");
+      return admins;
+    } catch (error) {
+      console.error("Error getting admins: ", error);
+      throw new Error("Error getting admins");
+    }
+  }
+
+  // Método para buscar documentos de uma coleção específica usando um ID
+  async getFromCollection(collectionName, id) {
+    try {
+      const docRef = doc(firestore, collectionName, id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() };
+      } else {
+        throw new Error(`No such document in ${collectionName} collection!`);
+      }
+    } catch (error) {
+      console.error(`Error getting document from ${collectionName}: `, error);
+      throw new Error("Error getting document");
+    }
+  }
 }
 
 export default DAOService;
