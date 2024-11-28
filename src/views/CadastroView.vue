@@ -86,6 +86,7 @@ export default {
             telefoneConsultorio: this.form.telefoneConsultorio,
             valorConsulta: this.form.valorConsulta,
             usuarioId: docId,
+            diasAtendimento: this.diasAtendimento,  // Adicionando os horários de atendimento
           };
           const medicoDao = new DAOService("medicos");
           await medicoDao.insert(medicoData);
@@ -122,6 +123,7 @@ export default {
   },
 };
 </script>
+
 <template>
   <div>
     <Navbar />
@@ -210,41 +212,73 @@ export default {
                         </div>
                         <div class="col-md-6">
                           <label for="valorConsulta" class="form-label">Valor da Consulta</label>
-                          <input v-model="form.valorConsulta" type="number" id="valorConsulta" class="form-control rounded-3" placeholder="R$ 100,00" required />
+                          <input v-model="form.valorConsulta" type="number" id="valorConsulta" class="form-control rounded-3" placeholder="R$ 150,00" required />
                         </div>
                       </div>
-                    </div>
 
-                    <div v-if="form.tipo === 'paciente'">
+                      <!-- Horários de Atendimento -->
+                      <h4 class="mt-4">Horários de Atendimento</h4>
                       <div class="row mb-3">
                         <div class="col-md-6">
-                          <label for="telefone" class="form-label">Telefone</label>
-                          <input v-model="form.telefone" type="text" id="telefone" class="form-control rounded-3" placeholder="(xx) xxxx-xxxx" required />
+                          <label for="segundaInicio" class="form-label">Segunda-feira (Início)</label>
+                          <input v-model="diasAtendimento.segunda.inicio" type="time" id="segundaInicio" class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
-                          <label for="planoSaude" class="form-label">Plano de Saúde</label>
-                          <input v-model="form.planoSaude" type="text" id="planoSaude" class="form-control rounded-3" placeholder="Digite o nome do plano" required />
+                          <label for="segundaFim" class="form-label">Segunda-feira (Fim)</label>
+                          <input v-model="diasAtendimento.segunda.fim" type="time" id="segundaFim" class="form-control rounded-3" />
                         </div>
                       </div>
-                    </div>
-
-                    <div v-if="form.tipo === 'admin'">
                       <div class="row mb-3">
                         <div class="col-md-6">
-                          <label for="nivelPermissao" class="form-label">Nível de Permissão</label>
-                          <select v-model="form.nivelPermissao" id="nivelPermissao" class="form-select rounded-3" required>
-                            <option value="admin">Administrador</option>
-                            <option value="gerente">Gerente</option>
-                            <option value="supervisor">Supervisor</option>
-                          </select>
+                          <label for="tercaInicio" class="form-label">Terça-feira (Início)</label>
+                          <input v-model="diasAtendimento.terca.inicio" type="time" id="tercaInicio" class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
-                          <label for="ultimoLogin" class="form-label">Último Login</label>
-                          <input v-model="form.ultimoLogin" type="datetime-local" id="ultimoLogin" class="form-control rounded-3" required />
+                          <label for="tercaFim" class="form-label">Terça-feira (Fim)</label>
+                          <input v-model="diasAtendimento.terca.fim" type="time" id="tercaFim" class="form-control rounded-3" />
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label for="quartaInicio" class="form-label">Quarta-feira (Início)</label>
+                          <input v-model="diasAtendimento.quarta.inicio" type="time" id="quartaInicio" class="form-control rounded-3" />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="quartaFim" class="form-label">Quarta-feira (Fim)</label>
+                          <input v-model="diasAtendimento.quarta.fim" type="time" id="quartaFim" class="form-control rounded-3" />
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label for="quintaInicio" class="form-label">Quinta-feira (Início)</label>
+                          <input v-model="diasAtendimento.quinta.inicio" type="time" id="quintaInicio" class="form-control rounded-3" />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="quintaFim" class="form-label">Quinta-feira (Fim)</label>
+                          <input v-model="diasAtendimento.quinta.fim" type="time" id="quintaFim" class="form-control rounded-3" />
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label for="sextaInicio" class="form-label">Sexta-feira (Início)</label>
+                          <input v-model="diasAtendimento.sexta.inicio" type="time" id="sextaInicio" class="form-control rounded-3" />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="sextaFim" class="form-label">Sexta-feira (Fim)</label>
+                          <input v-model="diasAtendimento.sexta.fim" type="time" id="sextaFim" class="form-control rounded-3" />
+                        </div>
+                      </div>
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label for="sabadoInicio" class="form-label">Sábado (Início)</label>
+                          <input v-model="diasAtendimento.sabado.inicio" type="time" id="sabadoInicio" class="form-control rounded-3" />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="sabadoFim" class="form-label">Sábado (Fim)</label>
+                          <input v-model="diasAtendimento.sabado.fim" type="time" id="sabadoFim" class="form-control rounded-3" />
                         </div>
                       </div>
                     </div>
-
                     <div class="text-center">
                       <button type="submit" class="btn btn-primary rounded-3 btn-lg">Cadastrar</button>
                     </div>
@@ -259,3 +293,7 @@ export default {
     <Footer />
   </div>
 </template>
+
+<style scoped>
+/* Adicione seus estilos personalizados aqui */
+</style>
