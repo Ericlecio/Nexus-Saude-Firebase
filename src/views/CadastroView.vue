@@ -22,12 +22,26 @@ export default {
       especialidades: ["Pediatria", "Cardiologia", "Dermatologia"],
       form: {
         nomeCompleto: "",
-        crm: "",
-        especialidade: "",
-        telefone: "",
+        cpf: "",
+        sexo: "",  // Novo campo
+        dataNascimento: "",  // Novo campo
         email: "",
         senha: "",
-        tipo: "",
+        tipo: "",  // Médico, paciente ou admin
+
+        // Para pacientes
+        telefone: "",
+        planoSaude: "",  // Novo campo
+
+        // Para médicos
+        crm: "",
+        especialidade: "",
+        telefoneConsultorio: "",  // Novo campo
+        valorConsulta: 0,  // Novo campo
+
+        // Para administradores
+        nivelPermissao: "admin",  // Novo campo
+        ultimoLogin: "",  // Novo campo
       },
       currentStep: 1,
     };
@@ -52,9 +66,12 @@ export default {
       try {
         const usuarioData = {
           nomeCompleto: this.form.nomeCompleto,
+          cpf: this.form.cpf,
+          sexo: this.form.sexo,
+          dataNascimento: this.form.dataNascimento,
           email: this.form.email,
           senha: this.form.senha,
-          tipo: this.form.tipo, // medico, paciente, admin
+          tipo: this.form.tipo,
         };
 
         // Criação do documento do usuário
@@ -66,9 +83,8 @@ export default {
           const medicoData = {
             crm: this.form.crm,
             especialidade: this.form.especialidade,
-            experiencia: this.form.experiencia, 
-            precoConsulta: this.form.precoConsulta, 
-            diasAtendimento: this.diasAtendimento, 
+            telefoneConsultorio: this.form.telefoneConsultorio,
+            valorConsulta: this.form.valorConsulta,
             usuarioId: docId,
           };
           const medicoDao = new DAOService("medicos");
@@ -76,13 +92,15 @@ export default {
         } else if (this.form.tipo === "paciente") {
           const pacienteData = {
             telefone: this.form.telefone,
-            usuarioId: docId, 
+            planoSaude: this.form.planoSaude,
+            usuarioId: docId,
           };
           const pacienteDao = new DAOService("pacientes");
           await pacienteDao.insert(pacienteData);
         } else if (this.form.tipo === "admin") {
           const adminData = {
-            permissao: "full", 
+            nivelPermissao: this.form.nivelPermissao,
+            ultimoLogin: this.form.ultimoLogin,
             usuarioId: docId,
           };
           const adminDao = new DAOService("admins");
@@ -104,7 +122,6 @@ export default {
   },
 };
 </script>
-
 <template>
   <div>
     <Navbar />
@@ -135,6 +152,27 @@ export default {
                         <input v-model="form.nomeCompleto" type="text" id="nomeCompleto" class="form-control rounded-3" placeholder="Digite seu nome completo" required />
                       </div>
                       <div class="col-md-6">
+                        <label for="cpf" class="form-label">CPF</label>
+                        <input v-model="form.cpf" type="text" id="cpf" class="form-control rounded-3" placeholder="Digite seu CPF" required />
+                      </div>
+                    </div>
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label for="sexo" class="form-label">Sexo</label>
+                        <select v-model="form.sexo" id="sexo" class="form-select rounded-3" required>
+                          <option value="" disabled selected>Selecione o sexo</option>
+                          <option value="M">Masculino</option>
+                          <option value="F">Feminino</option>
+                          <option value="O">Outro</option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label for="dataNascimento" class="form-label">Data de Nascimento</label>
+                        <input v-model="form.dataNascimento" type="date" id="dataNascimento" class="form-control rounded-3" required />
+                      </div>
+                    </div>
+                    <div class="row mb-3">
+                      <div class="col-md-12">
                         <label for="email" class="form-label">E-mail</label>
                         <input v-model="form.email" type="email" id="email" class="form-control rounded-3" placeholder="seuemail@dominio.com" required />
                       </div>
@@ -165,66 +203,53 @@ export default {
                           </select>
                         </div>
                       </div>
-                      <div class="mb-3">
-                        <label class="form-label">Horários de Atendimento</label>
-                        <div class="row">
-                          <div class="col-6 col-md-4 mb-3" v-for="(dia, key) in diasAtendimento" :key="key">
-                            <label :for="key" class="form-label">{{ key }}</label>
-                            <div class="input-group">
-                              <select v-model="dia.inicio" :id="`${key}-inicio`" class="form-select">
-                                <option v-for="slot in getTimeSlots()" :key="slot" :value="slot">{{ slot }}</option>
-                              </select>
-                              <select v-model="dia.fim" :id="`${key}-fim`" class="form-select">
-                                <option v-for="slot in getTimeSlots()" :key="slot" :value="slot">{{ slot }}</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
                       <div class="row mb-3">
-                        <div class="col-md-12">
-                          <label for="experiencia" class="form-label">Experiência</label>
-                          <textarea v-model="form.experiencia" id="experiencia" class="form-control" rows="3" placeholder="Digite a experiência do médico"></textarea>
+                        <div class="col-md-6">
+                          <label for="telefoneConsultorio" class="form-label">Telefone do Consultório</label>
+                          <input v-model="form.telefoneConsultorio" type="text" id="telefoneConsultorio" class="form-control rounded-3" placeholder="(xx) xxxx-xxxx" required />
                         </div>
-                      </div>
-
-                      <div class="row mb-3">
-                        <div class="col-md-12">
-                          <label for="precoConsulta" class="form-label">Preço da Consulta</label>
-                          <input v-model="form.precoConsulta" type="number" id="precoConsulta" class="form-control" placeholder="Digite o preço da consulta" required />
+                        <div class="col-md-6">
+                          <label for="valorConsulta" class="form-label">Valor da Consulta</label>
+                          <input v-model="form.valorConsulta" type="number" id="valorConsulta" class="form-control rounded-3" placeholder="R$ 100,00" required />
                         </div>
                       </div>
                     </div>
 
                     <div v-if="form.tipo === 'paciente'">
                       <div class="row mb-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                           <label for="telefone" class="form-label">Telefone</label>
-                          <input v-model="form.telefone" type="text" id="telefone" class="form-control rounded-3" placeholder="Digite seu telefone" required />
+                          <input v-model="form.telefone" type="text" id="telefone" class="form-control rounded-3" placeholder="(xx) xxxx-xxxx" required />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="planoSaude" class="form-label">Plano de Saúde</label>
+                          <input v-model="form.planoSaude" type="text" id="planoSaude" class="form-control rounded-3" placeholder="Digite o nome do plano" required />
                         </div>
                       </div>
                     </div>
 
                     <div v-if="form.tipo === 'admin'">
                       <div class="row mb-3">
-                        <div class="col-md-12">
-                          <label for="permissao" class="form-label">Permissões</label>
-                          <select v-model="form.permissao" id="permissao" class="form-select rounded-3" required>
-                            <option value="full">Administrador completo</option>
+                        <div class="col-md-6">
+                          <label for="nivelPermissao" class="form-label">Nível de Permissão</label>
+                          <select v-model="form.nivelPermissao" id="nivelPermissao" class="form-select rounded-3" required>
+                            <option value="admin">Administrador</option>
+                            <option value="gerente">Gerente</option>
+                            <option value="supervisor">Supervisor</option>
                           </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="ultimoLogin" class="form-label">Último Login</label>
+                          <input v-model="form.ultimoLogin" type="datetime-local" id="ultimoLogin" class="form-control rounded-3" required />
                         </div>
                       </div>
                     </div>
 
                     <div class="text-center">
-                      <button type="submit" class="btn btn-success rounded-3 btn-lg">Cadastrar</button>
+                      <button type="submit" class="btn btn-primary rounded-3 btn-lg">Cadastrar</button>
                     </div>
                   </div>
                 </form>
-              </div>
-              <div class="col-md-4 d-none d-md-block">
-                <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem do cadastro" class="img-fluid rounded-end" />
               </div>
             </div>
           </div>

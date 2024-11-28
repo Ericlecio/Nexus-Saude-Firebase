@@ -27,9 +27,9 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="/login">Login</a></li>
                         <li><a class="dropdown-item" href="#">Perfil</a></li>
-                        <li><a class="dropdown-item" href="#">Consultas</a></li>
+                        <li><a class="dropdown-item" href="/consultas">Consultas</a></li>
                         <li><a class="dropdown-item" href="#">Sair</a></li>
-                        <li><a class="dropdown-item" href="/medicos">lista de Medicos</a></li>
+                        <li><a class="dropdown-item" href="/medicos">Lista de Medicos</a></li>
                     </ul>
                 </div>
             </div>

@@ -12,8 +12,11 @@
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "bootstrap": "^5.3.3",
     "firebase": "^11.0.2",
+    "v-mask": "^2.3.0",
+    "vee-validate": "^4.14.7",
     "vue": "^3.5.12",
-    "vue-router": "^4.4.5"
+    "vue-router": "^4.4.5",
+    "vue-the-mask": "^0.11.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
