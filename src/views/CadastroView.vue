@@ -68,29 +68,29 @@ export default {
           const medicoData = {
             crm: this.form.crm,
             especialidade: this.form.especialidade,
-            diasAtendimento: this.diasAtendimento,
+            experiencia: this.form.experiencia,  // Nova chave para experiência
+            precoConsulta: this.form.precoConsulta,  // Nova chave para preço da consulta
+            diasAtendimento: this.diasAtendimento, // Horários de atendimento
           };
           const medicoDao = new DAOService("medicos");
           await medicoDao.insert(medicoData);
         } else if (this.form.tipo === "paciente") {
-          // Dados do paciente (exemplo)
           const pacienteData = {
             telefone: this.form.telefone,
           };
           const pacienteDao = new DAOService("pacientes");
           await pacienteDao.insert(pacienteData);
         } else if (this.form.tipo === "admin") {
-          // Dados do administrador (exemplo)
           const adminData = {
-            permissao: "full", // Definir permissões de acordo com a necessidade
+            permissao: "full", // Exemplo de permissões de administrador
           };
           const adminDao = new DAOService("admins");
           await adminDao.insert(adminData);
         }
 
-        // Redirecionamento
+        // Sucesso
         alert("Usuário cadastrado com sucesso!");
-        this.$router.push("/");
+        this.$router.push("/");  // Redireciona para a página inicial
       } catch (error) {
         console.error("Erro ao cadastrar usuário: ", error);
         alert("Ocorreu um erro ao cadastrar o usuário. Tente novamente.");
@@ -100,27 +100,27 @@ export default {
     nextStep() {
       this.currentStep++;
     },
-  },
+}
+
 };
 </script>
 
 <template>
   <div>
     <Navbar />
-    <div class="container py-5 mt-5"> <!-- Adicionada margem superior com mt-5 -->
+    <div class="container py-5 mt-5"> 
       <div class="row justify-content-center align-items-center">
         <!-- Card Principal -->
         <div class="col-lg-10">
           <div class="card shadow-lg border-0 rounded-3">
             <div class="row g-0">
               <!-- Formulário -->
-              <div class="col-md-8 bg text-light p-4" style="background-color: #000524 ;">
+              <div class="col-md-8 bg text-light p-4" style="background-color: #000524;">
                 <h1 class="text-center mb-3">Nexus Saúde</h1>
                 <h3 class="text-center mb-4">Cadastro de Usuário</h3>
                 <form @submit.prevent="submitForm">
                   <!-- Primeira Parte do Formulário -->
                   <div v-if="currentStep === 1">
-                    <!-- Tipo de Usuário -->
                     <div class="row mb-3">
                       <div class="col-md-12">
                         <label for="tipo" class="form-label">Tipo de Usuário</label>
@@ -133,7 +133,6 @@ export default {
                       </div>
                     </div>
 
-                    <!-- Nome Completo e E-mail -->
                     <div class="row mb-3">
                       <div class="col-md-6">
                         <label for="nomeCompleto" class="form-label">Nome Completo</label>
@@ -145,7 +144,6 @@ export default {
                       </div>
                     </div>
 
-                    <!-- Senha -->
                     <div class="row mb-3">
                       <div class="col-md-6">
                         <label for="senha" class="form-label">Senha</label>
@@ -153,17 +151,13 @@ export default {
                       </div>
                     </div>
 
-                    <!-- Botão "Próximo" -->
                     <div class="text-center">
-                      <button type="button" class="btn btn-primary rounded-3 btn-lg" @click="nextStep">
-                        Próximo
-                      </button>
+                      <button type="button" class="btn btn-primary rounded-3 btn-lg" @click="nextStep">Próximo</button>
                     </div>
                   </div>
 
                   <!-- Segunda Parte do Formulário (Aparece quando currentStep == 2) -->
                   <div v-if="currentStep === 2">
-                    <!-- Campos Condicionais para Médico -->
                     <div v-if="form.tipo === 'medico'">
                       <div class="row mb-3">
                         <div class="col-md-6">
@@ -196,27 +190,41 @@ export default {
                           </div>
                         </div>
                       </div>
+
+                      <!-- Campo para Experiência -->
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label for="experiencia" class="form-label">Experiência</label>
+                          <textarea v-model="form.experiencia" id="experiencia" class="form-control" rows="3" placeholder="Digite a experiência do médico"></textarea>
+                        </div>
+                      </div>
+
+                      <!-- Campo para Preço da Consulta -->
+                      <div class="row mb-3">
+                        <div class="col-md-12">
+                          <label for="precoConsulta" class="form-label">Preço da Consulta</label>
+                          <input v-model="form.precoConsulta" type="number" id="precoConsulta" class="form-control" placeholder="Digite o preço da consulta" required />
+                        </div>
+                      </div>
                     </div>
 
                     <!-- Campos Condicionais para Paciente -->
                     <div v-if="form.tipo === 'paciente'">
-                      <p>Dados do paciente (por exemplo, histórico de doenças, etc.)</p>
+                      <p>Campos para o paciente...</p>
                     </div>
 
                     <!-- Campos Condicionais para Admin -->
                     <div v-if="form.tipo === 'admin'">
-                      <p>Configurações do administrador (controle de permissões, etc.)</p>
+                      <p>Campos para o administrador...</p>
                     </div>
 
-                    <!-- Botão de Submit -->
                     <div class="text-center">
-                      <button type="submit" class="btn btn-primary rounded-3 btn-lg">
-                        Criar Conta
-                      </button>
+                      <button type="submit" class="btn btn-primary rounded-3 btn-lg">Criar Conta</button>
                     </div>
                   </div>
                 </form>
               </div>
+
               <!-- Logo -->
               <div class="col-md-4 bg-light d-flex justify-content-center align-items-center">
                 <img src="@/assets/img/NexusSaude_vertical.png" alt="Nexus Saúde" class="img-fluid logo" />
@@ -229,6 +237,7 @@ export default {
     <Footer />
   </div>
 </template>
+
 
 <style scoped>
 .container {

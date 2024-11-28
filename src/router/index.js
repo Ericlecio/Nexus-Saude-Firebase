@@ -5,6 +5,9 @@ import CadastroView from '@/views/CadastroView.vue'
 import ConsultasView from '@/views/ConsultasView.vue'
 import ContatoView from '@/views/ContatoView.vue'  
 import SobreView from '@/views/SobreView.vue'    
+import MedicosView from '@/views/MedicosView.vue'
+import DetalhesmedicosView from '@/views/DetalhesmedicosView.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +41,16 @@ const router = createRouter({
       path: '/consultas',
       name: 'Consultas',
       component: ConsultasView
+    },
+    {
+      path: '/medicos',
+      name: 'Medicos',
+      component: MedicosView
+    },
+    {
+      path: '/medicos/:id',
+      name: 'DetalhesMedicos',
+      component: DetalhesmedicosView
     },
   ]
 })
