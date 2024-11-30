@@ -7,14 +7,14 @@
       <div v-if="medico">
         <div class="row mb-4">
           <div class="col-md-6">
-            <h4>Especialidade: {{ medico.especialidade }}</h4>
+            <h4>Especialidade: {{ medico.especialidade}}</h4>
             <h5>Preço da Consulta: R$ {{ medico.precoConsulta }}</h5>
             <h5>CRM: {{ medico.crm }}</h5>
           </div>
         </div>
 
         <div class="row mb-4">
-          <div class="col-md-12">s
+          <div class="col-md-12">
             <h4>Experiência:</h4>
             <p>{{ medico.experiencia }}</p>
           </div>
@@ -71,7 +71,7 @@ export default {
   },
   data() {
     return {
-      medico: null, 
+      medico: true, 
       avaliacoes: [], 
       loading: true,
     };
