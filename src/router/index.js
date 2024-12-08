@@ -7,6 +7,7 @@ import ContatoView from '@/views/ContatoView.vue'
 import SobreView from '@/views/SobreView.vue'    
 import MedicosView from '@/views/MedicosView.vue'
 import DetalhesmedicosView from '@/views/DetalhesmedicosView.vue'
+import AgendamentoConsultasView from '@/views/AgendamentoConsultasView.vue'
 
 
 const router = createRouter({
@@ -52,6 +53,12 @@ const router = createRouter({
       name: 'DetalhesMedicos',
       props: true, 
       component: DetalhesmedicosView  
+    },
+    {
+      path: '/Agendamento',
+      name: 'Agendamento',
+      props: true, 
+      component: AgendamentoConsultasView
     },
   ]
 })
