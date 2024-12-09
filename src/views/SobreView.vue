@@ -14,7 +14,6 @@ export default {
   <div>
     <Navbar />
 
-    <!-- Banner Quem Somos -->
     <section class="banner" style="background-image: url('/img/quem_somos_fundo.jpg')">
       <div class="text-center">
         <h1>Quem Somos</h1>
@@ -22,21 +21,23 @@ export default {
       </div>
     </section>
 
-    <!-- Nossa Missão -->
     <section class="container my-5">
       <h2 class="section-title text-center">Nossa Missão</h2>
       <p class="text-center">
-        A Nexus Saúde é uma clínica comprometida em oferecer atendimento médico de qualidade, com profissionais experientes e dedicados, buscando sempre proporcionar bem-estar e segurança aos nossos pacientes. Nosso foco é proporcionar um atendimento humanizado e eficiente para todas as idades.
+        A Nexus Saúde é uma clínica comprometida em oferecer atendimento médico de qualidade, com profissionais
+        experientes e dedicados, buscando sempre proporcionar bem-estar e segurança aos nossos pacientes. Nosso foco é
+        proporcionar um atendimento humanizado e eficiente para todas as idades.
       </p>
     </section>
 
-    <!-- Nossa História -->
     <section class="container my-5">
       <h2 class="section-title text-center">Nossa História</h2>
       <div class="row">
         <div class="col-md-6">
           <p>
-            Fundada em 2010, a Nexus Saúde tem se destacado pelo compromisso com a excelência no atendimento médico. Ao longo dos anos, nossa clínica se consolidou como referência em diversas especialidades médicas, oferecendo sempre um atendimento rápido e de qualidade.
+            Fundada em 2010, a Nexus Saúde tem se destacado pelo compromisso com a excelência no atendimento médico. Ao
+            longo dos anos, nossa clínica se consolidou como referência em diversas especialidades médicas, oferecendo
+            sempre um atendimento rápido e de qualidade.
           </p>
         </div>
         <div class="col-md-6">
@@ -45,7 +46,6 @@ export default {
       </div>
     </section>
 
-    <!-- Valores -->
     <section class="container my-5">
       <h2 class="section-title text-center">Nossos Valores</h2>
       <ul>

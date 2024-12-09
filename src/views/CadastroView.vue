@@ -23,25 +23,21 @@ export default {
       form: {
         nomeCompleto: "",
         cpf: "",
-        sexo: "",  // Novo campo
-        dataNascimento: "",  // Novo campo
+        sexo: "",
+        dataNascimento: "",
         email: "",
         senha: "",
-        tipo: "",  // Médico, paciente ou admin
-
-        // Para pacientes
+        tipo: "",
         telefone: "",
-        planoSaude: "",  // Novo campo
+        planoSaude: "",
 
-        // Para médicos
         crm: "",
         especialidade: "",
-        telefoneConsultorio: "",  // Novo campo
-        valorConsulta: 0,  // Novo campo
+        telefoneConsultorio: "",
+        valorConsulta: 0,
 
-        // Para administradores
-        nivelPermissao: "admin",  // Novo campo
-        ultimoLogin: "",  // Novo campo
+        nivelPermissao: "admin",
+        ultimoLogin: "",
       },
       currentStep: 1,
     };
@@ -74,11 +70,9 @@ export default {
           tipo: this.form.tipo,
         };
 
-        // Criação do documento do usuário
         const dao = new DAOService("usuarios");
         const docId = await dao.insert(usuarioData);
 
-        // Dados específicos de cada tipo de usuário
         if (this.form.tipo === "medico") {
           const medicoData = {
             crm: this.form.crm,
@@ -86,7 +80,7 @@ export default {
             telefoneConsultorio: this.form.telefoneConsultorio,
             valorConsulta: this.form.valorConsulta,
             usuarioId: docId,
-            diasAtendimento: this.diasAtendimento,  // Adicionando os horários de atendimento
+            diasAtendimento: this.diasAtendimento,
           };
           const medicoDao = new DAOService("medicos");
           await medicoDao.insert(medicoData);
@@ -108,7 +102,6 @@ export default {
           await adminDao.insert(adminData);
         }
 
-        // Sucesso
         alert("Usuário cadastrado com sucesso!");
         this.$router.push("/");
       } catch (error) {
@@ -127,7 +120,7 @@ export default {
 <template>
   <div>
     <Navbar />
-    <div class="container py-5 mt-5"> 
+    <div class="container py-5 mt-5">
       <div class="row justify-content-center align-items-center">
         <div class="col-lg-10">
           <div class="card shadow-lg border-0 rounded-3">
@@ -151,11 +144,13 @@ export default {
                     <div class="row mb-3">
                       <div class="col-md-6">
                         <label for="nomeCompleto" class="form-label">Nome Completo</label>
-                        <input v-model="form.nomeCompleto" type="text" id="nomeCompleto" class="form-control rounded-3" placeholder="Digite seu nome completo" required />
+                        <input v-model="form.nomeCompleto" type="text" id="nomeCompleto" class="form-control rounded-3"
+                          placeholder="Digite seu nome completo" required />
                       </div>
                       <div class="col-md-6">
                         <label for="cpf" class="form-label">CPF</label>
-                        <input v-model="form.cpf" type="text" id="cpf" class="form-control rounded-3" placeholder="Digite seu CPF" required />
+                        <input v-model="form.cpf" type="text" id="cpf" class="form-control rounded-3"
+                          placeholder="Digite seu CPF" required />
                       </div>
                     </div>
                     <div class="row mb-3">
@@ -170,19 +165,22 @@ export default {
                       </div>
                       <div class="col-md-6">
                         <label for="dataNascimento" class="form-label">Data de Nascimento</label>
-                        <input v-model="form.dataNascimento" type="date" id="dataNascimento" class="form-control rounded-3" required />
+                        <input v-model="form.dataNascimento" type="date" id="dataNascimento"
+                          class="form-control rounded-3" required />
                       </div>
                     </div>
                     <div class="row mb-3">
                       <div class="col-md-12">
                         <label for="email" class="form-label">E-mail</label>
-                        <input v-model="form.email" type="email" id="email" class="form-control rounded-3" placeholder="seuemail@dominio.com" required />
+                        <input v-model="form.email" type="email" id="email" class="form-control rounded-3"
+                          placeholder="seuemail@dominio.com" required />
                       </div>
                     </div>
                     <div class="row mb-3">
                       <div class="col-md-6">
                         <label for="senha" class="form-label">Senha</label>
-                        <input v-model="form.senha" type="password" id="senha" class="form-control rounded-3" placeholder="Digite sua senha" required />
+                        <input v-model="form.senha" type="password" id="senha" class="form-control rounded-3"
+                          placeholder="Digite sua senha" required />
                       </div>
                     </div>
                     <div class="text-center">
@@ -195,24 +193,29 @@ export default {
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="crm" class="form-label">CRM</label>
-                          <input v-model="form.crm" type="text" id="crm" class="form-control rounded-3" placeholder="123456/PE" required />
+                          <input v-model="form.crm" type="text" id="crm" class="form-control rounded-3"
+                            placeholder="123456/PE" required />
                         </div>
                         <div class="col-md-6">
                           <label for="especialidade" class="form-label">Especialidade</label>
-                          <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3" required>
+                          <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
+                            required>
                             <option value="" disabled selected>Selecione</option>
-                            <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">{{ especialidade }}</option>
+                            <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
+                              {{ especialidade }}</option>
                           </select>
                         </div>
                       </div>
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="telefoneConsultorio" class="form-label">Telefone do Consultório</label>
-                          <input v-model="form.telefoneConsultorio" type="text" id="telefoneConsultorio" class="form-control rounded-3" placeholder="(xx) xxxx-xxxx" required />
+                          <input v-model="form.telefoneConsultorio" type="text" id="telefoneConsultorio"
+                            class="form-control rounded-3" placeholder="(xx) xxxx-xxxx" required />
                         </div>
                         <div class="col-md-6">
                           <label for="valorConsulta" class="form-label">Valor da Consulta</label>
-                          <input v-model="form.valorConsulta" type="number" id="valorConsulta" class="form-control rounded-3" placeholder="R$ 150,00" required />
+                          <input v-model="form.valorConsulta" type="number" id="valorConsulta"
+                            class="form-control rounded-3" placeholder="R$ 150,00" required />
                         </div>
                       </div>
 
@@ -221,61 +224,73 @@ export default {
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="segundaInicio" class="form-label">Segunda-feira (Início)</label>
-                          <input v-model="diasAtendimento.segunda.inicio" type="time" id="segundaInicio" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.segunda.inicio" type="time" id="segundaInicio"
+                            class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
                           <label for="segundaFim" class="form-label">Segunda-feira (Fim)</label>
-                          <input v-model="diasAtendimento.segunda.fim" type="time" id="segundaFim" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.segunda.fim" type="time" id="segundaFim"
+                            class="form-control rounded-3" />
                         </div>
                       </div>
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="tercaInicio" class="form-label">Terça-feira (Início)</label>
-                          <input v-model="diasAtendimento.terca.inicio" type="time" id="tercaInicio" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.terca.inicio" type="time" id="tercaInicio"
+                            class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
                           <label for="tercaFim" class="form-label">Terça-feira (Fim)</label>
-                          <input v-model="diasAtendimento.terca.fim" type="time" id="tercaFim" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.terca.fim" type="time" id="tercaFim"
+                            class="form-control rounded-3" />
                         </div>
                       </div>
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="quartaInicio" class="form-label">Quarta-feira (Início)</label>
-                          <input v-model="diasAtendimento.quarta.inicio" type="time" id="quartaInicio" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.quarta.inicio" type="time" id="quartaInicio"
+                            class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
                           <label for="quartaFim" class="form-label">Quarta-feira (Fim)</label>
-                          <input v-model="diasAtendimento.quarta.fim" type="time" id="quartaFim" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.quarta.fim" type="time" id="quartaFim"
+                            class="form-control rounded-3" />
                         </div>
                       </div>
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="quintaInicio" class="form-label">Quinta-feira (Início)</label>
-                          <input v-model="diasAtendimento.quinta.inicio" type="time" id="quintaInicio" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.quinta.inicio" type="time" id="quintaInicio"
+                            class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
                           <label for="quintaFim" class="form-label">Quinta-feira (Fim)</label>
-                          <input v-model="diasAtendimento.quinta.fim" type="time" id="quintaFim" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.quinta.fim" type="time" id="quintaFim"
+                            class="form-control rounded-3" />
                         </div>
                       </div>
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="sextaInicio" class="form-label">Sexta-feira (Início)</label>
-                          <input v-model="diasAtendimento.sexta.inicio" type="time" id="sextaInicio" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.sexta.inicio" type="time" id="sextaInicio"
+                            class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
                           <label for="sextaFim" class="form-label">Sexta-feira (Fim)</label>
-                          <input v-model="diasAtendimento.sexta.fim" type="time" id="sextaFim" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.sexta.fim" type="time" id="sextaFim"
+                            class="form-control rounded-3" />
                         </div>
                       </div>
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="sabadoInicio" class="form-label">Sábado (Início)</label>
-                          <input v-model="diasAtendimento.sabado.inicio" type="time" id="sabadoInicio" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.sabado.inicio" type="time" id="sabadoInicio"
+                            class="form-control rounded-3" />
                         </div>
                         <div class="col-md-6">
                           <label for="sabadoFim" class="form-label">Sábado (Fim)</label>
-                          <input v-model="diasAtendimento.sabado.fim" type="time" id="sabadoFim" class="form-control rounded-3" />
+                          <input v-model="diasAtendimento.sabado.fim" type="time" id="sabadoFim"
+                            class="form-control rounded-3" />
                         </div>
                       </div>
                     </div>
@@ -294,6 +309,4 @@ export default {
   </div>
 </template>
 
-<style scoped>
-/* Adicione seus estilos personalizados aqui */
-</style>
+<style scoped></style>

@@ -1,31 +1,3 @@
-<script>
-import Navbar from "@/components/Navbar.vue";
-import Footer from "@/components/Footer.vue";
-import { useRouter } from "vue-router";
-
-export default {
-  name: "LoginScreen",
-  components: {
-    Navbar,
-    Footer,
-  },
-  data() {
-    return {
-      userType: "paciente",
-      showPassword: false,
-    };
-  },
-  methods: {
-    togglePassword() {
-      this.showPassword = !this.showPassword;
-    },
-    goToCadastro() {
-      this.$router.push("/cadastro");
-    },
-  },
-};
-</script>
-
 <template>
   <Navbar />
   <div class="main-container">
@@ -35,7 +7,6 @@ export default {
           <h2>Bem-Vindo</h2>
           <h1>Nexus Saúde</h1>
         </div>
-        <!-- Seleção de tipo de usuário -->
         <div class="user-type-selector">
           <label>
             <input type="radio" name="userType" value="paciente" v-model="userType" />
@@ -46,48 +17,44 @@ export default {
             Médico
           </label>
         </div>
-        <!-- Formulário dinâmico -->
-        <form>
+        <form @submit.prevent="login">
           <div v-if="userType === 'paciente'">
-            <!-- Campos para Paciente -->
             <div class="input-group">
               <i class="fas fa-user"></i>
-              <input type="email" placeholder="E-mail" required class="input-field" />
+              <input type="email" v-model="email" placeholder="E-mail" required class="input-field" />
             </div>
             <div class="input-group">
               <i class="fas fa-lock"></i>
-              <input :type="showPassword ? 'text' : 'password'" placeholder="Senha" required class="input-field" />
+              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required class="input-field" />
             </div>
-            <!-- Mostrar Senha -->
             <div class="show-password" @click="togglePassword">
               <span>{{ showPassword ? 'Ocultar Senha' : 'Mostrar Senha' }}</span>
             </div>
           </div>
           <div v-if="userType === 'medico'">
-            <!-- Campos para Médico -->
             <div class="input-group">
               <i class="fas fa-user"></i>
-              <input type="email" placeholder="E-mail" required class="input-field" />
+              <input type="email" v-model="email" placeholder="E-mail" required class="input-field" />
             </div>
             <div class="input-group">
               <i class="fas fa-id-card"></i>
-              <input type="text" placeholder="CRM" required class="input-field" />
+              <input type="text" v-model="crm" placeholder="CRM" required class="input-field" />
             </div>
             <div class="input-group">
               <i class="fas fa-lock"></i>
-              <input :type="showPassword ? 'text' : 'password'" placeholder="Senha" required class="input-field" />
+              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required class="input-field" />
             </div>
-            <!-- Mostrar Senha -->
             <div class="show-password" @click="togglePassword">
               <span>{{ showPassword ? 'Ocultar Senha' : 'Mostrar Senha' }}</span>
             </div>
           </div>
           <div class="options">
             <label><input type="checkbox" /> Lembrar Sempre</label>
-            <a href="#">Esqueceu a Senha</a>
+            <a href="#">Esqueceu a Senha?</a>
           </div>
           <div class="btn-container">
             <button type="submit" class="btn">Entrar</button>
+            <button type="button" @click="loginWithGoogle" class="btn-google">Login com Google</button>
           </div>
         </form>
       </div>
@@ -101,8 +68,62 @@ export default {
 </template>
 
 
+<script>
+import Navbar from "@/components/Navbar.vue";
+import Footer from "@/components/Footer.vue";
+import { useRouter } from "vue-router";
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"; 
+
+export default {
+  name: "LoginScreen",
+  components: {
+    Navbar,
+    Footer,
+  },
+  data() {
+    return {
+      userType: "paciente", 
+      email: "",
+      crm: "", 
+      password: "",
+      showPassword: false,
+    };
+  },
+  methods: {
+    togglePassword() {
+      this.showPassword = !this.showPassword;
+    },
+    goToCadastro() {
+      this.$router.push("/cadastro");
+    },
+    login() {
+      if (this.userType === "paciente") {
+        console.log("Paciente logado com e-mail: ", this.email);
+      } else if (this.userType === "medico") {
+        console.log("Médico logado com e-mail: ", this.email, " CRM: ", this.crm);
+      }
+      this.$router.push("/home"); 
+    },
+    loginWithGoogle() {
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          const user = result.user;
+          console.log("Usuário logado com Google:", user.email);
+          this.$router.push("/home");
+        })
+        .catch((error) => {
+          console.error("Erro de autenticação com Google:", error.message);
+        });
+    }
+  },
+};
+</script>
+
+
 <style scoped>
-/* Estilos gerais */
 * {
   margin: 0;
   padding: 0;
@@ -118,11 +139,11 @@ body {
 }
 
 .main-container {
-  height: 100vh;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 40px;
+  margin: 5% 0 5% 0;
   animation: fadeIn 0.8s ease-in-out;
 }
 
@@ -149,7 +170,6 @@ body {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Ajuste no layout para garantir que o formulário e logo fiquem separados */
 .login-form {
   flex: 1;
   padding: 40px;
@@ -233,13 +253,11 @@ h1 {
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Estilo para quando o input está em foco */
 .input-field:focus {
   border-color: #53ba83;
   box-shadow: 0 0 5px #53ba83;
 }
 
-/* Mostrar Senha */
 .show-password {
   text-align: center;
   margin-top: 5px;
@@ -251,7 +269,6 @@ h1 {
   font-size: 14px;
 }
 
-/* Opções de Lembrar Sempre e Esqueci a Senha */
 .options {
   display: flex;
   justify-content: space-between;
@@ -278,7 +295,7 @@ h1 {
   width: 50%;
   padding: 15px;
   border: 2px solid white;
-  border-radius: 20px;
+  border-radius: 20px 0 0 20px;
   background-color: #000524;
   color: white;
   font-size: 18px;
@@ -314,4 +331,19 @@ h1 {
   margin-bottom: 20px;
 }
 
+.btn-google {
+  width: 50%;
+  padding: 15px;
+  border: 2px solid white;
+  border-radius: 0 20px 20px 0;
+  background-color:#53ba83;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  margin-bottom: 20px
+}
+
+.btn-google:hover {
+  background-color: #000524;
+}
 </style>

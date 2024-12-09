@@ -11,13 +11,13 @@ export default {
   },
   data() {
     return {
-      medicos: [], // Lista completa de médicos cadastrados
-      medicosFiltrados: [], // Médicos filtrados por especialidade
-      especialidades: [], // Lista de especialidades disponíveis
+      medicos: [],
+      medicosFiltrados: [],
+      especialidades: [],
       form: {
         especialidade: "",
-        medicoNome: "", // Nome do médico selecionado automaticamente
-        local: "Clínica Nexus Saúde - Palmares, PE", // Local fixo
+        medicoNome: "",
+        local: "Clínica Nexus Saúde - Palmares, PE",
         data: "",
         horario: "",
         pacienteNome: "",
@@ -32,7 +32,6 @@ export default {
         const dao = new DAOService("medicos");
         this.medicos = await dao.getAll();
 
-        // Extrair especialidades únicas dos médicos
         this.especialidades = [
           ...new Set(this.medicos.map((medico) => medico.especialidade)),
         ];
@@ -42,15 +41,13 @@ export default {
       }
     },
     filterMedicosByEspecialidade() {
-      // Filtrar médicos com base na especialidade selecionada
       this.medicosFiltrados = this.medicos.filter(
         (medico) => medico.especialidade === this.form.especialidade
       );
       if (this.medicosFiltrados.length > 0) {
-        // Selecionar automaticamente o nome do primeiro médico da lista
         this.form.medicoNome = this.medicosFiltrados[0].nome;
       } else {
-        this.form.medicoNome = ""; // Limpar caso nenhum médico seja encontrado
+        this.form.medicoNome = "";
       }
     },
     getTimeSlots() {
@@ -83,7 +80,7 @@ export default {
         await dao.insert(agendamentoData);
 
         alert("Consulta agendada com sucesso!");
-        this.$router.push("/"); // Redireciona para a página inicial
+        this.$router.push("/");
       } catch (error) {
         console.error("Erro ao agendar consulta:", error);
         alert("Não foi possível agendar a consulta. Tente novamente.");
@@ -111,19 +108,10 @@ export default {
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="especialidade" class="form-label">Selecione a Especialidade</label>
-                      <select
-                        v-model="form.especialidade"
-                        id="especialidade"
-                        class="form-select rounded-3"
-                        @change="filterMedicosByEspecialidade"
-                        required
-                      >
+                      <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
+                        @change="filterMedicosByEspecialidade" required>
                         <option value="" disabled selected>Selecione</option>
-                        <option
-                          v-for="especialidade in especialidades"
-                          :key="especialidade"
-                          :value="especialidade"
-                        >
+                        <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
                           {{ especialidade }}
                         </option>
                       </select>
@@ -132,42 +120,22 @@ export default {
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="medicoNome" class="form-label">Médico</label>
-                      <input
-                        v-model="form.medicoNome"
-                        type="text"
-                        id="medicoNome"
-                        class="form-control rounded-3"
-                        readonly
-                      />
+                      <input v-model="form.medicoNome" type="text" id="medicoNome" class="form-control rounded-3"
+                        readonly />
                     </div>
                   </div>
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="data" class="form-label">Data</label>
-                      <input
-                        v-model="form.data"
-                        type="date"
-                        id="data"
-                        class="form-control rounded-3"
-                        required
-                      />
+                      <input v-model="form.data" type="date" id="data" class="form-control rounded-3" required />
                     </div>
                   </div>
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="horario" class="form-label">Horário</label>
-                      <select
-                        v-model="form.horario"
-                        id="horario"
-                        class="form-select rounded-3"
-                        required
-                      >
+                      <select v-model="form.horario" id="horario" class="form-select rounded-3" required>
                         <option value="" disabled selected>Selecione um horário</option>
-                        <option
-                          v-for="horario in horariosDisponiveis"
-                          :key="horario"
-                          :value="horario"
-                        >
+                        <option v-for="horario in horariosDisponiveis" :key="horario" :value="horario">
                           {{ horario }}
                         </option>
                       </select>
@@ -176,32 +144,19 @@ export default {
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="pacienteNome" class="form-label">Nome do Paciente</label>
-                      <input
-                        v-model="form.pacienteNome"
-                        type="text"
-                        id="pacienteNome"
-                        class="form-control rounded-3"
-                        required
-                      />
+                      <input v-model="form.pacienteNome" type="text" id="pacienteNome" class="form-control rounded-3"
+                        required />
                     </div>
                   </div>
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="pacienteTelefone" class="form-label">Telefone do Paciente</label>
-                      <input
-                        v-model="form.pacienteTelefone"
-                        type="text"
-                        id="pacienteTelefone"
-                        class="form-control rounded-3"
-                        required
-                      />
+                      <input v-model="form.pacienteTelefone" type="text" id="pacienteTelefone"
+                        class="form-control rounded-3" required />
                     </div>
                   </div>
                   <div class="text-center">
-                    <button
-                      type="submit"
-                      class="btn btn-primary rounded-3 btn-lg"
-                    >
+                    <button type="submit" class="btn btn-primary rounded-3 btn-lg">
                       Agendar Consulta
                     </button>
                   </div>
@@ -216,6 +171,4 @@ export default {
   </div>
 </template>
 
-<style scoped>
-/* Adicione seus estilos personalizados aqui */
-</style>
+<style scoped></style>

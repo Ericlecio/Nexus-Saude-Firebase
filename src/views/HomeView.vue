@@ -31,16 +31,14 @@ export default {
     <div>
         <Navbar />
 
-        <!-- Banner Principal -->
         <section class="banner" style="background-image: url('/img/Fundo.png')">
             <div class="text-center">
                 <h1>Cuide da sua Saúde com Profissionais de Confiança</h1>
                 <p>Consultas rápidas e seguras ao alcance de um clique</p>
-                <button class="btn btn-success btn-lg">MARQUE SUA CONSULTA</button>
+                <a href="/Agendamento" class="btn btn-success btn-lg">MARQUE SUA CONSULTA</a>
             </div>
         </section>
 
-        <!-- Serviços -->
         <section class="container my-5">
             <h2 class="section-title text-center">Nossos Serviços</h2>
             <div class="row text-center">
@@ -83,7 +81,6 @@ export default {
             </div>
         </section>
 
-        <!-- Depoimentos -->
         <section class="testimonial bg-light">
             <div class="container">
                 <h2 class="section-title text-center">Depoimentos</h2>
@@ -110,7 +107,6 @@ export default {
             </div>
         </section>
 
-        <!-- FAQ -->
         <section class="faq">
             <div class="container">
                 <h2 class="section-title text-center">Perguntas Frequentes</h2>
@@ -152,7 +148,6 @@ export default {
 </template>
 
 <style scoped>
-/* Estilos principais */
 body,
 html {
     margin: 0;
@@ -195,6 +190,3 @@ html {
     padding: 40px 0;
 }
 </style>
-
-
-

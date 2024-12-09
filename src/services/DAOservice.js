@@ -1,4 +1,4 @@
-import { firestore } from "../firebase"; // Certifique-se de importar o Firestore
+import { firestore } from "../firebase";
 import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs, getDoc, query, where } from "firebase/firestore";
 
 class DAOService {
@@ -9,18 +9,16 @@ class DAOService {
     this.collectionRef = collection(firestore, collectionPath);
   }
 
-  // Método para inserir um documento
   async insert(object) {
     try {
       const docRef = await addDoc(this.collectionRef, object);
-      return docRef.id; // Retorna o ID do documento criado
+      return docRef.id;
     } catch (error) {
       console.error("Error adding document: ", error);
       throw new Error("Error adding document");
     }
   }
 
-  // Método para atualizar um documento
   async update(id, object) {
     try {
       const docRef = doc(firestore, this.collectionRef.path, id);
@@ -31,7 +29,6 @@ class DAOService {
     }
   }
 
-  // Método para excluir um documento
   async delete(id) {
     try {
       const docRef = doc(firestore, this.collectionRef.path, id);
@@ -42,7 +39,6 @@ class DAOService {
     }
   }
 
-  // Método para buscar todos os documentos
   async getAll() {
     try {
       const querySnapshot = await getDocs(this.collectionRef);
@@ -59,7 +55,6 @@ class DAOService {
     }
   }
 
-  // Método para buscar um único documento por ID
   async get(id) {
     try {
       const docRef = doc(firestore, this.collectionRef.path, id);
@@ -76,7 +71,6 @@ class DAOService {
     }
   }
 
-  // Método para buscar documentos com base em um filtro
   async search(property, value) {
     try {
       const q = query(this.collectionRef, where(property, "==", value));
@@ -94,16 +88,13 @@ class DAOService {
     }
   }
 
-  // Método para buscar médicos específicos (usuários do tipo "medico")
   async getMedicos() {
     try {
-      // Buscar todos os usuários com tipo "medico"
       const medicos = await this.search("tipo", "medico");
       const medicosComDetalhes = [];
 
-      // Para cada médico, buscar mais detalhes na coleção "medicos"
       for (let medico of medicos) {
-        const medicoDetails = await this.getFromCollection("medicos", medico.id); // Busca os detalhes específicos do médico
+        const medicoDetails = await this.getFromCollection("medicos", medico.id);
         medicosComDetalhes.push({ ...medico, ...medicoDetails });
       }
 
@@ -114,10 +105,8 @@ class DAOService {
     }
   }
 
-  // Método para buscar pacientes específicos (usuários do tipo "paciente")
   async getPacientes() {
     try {
-      // Buscar todos os usuários com tipo "paciente"
       const pacientes = await this.search("tipo", "paciente");
       return pacientes;
     } catch (error) {
@@ -126,10 +115,8 @@ class DAOService {
     }
   }
 
-  // Método para buscar administradores específicos (usuários do tipo "admin")
   async getAdmins() {
     try {
-      // Buscar todos os usuários com tipo "admin"
       const admins = await this.search("tipo", "admin");
       return admins;
     } catch (error) {
@@ -138,7 +125,6 @@ class DAOService {
     }
   }
 
-  // Método para buscar documentos de uma coleção específica usando um ID
   async getFromCollection(collectionName, id) {
     try {
       const docRef = doc(firestore, collectionName, id);
@@ -154,6 +140,9 @@ class DAOService {
       throw new Error("Error getting document");
     }
   }
+
+
+
 }
 
 export default DAOService;

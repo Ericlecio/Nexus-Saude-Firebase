@@ -7,7 +7,7 @@
       <div v-if="medico">
         <div class="row mb-4">
           <div class="col-md-6">
-            <h4>Especialidade: {{ medico.especialidade}}</h4>
+            <h4>Especialidade: {{ medico.especialidade }}</h4>
             <h5>Preço da Consulta: R$ {{ medico.precoConsulta }}</h5>
             <h5>CRM: {{ medico.crm }}</h5>
           </div>
@@ -25,7 +25,7 @@
           <div v-if="medico.diasAtendimento && Object.keys(medico.diasAtendimento).length > 0">
             <ul>
               <li v-for="(horario, dia) in medico.diasAtendimento" :key="dia">
-                <strong>{{ dia.charAt(0).toUpperCase() + dia.slice(1) }}:</strong> 
+                <strong>{{ dia.charAt(0).toUpperCase() + dia.slice(1) }}:</strong>
                 {{ horario.inicio }} - {{ horario.fim }}
               </li>
             </ul>
@@ -71,26 +71,26 @@ export default {
   },
   data() {
     return {
-      medico: true, 
-      avaliacoes: [], 
+      medico: true,
+      avaliacoes: [],
       loading: true,
     };
   },
   methods: {
     async fetchMedicoDetails() {
       try {
-        const usuarioId = this.$route.params.id; 
-        console.log('ID do Usuário (Médico):', usuarioId); 
+        const usuarioId = this.$route.params.id;
+        console.log('ID do Usuário (Médico):', usuarioId);
 
         const dao = new DAOService("usuarios");
-        const usuarioData = await dao.get(usuarioId); 
+        const usuarioData = await dao.get(usuarioId);
 
-        console.log('Dados do Usuário:', usuarioData); 
+        console.log('Dados do Usuário:', usuarioData);
 
         if (usuarioData && usuarioData.tipo === "medico") {
-          const medicoDetails = await dao.getFromCollection("medicos", usuarioId); 
-          console.log('Detalhes do Médico:', medicoDetails); 
-          
+          const medicoDetails = await dao.getFromCollection("medicos", usuarioId);
+          console.log('Detalhes do Médico:', medicoDetails);
+
           this.medico = { ...usuarioData, ...medicoDetails };
         } else {
           console.error("Usuário não é um médico");
@@ -98,8 +98,8 @@ export default {
 
         // Buscar as avaliações (caso necessário)
         const avaliacoesDao = new DAOService("avaliacoes");
-        this.avaliacoes = await avaliacoesDao.search("medicoId", usuarioId); 
-        console.log('Avaliações do Médico:', this.avaliacoes); 
+        this.avaliacoes = await avaliacoesDao.search("medicoId", usuarioId);
+        console.log('Avaliações do Médico:', this.avaliacoes);
       } catch (error) {
         console.error("Erro ao buscar detalhes do médico: ", error);
       } finally {
