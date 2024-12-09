@@ -9,9 +9,11 @@ export default {
     Navbar,
     Footer,
   },
+
   data() {
     return {
       medicos: [],
+      usuarios: [],
       medicosFiltrados: [],
       especialidades: [],
       form: {
@@ -26,11 +28,20 @@ export default {
       horariosDisponiveis: this.getTimeSlots(),
     };
   },
+
   methods: {
     async fetchMedicos() {
       try {
         const dao = new DAOService("medicos");
+        const daoUsuarios = new DAOService("usuarios");
+
         this.medicos = await dao.getAll();
+        this.usuarios = await daoUsuarios.getAll();
+
+        this.medicos.forEach(medico => {
+          const filteredUser = this.usuarios.filter(u => u.id === medico.usuarioId)[0];
+          medico.nomeCompleto = filteredUser.nomeCompleto;
+        });
 
         this.especialidades = [
           ...new Set(this.medicos.map((medico) => medico.especialidade)),
@@ -40,16 +51,33 @@ export default {
         alert("Não foi possível carregar os médicos. Tente novamente.");
       }
     },
+
     filterMedicosByEspecialidade() {
-      this.medicosFiltrados = this.medicos.filter(
-        (medico) => medico.especialidade === this.form.especialidade
-      );
-      if (this.medicosFiltrados.length > 0) {
-        this.form.medicoNome = this.medicosFiltrados[0].nome;
+      this.medicosFiltrados = this.medicos.filter(medico => medico.especialidade === this.form.especialidade);
+      if (this.medicosFiltrados.length === 1) {
+        this.form.medicoNome = this.medicosFiltrados[0].nomeCompleto;
       } else {
         this.form.medicoNome = "";
       }
     },
+
+    medicoChanged() {
+      const diasSemana = ['segunda', 'terca', 'quarta', 'quinta', 'sexta'];
+      const dias = [];
+
+      const medicoSelecionado = this.medicosFiltrados.find(m => m.id === this.form.medicoNome);
+
+      if (medicoSelecionado) {
+        diasSemana.forEach(dia => {
+          const diaAtendimento = medicoSelecionado.diasAtendimento[dia];
+          if (diaAtendimento.inicio && diaAtendimento.fim) {
+            dias.push(`${dia.charAt(0).toUpperCase() + dia.slice(1)}: ${diaAtendimento.inicio} às ${diaAtendimento.fim}`);
+          }
+        });
+      }
+      this.horariosDisponiveis = dias;
+    },
+
     getTimeSlots() {
       const slots = [];
       const startHour = 8;
@@ -64,6 +92,7 @@ export default {
       }
       return slots;
     },
+    
     async submitForm() {
       try {
         const agendamentoData = {
@@ -120,27 +149,24 @@ export default {
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="medicoNome" class="form-label">Médico</label>
-                      <input v-model="form.medicoNome" type="text" id="medicoNome" class="form-control rounded-3"
-                        readonly />
-                    </div>
-                  </div>
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="data" class="form-label">Data</label>
-                      <input v-model="form.data" type="date" id="data" class="form-control rounded-3" required />
-                    </div>
-                  </div>
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="horario" class="form-label">Horário</label>
-                      <select v-model="form.horario" id="horario" class="form-select rounded-3" required>
-                        <option value="" disabled selected>Selecione um horário</option>
-                        <option v-for="horario in horariosDisponiveis" :key="horario" :value="horario">
-                          {{ horario }}
-                        </option>
+                      <select v-model="form.medicoNome" id="medico" class="form-select rounded-3" required
+                        @change="medicoChanged">
+                        <option value="">-</option>
+                        <option :value="medico.id" v-for="medico of medicosFiltrados">{{ medico.nomeCompleto }}</option>
                       </select>
                     </div>
                   </div>
+
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="data" class="form-label">Selecione a Data</label>
+                      <select v-model="form.data" id="data" class="form-select rounded-3" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option v-for="data in horariosDisponiveis" :key="data" :value="data">{{ data }}</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label for="pacienteNome" class="form-label">Nome do Paciente</label>

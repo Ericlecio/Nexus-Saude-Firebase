@@ -43,22 +43,40 @@ export default {
     };
   },
   methods: {
-    getTimeSlots() {
-      const slots = [];
-      const startHour = 8;
-      const endHour = 18;
-
-      for (let h = startHour; h < endHour; h++) {
-        for (let m = 0; m < 60; m += 30) {
-          const hour = h < 10 ? `0${h}` : h;
-          const minute = m < 10 ? `0${m}` : m;
-          slots.push(`${hour}:${minute}`);
-        }
-      }
-      return slots;
+    // Função para formatar o CPF
+    formatCPF(value) {
+      const onlyNumbers = value.replace(/\D/g, "");
+      return onlyNumbers
+        .replace(/^(\d{3})(\d)/, "$1.$2")
+        .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1-$2")
+        .slice(0, 14); // Garante que não ultrapasse o limite de caracteres
     },
 
+    // Manipula o CPF e formata automaticamente
+    handleCPFInput(event) {
+      this.form.cpf = this.formatCPF(event.target.value);
+    },
+
+    // Função para validar a idade do usuário
+    validateAge() {
+      const today = new Date();
+      const birthDate = new Date(this.form.dataNascimento);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const month = today.getMonth() - birthDate.getMonth();
+
+      // Verifica se a idade é maior ou igual a 18 anos
+      if (age < 18 || (age === 18 && month < 0)) {
+        alert("Você precisa ter pelo menos 18 anos para se cadastrar.");
+        return false;
+      }
+      return true;
+    },
+
+    // Função para submeter o formulário
     async submitForm() {
+      if (!this.validateAge()) return; // Verifica se a idade é válida
+
       try {
         const usuarioData = {
           nomeCompleto: this.form.nomeCompleto,
@@ -117,15 +135,22 @@ export default {
 };
 </script>
 
+
 <template>
   <div>
     <Navbar />
     <div class="container py-5 mt-5">
       <div class="row justify-content-center align-items-center">
-        <div class="col-lg-10">
+        <div class="col-md-6">
+          <div class="logo-container text-center">
+            <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" class="img-fluid" />
+          </div>
+        </div>
+
+        <div class="col-md-6">
           <div class="card shadow-lg border-0 rounded-3">
             <div class="row g-0">
-              <div class="col-md-8 bg text-light p-4" style="background-color: #000524;">
+              <div class="col-md-12 bg text-light p-4" style="background-color: #000524;">
                 <h1 class="text-center mb-3">Nexus Saúde</h1>
                 <h3 class="text-center mb-4">Cadastro de Usuário</h3>
                 <form @submit.prevent="submitForm">
@@ -149,8 +174,8 @@ export default {
                       </div>
                       <div class="col-md-6">
                         <label for="cpf" class="form-label">CPF</label>
-                        <input v-model="form.cpf" type="text" id="cpf" class="form-control rounded-3"
-                          placeholder="Digite seu CPF" required />
+                        <input v-model="form.cpf" @input="handleCPFInput" type="text" id="cpf"
+                          class="form-control rounded-3" placeholder="Digite seu CPF" required />
                       </div>
                     </div>
                     <div class="row mb-3">
@@ -163,11 +188,13 @@ export default {
                           <option value="O">Outro</option>
                         </select>
                       </div>
-                      <div class="col-md-6">
-                        <label for="dataNascimento" class="form-label">Data de Nascimento</label>
-                        <input v-model="form.dataNascimento" type="date" id="dataNascimento"
-                          class="form-control rounded-3" required />
-                      </div>
+          
+                        <div class="col-md-6">
+                          <label for="dataNascimento" class="form-label">Data de Nascimento</label>
+                          <input v-model="form.dataNascimento" type="date" id="dataNascimento"
+                            class="form-control rounded-3" :max="maxDate" required />
+                        </div>
+                  
                     </div>
                     <div class="row mb-3">
                       <div class="col-md-12">
@@ -200,9 +227,10 @@ export default {
                           <label for="especialidade" class="form-label">Especialidade</label>
                           <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
                             required>
-                            <option value="" disabled selected>Selecione</option>
+                            <option value="" disabled selected>Selecione sua especialidade</option>
                             <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
-                              {{ especialidade }}</option>
+                              {{ especialidade }}
+                            </option>
                           </select>
                         </div>
                       </div>
@@ -210,92 +238,51 @@ export default {
                         <div class="col-md-6">
                           <label for="telefoneConsultorio" class="form-label">Telefone do Consultório</label>
                           <input v-model="form.telefoneConsultorio" type="text" id="telefoneConsultorio"
-                            class="form-control rounded-3" placeholder="(xx) xxxx-xxxx" required />
+                            class="form-control rounded-3" placeholder="(XX) XXXXX-XXXX" required />
                         </div>
                         <div class="col-md-6">
                           <label for="valorConsulta" class="form-label">Valor da Consulta</label>
                           <input v-model="form.valorConsulta" type="number" id="valorConsulta"
-                            class="form-control rounded-3" placeholder="R$ 150,00" required />
-                        </div>
-                      </div>
-
-                      <!-- Horários de Atendimento -->
-                      <h4 class="mt-4">Horários de Atendimento</h4>
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <label for="segundaInicio" class="form-label">Segunda-feira (Início)</label>
-                          <input v-model="diasAtendimento.segunda.inicio" type="time" id="segundaInicio"
-                            class="form-control rounded-3" />
-                        </div>
-                        <div class="col-md-6">
-                          <label for="segundaFim" class="form-label">Segunda-feira (Fim)</label>
-                          <input v-model="diasAtendimento.segunda.fim" type="time" id="segundaFim"
-                            class="form-control rounded-3" />
-                        </div>
-                      </div>
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <label for="tercaInicio" class="form-label">Terça-feira (Início)</label>
-                          <input v-model="diasAtendimento.terca.inicio" type="time" id="tercaInicio"
-                            class="form-control rounded-3" />
-                        </div>
-                        <div class="col-md-6">
-                          <label for="tercaFim" class="form-label">Terça-feira (Fim)</label>
-                          <input v-model="diasAtendimento.terca.fim" type="time" id="tercaFim"
-                            class="form-control rounded-3" />
-                        </div>
-                      </div>
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <label for="quartaInicio" class="form-label">Quarta-feira (Início)</label>
-                          <input v-model="diasAtendimento.quarta.inicio" type="time" id="quartaInicio"
-                            class="form-control rounded-3" />
-                        </div>
-                        <div class="col-md-6">
-                          <label for="quartaFim" class="form-label">Quarta-feira (Fim)</label>
-                          <input v-model="diasAtendimento.quarta.fim" type="time" id="quartaFim"
-                            class="form-control rounded-3" />
-                        </div>
-                      </div>
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <label for="quintaInicio" class="form-label">Quinta-feira (Início)</label>
-                          <input v-model="diasAtendimento.quinta.inicio" type="time" id="quintaInicio"
-                            class="form-control rounded-3" />
-                        </div>
-                        <div class="col-md-6">
-                          <label for="quintaFim" class="form-label">Quinta-feira (Fim)</label>
-                          <input v-model="diasAtendimento.quinta.fim" type="time" id="quintaFim"
-                            class="form-control rounded-3" />
-                        </div>
-                      </div>
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <label for="sextaInicio" class="form-label">Sexta-feira (Início)</label>
-                          <input v-model="diasAtendimento.sexta.inicio" type="time" id="sextaInicio"
-                            class="form-control rounded-3" />
-                        </div>
-                        <div class="col-md-6">
-                          <label for="sextaFim" class="form-label">Sexta-feira (Fim)</label>
-                          <input v-model="diasAtendimento.sexta.fim" type="time" id="sextaFim"
-                            class="form-control rounded-3" />
-                        </div>
-                      </div>
-                      <div class="row mb-3">
-                        <div class="col-md-6">
-                          <label for="sabadoInicio" class="form-label">Sábado (Início)</label>
-                          <input v-model="diasAtendimento.sabado.inicio" type="time" id="sabadoInicio"
-                            class="form-control rounded-3" />
-                        </div>
-                        <div class="col-md-6">
-                          <label for="sabadoFim" class="form-label">Sábado (Fim)</label>
-                          <input v-model="diasAtendimento.sabado.fim" type="time" id="sabadoFim"
-                            class="form-control rounded-3" />
+                            class="form-control rounded-3" placeholder="R$ 0,00" required />
                         </div>
                       </div>
                     </div>
+
+                    <div v-if="form.tipo === 'paciente'">
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label for="telefone" class="form-label">Telefone</label>
+                          <input v-model="form.telefone" type="text" id="telefone" class="form-control rounded-3"
+                            placeholder="(XX) XXXXX-XXXX" required />
+                        </div>
+                        <div class="col-md-6">
+                          <label for="planoSaude" class="form-label">Plano de Saúde</label>
+                          <input v-model="form.planoSaude" type="text" id="planoSaude" class="form-control rounded-3"
+                            placeholder="Plano de Saúde" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div v-if="form.tipo === 'admin'">
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label for="nivelPermissao" class="form-label">Nível de Permissão</label>
+                          <select v-model="form.nivelPermissao" id="nivelPermissao" class="form-select rounded-3"
+                            required>
+                            <option value="admin">Administrador</option>
+                            <option value="superadmin">Super Administrador</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label for="ultimoLogin" class="form-label">Último Login</label>
+                          <input v-model="form.ultimoLogin" type="datetime-local" id="ultimoLogin"
+                            class="form-control rounded-3" required />
+                        </div>
+                      </div>
+                    </div>
+
                     <div class="text-center">
-                      <button type="submit" class="btn btn-primary rounded-3 btn-lg">Cadastrar</button>
+                      <button type="submit" class="btn btn-success rounded-3 btn-lg">Cadastrar</button>
                     </div>
                   </div>
                 </form>
@@ -309,4 +296,16 @@ export default {
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.container {
+  margin: 0 auto;
+}
+
+.card {
+  border-radius: 15px;
+}
+
+.bg {
+  background-color: #0d2d44;
+}
+</style>
