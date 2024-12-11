@@ -143,7 +143,7 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 5% 0 5% 0;
+  margin: 8% 0 5% 0;
   animation: fadeIn 0.8s ease-in-out;
 }
 

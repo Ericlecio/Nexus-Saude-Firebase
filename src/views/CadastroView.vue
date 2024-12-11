@@ -43,29 +43,29 @@ export default {
     };
   },
   methods: {
-    // Função para formatar o CPF
     formatCPF(value) {
       const onlyNumbers = value.replace(/\D/g, "");
       return onlyNumbers
         .replace(/^(\d{3})(\d)/, "$1.$2")
         .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
         .replace(/\.(\d{3})(\d)/, ".$1-$2")
-        .slice(0, 14); // Garante que não ultrapasse o limite de caracteres
+        .slice(0, 14);
     },
 
-    // Manipula o CPF e formata automaticamente
+    goBack() {
+      window.history.back();
+    },
+
     handleCPFInput(event) {
       this.form.cpf = this.formatCPF(event.target.value);
     },
 
-    // Função para validar a idade do usuário
     validateAge() {
       const today = new Date();
       const birthDate = new Date(this.form.dataNascimento);
       const age = today.getFullYear() - birthDate.getFullYear();
       const month = today.getMonth() - birthDate.getMonth();
 
-      // Verifica se a idade é maior ou igual a 18 anos
       if (age < 18 || (age === 18 && month < 0)) {
         alert("Você precisa ter pelo menos 18 anos para se cadastrar.");
         return false;
@@ -73,9 +73,8 @@ export default {
       return true;
     },
 
-    // Função para submeter o formulário
     async submitForm() {
-      if (!this.validateAge()) return; // Verifica se a idade é válida
+      if (!this.validateAge()) return;
 
       try {
         const usuarioData = {
@@ -135,22 +134,24 @@ export default {
 };
 </script>
 
-
 <template>
   <div>
     <Navbar />
-    <div class="container py-5 mt-5">
-      <div class="row justify-content-center align-items-center">
-        <div class="col-md-6">
+    <div class="container py-5 mt-5" >
+      <div class="row justify-content-center align-items-center" >
+        <!-- Coluna para a Imagem -->
+        <div class="col-md-4 d-flex justify-content-center">
+
           <div class="logo-container text-center">
             <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" class="img-fluid" />
           </div>
         </div>
 
+        <!-- Coluna para o Formulário -->
         <div class="col-md-6">
           <div class="card shadow-lg border-0 rounded-3">
             <div class="row g-0">
-              <div class="col-md-12 bg text-light p-4" style="background-color: #000524;">
+              <div class="col-md-12 bg text-light p-4" style="background-color: #000524; border-radius: 2%;" >
                 <h1 class="text-center mb-3">Nexus Saúde</h1>
                 <h3 class="text-center mb-4">Cadastro de Usuário</h3>
                 <form @submit.prevent="submitForm">
@@ -188,22 +189,19 @@ export default {
                           <option value="O">Outro</option>
                         </select>
                       </div>
-          
-                        <div class="col-md-6">
-                          <label for="dataNascimento" class="form-label">Data de Nascimento</label>
-                          <input v-model="form.dataNascimento" type="date" id="dataNascimento"
-                            class="form-control rounded-3" :max="maxDate" required />
-                        </div>
-                  
+
+                      <div class="col-md-6">
+                        <label for="dataNascimento" class="form-label">Data de Nascimento</label>
+                        <input v-model="form.dataNascimento" type="date" id="dataNascimento"
+                          class="form-control rounded-3" :max="maxDate" required />
+                      </div>
                     </div>
                     <div class="row mb-3">
-                      <div class="col-md-12">
+                      <div class="col-md-6">
                         <label for="email" class="form-label">E-mail</label>
                         <input v-model="form.email" type="email" id="email" class="form-control rounded-3"
                           placeholder="seuemail@dominio.com" required />
                       </div>
-                    </div>
-                    <div class="row mb-3">
                       <div class="col-md-6">
                         <label for="senha" class="form-label">Senha</label>
                         <input v-model="form.senha" type="password" id="senha" class="form-control rounded-3"
@@ -211,6 +209,7 @@ export default {
                       </div>
                     </div>
                     <div class="text-center">
+                      <button type="button" class="btn btn-primary rounded-3 btn-lg" @click="goBack">Voltar</button>
                       <button type="button" class="btn btn-primary rounded-3 btn-lg" @click="nextStep">Próximo</button>
                     </div>
                   </div>
@@ -227,7 +226,7 @@ export default {
                           <label for="especialidade" class="form-label">Especialidade</label>
                           <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
                             required>
-                            <option value="" disabled selected>Selecione sua especialidade</option>
+                            <option value="" disabled selected>Selecione a especialidade</option>
                             <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
                               {{ especialidade }}
                             </option>
@@ -236,53 +235,102 @@ export default {
                       </div>
                       <div class="row mb-3">
                         <div class="col-md-6">
-                          <label for="telefoneConsultorio" class="form-label">Telefone do Consultório</label>
+                          <label for="telefoneConsultorio" class="form-label">Telefone Consultório</label>
                           <input v-model="form.telefoneConsultorio" type="text" id="telefoneConsultorio"
-                            class="form-control rounded-3" placeholder="(XX) XXXXX-XXXX" required />
+                            class="form-control rounded-3" placeholder="Digite o telefone do consultório" required />
                         </div>
                         <div class="col-md-6">
                           <label for="valorConsulta" class="form-label">Valor da Consulta</label>
                           <input v-model="form.valorConsulta" type="number" id="valorConsulta"
-                            class="form-control rounded-3" placeholder="R$ 0,00" required />
+                            class="form-control rounded-3" placeholder="Digite o valor da consulta" required />
+                        </div>
+                      </div>
+
+                      <!-- Horários de Atendimento -->
+                      <div class="row mb-3">
+                        <div class="col-md-14">
+                          <h5>Horários de Atendimento</h5>
+                          <div class="row">
+                            <div class="col-md-4">
+                              <label for="segundaInicio">Segunda</label>
+                              <input v-model="diasAtendimento.segunda.inicio" type="time" id="segundaInicio"
+                                class="form-control" />
+                              <input v-model="diasAtendimento.segunda.fim" type="time" id="segundaFim"
+                                class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                              <label for="tercaInicio">Terça</label>
+                              <input v-model="diasAtendimento.terca.inicio" type="time" id="tercaInicio"
+                                class="form-control" />
+                              <input v-model="diasAtendimento.terca.fim" type="time" id="tercaFim"
+                                class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                              <label for="quartaInicio">Quarta</label>
+                              <input v-model="diasAtendimento.quarta.inicio" type="time" id="quartaInicio"
+                                class="form-control" />
+                              <input v-model="diasAtendimento.quarta.fim" type="time" id="quartaFim"
+                                class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                              <label for="quintaInicio">Quinta</label>
+                              <input v-model="diasAtendimento.quinta.inicio" type="time" id="quintaInicio"
+                                class="form-control" />
+                              <input v-model="diasAtendimento.quinta.fim" type="time" id="quintaFim"
+                                class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                              <label for="sextaInicio">Sexta</label>
+                              <input v-model="diasAtendimento.sexta.inicio" type="time" id="sextaInicio"
+                                class="form-control" />
+                              <input v-model="diasAtendimento.sexta.fim" type="time" id="sextaFim"
+                                class="form-control" />
+                            </div>
+                            <div class="col-md-4">
+                              <label for="sabadoInicio">Sábado</label>
+                              <input v-model="diasAtendimento.sabado.inicio" type="time" id="sabadoInicio"
+                                class="form-control" />
+                              <input v-model="diasAtendimento.sabado.fim" type="time" id="sabadoFim"
+                                class="form-control" />
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
+                    <!-- Formulário do Paciente -->
                     <div v-if="form.tipo === 'paciente'">
                       <div class="row mb-3">
                         <div class="col-md-6">
                           <label for="telefone" class="form-label">Telefone</label>
                           <input v-model="form.telefone" type="text" id="telefone" class="form-control rounded-3"
-                            placeholder="(XX) XXXXX-XXXX" required />
+                            placeholder="Digite seu telefone" required />
                         </div>
                         <div class="col-md-6">
                           <label for="planoSaude" class="form-label">Plano de Saúde</label>
                           <input v-model="form.planoSaude" type="text" id="planoSaude" class="form-control rounded-3"
-                            placeholder="Plano de Saúde" />
+                            placeholder="Digite o plano de saúde" />
                         </div>
                       </div>
                     </div>
-
                     <div v-if="form.tipo === 'admin'">
                       <div class="row mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                           <label for="nivelPermissao" class="form-label">Nível de Permissão</label>
                           <select v-model="form.nivelPermissao" id="nivelPermissao" class="form-select rounded-3"
                             required>
                             <option value="admin">Administrador</option>
-                            <option value="superadmin">Super Administrador</option>
                           </select>
-                        </div>
-                        <div class="col-md-6">
-                          <label for="ultimoLogin" class="form-label">Último Login</label>
-                          <input v-model="form.ultimoLogin" type="datetime-local" id="ultimoLogin"
-                            class="form-control rounded-3" required />
                         </div>
                       </div>
                     </div>
-
-                    <div class="text-center">
-                      <button type="submit" class="btn btn-success rounded-3 btn-lg">Cadastrar</button>
+                    <div class="row mb-3">
+                      <div class="col-md-12">
+                        <div class="text-center">
+                          <button type="button" class="btn btn-primary rounded-5 btn-lg" @click="goBack">Voltar</button>
+                          <button type="submit" class="btn btn-success rounded-3 btn-lg">Cadastrar</button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </form>
@@ -290,6 +338,7 @@ export default {
             </div>
           </div>
         </div>
+
       </div>
     </div>
     <Footer />
@@ -297,15 +346,9 @@ export default {
 </template>
 
 <style scoped>
-.container {
-  margin: 0 auto;
-}
-
-.card {
-  border-radius: 15px;
-}
-
-.bg {
-  background-color: #0d2d44;
+.text-center button{
+    margin-right:10px;
+    margin-left: 10px;
+    width: 30%;
 }
 </style>
