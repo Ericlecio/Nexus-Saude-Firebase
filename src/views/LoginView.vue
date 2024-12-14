@@ -67,12 +67,11 @@
   <Footer />
 </template>
 
-
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { useRouter } from "vue-router";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"; 
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"; // Importando autenticação do Firebase
 
 export default {
   name: "LoginScreen",
@@ -102,17 +101,21 @@ export default {
       } else if (this.userType === "medico") {
         console.log("Médico logado com e-mail: ", this.email, " CRM: ", this.crm);
       }
-      this.$router.push("/home"); 
+      this.$router.push("/home"); // Redireciona após o login
     },
     loginWithGoogle() {
-      const auth = getAuth();
-      const provider = new GoogleAuthProvider();
-      
-      signInWithPopup(auth, provider)
+      const auth = getAuth(); // Inicializa a autenticação do Firebase
+      const provider = new GoogleAuthProvider(); // Cria um provedor para o Google
+
+      signInWithPopup(auth, provider) // Tenta realizar o login com o Google
         .then((result) => {
           const user = result.user;
           console.log("Usuário logado com Google:", user.email);
-          this.$router.push("/home");
+          
+          // Caso precise de informações adicionais, como salvar os dados do usuário:
+          // Você pode fazer isso com Firestore ou Vuex aqui, se necessário.
+
+          this.$router.push("/home"); // Redireciona após o login
         })
         .catch((error) => {
           console.error("Erro de autenticação com Google:", error.message);
@@ -121,7 +124,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 * {
@@ -144,7 +146,7 @@ body {
   justify-content: center;
   align-items: center;
   margin: 8% 0 5% 0;
-  animation: fadeIn 0.8s ease-in-out;
+  animation: fadeIn 1s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -176,6 +178,19 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  opacity: 0;
+  animation: fadeInForm 1s ease-in-out forwards;
+}
+
+@keyframes fadeInForm {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .logo-container {
@@ -186,6 +201,19 @@ body {
   flex-direction: column;
   padding: 20px;
   background-color: white;
+  opacity: 0;
+  animation: fadeInLogo 1s ease-in-out forwards;
+}
+
+@keyframes fadeInLogo {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .header {
@@ -301,11 +329,12 @@ h1 {
   font-size: 18px;
   cursor: pointer;
   margin-bottom: 20px;
+  transition: background-color 0.2s, transform 0.2s;
 }
 
 .btn:hover {
   background-color: #53ba83;
-  color: white;
+  transform: scale(1.05);
 }
 
 .create-account {
@@ -340,10 +369,12 @@ h1 {
   color: white;
   font-size: 18px;
   cursor: pointer;
-  margin-bottom: 20px
-}
+  margin-bottom: 20px;
+  transition: background-color 0.2s, transform 0.2s;
+}y
 
 .btn-google:hover {
   background-color: #000524;
+  transform: scale(1.05);
 }
 </style>

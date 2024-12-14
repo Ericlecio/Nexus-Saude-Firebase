@@ -1,162 +1,177 @@
-<script>
-import Navbar from '@/components/Navbar.vue'
-import Footer from '@/components/Footer.vue'
-
-export default {
-  data() {
-        return {
-            scrolled: false
-        };
-    },
-    mounted() {
-        window.addEventListener('scroll', this.handleScroll);
-    },
-    beforeDestroy() {
-        window.removeEventListener('scroll', this.handleScroll);
-    },
-    methods: {
-        handleScroll() {
-            this.scrolled = window.scrollY > 50;
-        }
-    },
-
-  components: {
-    Navbar,
-    Footer
-  }
-};
-</script>
-
 <template>
     <div>
+      <!-- Tela de carregamento com a logo -->
+      <div v-if="loading" class="loading-screen">
+        <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Logo" class="loading-logo" />
+      </div>
+  
+      <!-- O conteúdo da página aparece após o loading ser false -->
+      <div v-show="!loading">
         <Navbar />
-
+  
         <section class="banner" style="background-image: url('/img/Fundo.png')">
-            <div class="text-center">
-                <h1>Cuide da sua Saúde com Profissionais de Confiança</h1>
-                <p>Consultas rápidas e seguras ao alcance de um clique</p>
-                <a href="/Agendamento" class="btn btn-success btn-lg">MARQUE SUA CONSULTA</a>
-            </div>
+          <div class="text-center">
+            <h1>Cuide da sua Saúde com Profissionais de Confiança</h1>
+            <p>Consultas rápidas e seguras ao alcance de um clique</p>
+            <a href="/Agendamento" class="btn btn-success btn-lg">MARQUE SUA CONSULTA</a>
+          </div>
         </section>
-
+        <br>
+  
+        <section class="cta">
+          <div class="container text-center">
+            <h2>Quer saber mais?</h2>
+            <p>Nosso time de profissionais está pronto para ajudá-lo!</p>
+            <a href="/contato" class="btn btn-primary btn-lg">Fale Conosco</a>
+          </div>
+        </section>
+  
         <section class="container my-5">
-            <h2 class="section-title text-center">Nossos Serviços</h2>
-            <div class="row text-center">
-                <div class="col-md-4">
-                    <div class="card service-card">
-                        <img src="/src/assets/img/clinico_geral.webp" class="card-img-top" alt="Clínica Geral" style="height: 30%; border-radius: 10%;" />
-                        <div class="card-body">
-                            <h5 class="card-title">Clínica Geral</h5>
-                            <p class="card-text">
-                                Atendimento completo para diversas especialidades.
-                            </p>
-                        </div>
-                    </div>
+          <h2 class="section-title text-center" data-aos="fade-up">Nossos Serviços</h2><br>
+          <div class="row text-center">
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
+              <div class="card service-card shadow-lg">
+                <i class="fa fa-user-md fa-3x icon-animate"></i>
+                <div class="card-body">
+                  <h5 class="card-title">Clínica Geral</h5>
+                  <p class="card-text">Atendimento completo para diversas especialidades.</p>
                 </div>
-
-
-                <div class="col-md-4">
-                    <div class="card service-card">
-                        <img src="/src/assets/img/dermatologia.webp" class="card-img-top" alt="Dermatologia" style="height: 30%; border-radius: 10%;" />
-                        <div class="card-body">
-                            <h5 class="card-title">Dermatologia</h5>
-                            <p class="card-text">
-                                Tratamentos para uma pele saudável e bonita.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="card service-card">
-                        <img src="/src/assets/img/cardiologia.webp" class="card-img-top" alt="Cardiologia" style="height: 30%; border-radius: 10%;" />
-                        <div class="card-body">
-                            <h5 class="card-title">Cardiologia</h5>
-                            <p class="card-text">
-                                Cuide da saúde do seu coração com nossos especialistas.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+              </div>
             </div>
-        </section>
-
-        <section class="testimonial bg-light">
-            <div class="container">
-                <h2 class="section-title text-center">Depoimentos</h2>
-                <div class="row">
-                    <div class="col-md-6">
-                        <blockquote class="blockquote">
-                            <p>
-                                "A Nexus Saúde me proporcionou um atendimento rápido e
-                                eficiente. Recomendo!"
-                            </p>
-                            <footer class="blockquote-footer">João da Silva</footer>
-                        </blockquote>
-                    </div>
-                    <div class="col-md-6">
-                        <blockquote class="blockquote">
-                            <p>
-                                "Melhor clínica que já fui, médicos atenciosos e estrutura de
-                                primeira."
-                            </p>
-                            <footer class="blockquote-footer">Maria Oliveira</footer>
-                        </blockquote>
-                    </div>
+  
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="400">
+              <div class="card service-card shadow-lg">
+                <i class="fa fa-thermometer fa-3x icon-animate"></i>
+                <div class="card-body">
+                  <h5 class="card-title">Dermatologia</h5>
+                  <p class="card-text">Tratamentos para uma pele saudável e bonita.</p>
                 </div>
+              </div>
             </div>
-        </section>
-
-        <section class="faq">
-            <div class="container">
-                <h2 class="section-title text-center">Perguntas Frequentes</h2>
-                <div class="accordion" id="faqAccordion">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                Como faço para agendar uma consulta?
-                            </button>
-                        </h2>
-                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne">
-                            <div class="accordion-body">
-                                Para agendar uma consulta, basta clicar no botão "Marque sua
-                                Consulta" e escolher o melhor horário.
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                                data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                Quais convênios são aceitos?
-                            </button>
-                        </h2>
-                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo">
-                            <div class="accordion-body">
-                                Aceitamos diversos convênios. Entre em contato para verificar o
-                                seu.
-                            </div>
-                        </div>
-                    </div>
+  
+            <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="600">
+              <div class="card service-card shadow-lg">
+                <i class="fa fa-heartbeat fa-3x icon-animate"></i>
+                <div class="card-body">
+                  <h5 class="card-title">Cardiologia</h5>
+                  <p class="card-text">Cuide da saúde do seu coração com nossos especialistas.</p>
                 </div>
+              </div>
             </div>
+          </div>
         </section>
-
+  
+        <section class="testimonial bg-light py-5" data-aos="zoom-in">
+          <div class="container">
+            <h2 class="section-title text-center">Depoimentos</h2>
+            <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-inner">
+                <div class="carousel-item active">
+                  <blockquote class="blockquote">
+                    <p>"A Nexus Saúde me proporcionou um atendimento rápido e eficiente. Recomendo!"</p>
+                    <footer class="blockquote-footer">João da Silva</footer>
+                  </blockquote>
+                </div>
+                <div class="carousel-item">
+                  <blockquote class="blockquote">
+                    <p>"Melhor clínica que já fui, médicos atenciosos e estrutura de primeira."</p>
+                    <footer class="blockquote-footer">Maria Oliveira</footer>
+                  </blockquote>
+                </div>
+              </div>
+              <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+              </button>
+            </div>
+          </div>
+        </section>
+  
+        <section class="faq py-5">
+          <div class="container">
+            <h2 class="section-title text-center">Perguntas Frequentes</h2>
+            <div class="accordion" id="faqAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingOne">
+                  <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    Como faço para agendar uma consulta?
+                  </button>
+                </h2>
+                <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne">
+                  <div class="accordion-body">
+                    Para agendar uma consulta, basta clicar no botão "Marque sua Consulta" e escolher o melhor horário.
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="headingTwo">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    Quais convênios são aceitos?
+                  </button>
+                </h2>
+                <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo">
+                  <div class="accordion-body">
+                    Aceitamos diversos convênios. Entre em contato para verificar o seu.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+  
         <Footer />
+      </div>
     </div>
-</template>
-
-<style scoped>
-body,
-html {
+  </template>
+  
+  <script>
+  import Navbar from '@/components/Navbar.vue';
+  import Footer from '@/components/Footer.vue';
+  import AOS from 'aos';
+  import 'aos/dist/aos.css'; // Importando o CSS do AOS
+  
+  export default {
+    data() {
+      return {
+        loading: true, // Controle para a tela de carregamento
+      };
+    },
+    mounted() {
+      // Simula o carregamento da página e depois esconde a tela de carregamento
+      setTimeout(() => {
+        this.loading = false; // A tela de carregamento será escondida após 3 segundos
+        AOS.init(); // Inicializando AOS para animações
+      }, 3000); // Ajuste o tempo conforme necessário
+    },
+    beforeDestroy() {
+      window.removeEventListener('scroll', this.handleScroll);
+    },
+    methods: {
+      handleScroll() {
+        this.scrolled = window.scrollY > 50;
+      },
+    },
+    components: {
+      Navbar,
+      Footer,
+    },
+  };
+  </script>
+  
+  <style scoped>
+  body,
+  html {
     margin: 0;
     padding: 0;
     height: 100%;
     overflow-x: hidden;
-}
-
-.banner {
+  }
+  
+  .banner {
     background-size: cover;
     background-position: center;
     height: 100vh;
@@ -166,27 +181,76 @@ html {
     align-items: center;
     justify-content: center;
     position: relative;
-}
-
-.section-title {
+  }
+  
+  .section-title {
     margin-top: 30px;
     font-size: 2rem;
     color: #333;
-}
-
-.service-card {
+  }
+  
+  .service-card {
     border: none;
     text-align: center;
-    transition: transform 0.2s ease;
-}
-
-.service-card:hover {
-    transform: scale(1.05);
-}
-
-.testimonial,
-.faq,
-.footer {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  .service-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .icon-animate {
+    animation: bounceIn 1s ease-out;
+  }
+  
+  .testimonial,
+  .faq,
+  .footer {
     padding: 40px 0;
-}
-</style>
+  }
+  
+  .carousel-inner .carousel-item {
+    text-align: center;
+  }
+  
+  .carousel-control-prev-icon, .carousel-control-next-icon {
+    background-color: #0C0636;
+  }
+  
+  /* Estilos para a tela de carregamento */
+  .loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 1s ease-out;
+    backdrop-filter: blur(5px); /* Adiciona o desfoque */
+  }
+  
+  .loading-logo {
+    width: 800px;
+    animation: fadeInOut 3s ease-out;
+  }
+  
+  @keyframes fadeInOut {
+    0% {
+      opacity: 0;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  </style>

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
+    "aos": "^2.3.4",
     "bootstrap": "^5.3.3",
     "firebase": "^11.0.2",
     "v-mask": "^2.3.0",
