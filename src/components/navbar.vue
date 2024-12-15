@@ -21,15 +21,18 @@
                     </li>
                 </ul>
                 <div class="dropdown ms-3">
-                    <a href="#" class="d-flex align-items-center" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle"></i>
+                    <a href="#" class="d-flex align-items-center text-dark text-decoration-none" data-bs-toggle="dropdown">
+                        <i class="bi bi-person-circle me-2"></i>
+                        <span v-if="userName">{{ userName }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/login">Login</a></li>
-                        <li><a class="dropdown-item" href="#">Perfil</a></li>
-                        <li><a class="dropdown-item" href="/consultas">Consultas</a></li>
-                        <li><a class="dropdown-item" href="#">Sair</a></li>
-                        <li><a class="dropdown-item" href="/medicos">Lista de Medicos</a></li>
+                        <li v-if="!userName"><a class="dropdown-item" href="/login">Login</a></li>
+                        <li v-else>
+                            <a class="dropdown-item" href="/perfil">Perfil</a>
+                        </li>
+                        <li v-if="userName"><a class="dropdown-item" href="/consultas">Consultas</a></li>
+                        <li v-if="userName"><a class="dropdown-item" href="#" @click="logout">Sair</a></li>
+                        <li><a class="dropdown-item" href="/medicos">Lista de Médicos</a></li>
                     </ul>
                 </div>
             </div>
@@ -37,12 +40,14 @@
     </nav>
 </template>
 
+
 <script>
 export default {
     data() {
         return {
             isScrolled: false,
             isCollapsed: true,
+            userName: null, // Nome do usuário logado
         };
     },
     methods: {
@@ -52,14 +57,25 @@ export default {
         toggleCollapse() {
             this.isCollapsed = !this.isCollapsed;
         },
+        logout() {
+            // Remove os dados do usuário
+            localStorage.removeItem("userName");
+            this.userName = null;
+
+            // Redireciona para a tela de login
+            this.$router.push("/login");
+        },
     },
     mounted() {
+        // Recupera o nome do usuário do localStorage
+        this.userName = localStorage.getItem("userName");
         window.addEventListener("scroll", this.handleScroll);
     },
     beforeDestroy() {
         window.removeEventListener("scroll", this.handleScroll);
     },
 };
+
 </script>
 
 <style scoped>

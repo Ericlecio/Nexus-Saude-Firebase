@@ -1,3 +1,113 @@
+<template>
+  <div>
+    <Navbar />
+    <div class="container py-5 mt-5">
+      <div class="row justify-content-center align-items-center">
+        <div class="col-lg-10">
+          <div class="card shadow-lg border-0 rounded-3">
+            <div class="row g-0">
+              <div class="col-md-12 bg text-light p-4" style="background-color: #000524">
+                <h1 class="text-center mb-3">Nexus Saúde</h1>
+                <h3 class="text-center mb-4">Agendamento de Consultas</h3>
+                <form @submit.prevent="submitForm">
+                  <!-- Especialidade -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="especialidade" class="form-label">Selecione a Especialidade</label>
+                      <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
+                        @change="filterMedicosByEspecialidade" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
+                          {{ especialidade }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <!-- Médico -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="medicoNome" class="form-label">Médico</label>
+                      <select v-model="form.medicoNome" id="medico" class="form-select rounded-3" required
+                        @change="medicoChanged">
+                        <option value="">-</option>
+                        <option :value="medico.id" v-for="medico of medicosFiltrados">
+                          {{ medico.nomeCompleto }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Data -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="data" class="form-label">Selecione a Data</label>
+                      <select v-model="form.data" id="data" class="form-select rounded-3" required>
+                        <option value="" disabled selected>Selecione</option>
+                        <option v-for="data in horariosDisponiveis" :key="data" :value="data">
+                          {{ data }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Paciente -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="pacienteNome" class="form-label">Paciente</label>
+                      <select v-model="form.pacienteNome" id="paciente" class="form-select rounded-3" required
+                        @change="pacienteChanged">
+                        <option value="">-</option>
+                        <option :value="paciente.id" v-for="paciente in usuarios" :key="paciente.id">
+                          {{ paciente.nomeCompleto }}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Telefone do Paciente -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="pacienteTelefone" class="form-label">Telefone do Paciente</label>
+                      <input type="text" id="pacienteTelefone" v-model="form.pacienteTelefone" 
+                        class="form-control rounded-3" placeholder="(00) 00000-0000" required 
+                        :disabled="!form.pacienteNome" @input="formatPhoneNumber"/>
+                    </div>
+                  </div>
+
+                  <!-- Endereço do Paciente -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="pacienteEndereco" class="form-label">Endereço do Paciente</label>
+                      <input type="text" id="pacienteEndereco" v-model="form.pacienteEndereco" 
+                        class="form-control rounded-3" placeholder="Endereço completo" required />
+                    </div>
+                  </div>
+
+                  <!-- Observações -->
+                  <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="observacoes" class="form-label">Observações</label>
+                      <textarea v-model="form.observacoes" id="observacoes" class="form-control rounded-3" rows="3"></textarea>
+                    </div>
+                  </div>
+
+                  <div class="text-center">
+                    <button type="submit" class="btn btn-primary rounded-3 btn-lg">
+                      Agendar Consulta
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <Footer />
+  </div>
+</template>
+
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -24,6 +134,8 @@ export default {
         horario: "",
         pacienteNome: "", // Ajuste para armazenar o nome do paciente
         pacienteTelefone: "",
+        pacienteEndereco: "",
+        observacoes: "",
       },
       horariosDisponiveis: this.getTimeSlots(),
     };
@@ -73,7 +185,6 @@ export default {
         alert("Não foi possível carregar os pacientes. Tente novamente.");
       }
     },
-
 
     filterMedicosByEspecialidade() {
       // Filtrando médicos pela especialidade
@@ -135,6 +246,18 @@ export default {
       return slots;
     },
 
+    formatPhoneNumber(event) {
+      let phone = event.target.value.replace(/\D/g, '');
+      if (phone.length <= 2) {
+        phone = `(${phone}`;
+      } else if (phone.length <= 7) {
+        phone = `(${phone.slice(0, 2)}) ${phone.slice(2)}`;
+      } else {
+        phone = `(${phone.slice(0, 2)}) ${phone.slice(2, 7)}-${phone.slice(7, 11)}`;
+      }
+      event.target.value = phone;
+    },
+
     async submitForm() {
       // Enviando os dados do agendamento para o banco de dados
       try {
@@ -146,6 +269,8 @@ export default {
           horario: this.form.horario,
           pacienteNome: this.form.pacienteNome,
           pacienteTelefone: this.form.pacienteTelefone,
+          pacienteEndereco: this.form.pacienteEndereco,
+          observacoes: this.form.observacoes,
         };
 
         const dao = new DAOService("agendamentos");
@@ -167,101 +292,5 @@ export default {
   },
 };
 </script>
-
-
-
-<template>
-  <div>
-    <Navbar />
-    <div class="container py-5 mt-5">
-      <div class="row justify-content-center align-items-center">
-        <div class="col-lg-10">
-          <div class="card shadow-lg border-0 rounded-3">
-            <div class="row g-0">
-              <div class="col-md-12 bg text-light p-4" style="background-color: #000524">
-                <h1 class="text-center mb-3">Nexus Saúde</h1>
-                <h3 class="text-center mb-4">Agendamento de Consultas</h3>
-                <form @submit.prevent="submitForm">
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="especialidade" class="form-label">Selecione a Especialidade</label>
-                      <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
-                        @change="filterMedicosByEspecialidade" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
-                          {{ especialidade }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="medicoNome" class="form-label">Médico</label>
-                      <select v-model="form.medicoNome" id="medico" class="form-select rounded-3" required
-                        @change="medicoChanged">
-                        <option value="">-</option>
-                        <option :value="medico.id" v-for="medico of medicosFiltrados">
-                          {{ medico.nomeCompleto }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="data" class="form-label">Selecione a Data</label>
-                      <select v-model="form.data" id="data" class="form-select rounded-3" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option v-for="data in horariosDisponiveis" :key="data" :value="data">
-                          {{ data }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Select para escolher o paciente -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="pacienteNome" class="form-label">Paciente</label>
-                      <select v-model="form.pacienteNome" id="paciente" class="form-select rounded-3" required
-                        @change="pacienteChanged">
-                        <option value="">-</option>
-                        <option :value="paciente.id" v-for="paciente in usuarios" :key="paciente.id">
-                          {{ paciente.nomeCompleto }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <!-- Select para o telefone do paciente -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="pacienteTelefone" class="form-label">Telefone do Paciente</label>
-                      <select v-model="form.pacienteTelefone" id="pacienteTelefone" class="form-select rounded-3"
-                        required disabled>
-                        <option v-if="form.pacienteTelefone" :value="form.pacienteTelefone">{{ form.pacienteTelefone }}
-                        </option>
-                        <option value="" disabled selected>Selecione um paciente para ver o telefone</option>
-                      </select>
-                    </div>
-                  </div>
-
-
-
-                  <div class="text-center">
-                    <button type="submit" class="btn btn-primary rounded-3 btn-lg">
-                      Agendar Consulta
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <Footer />
-  </div>
-</template>
 
 <style scoped></style>

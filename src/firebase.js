@@ -12,6 +12,8 @@ let config = {
   measurementId: "G-CNM23HDVN0",
 };
 
+
+
 const firebaseApp = initializeApp(config);
 
 export const auth = getAuth(firebaseApp);

@@ -101,26 +101,24 @@ export default {
       } else if (this.userType === "medico") {
         console.log("Médico logado com e-mail: ", this.email, " CRM: ", this.crm);
       }
-      this.$router.push("/home"); // Redireciona após o login
+      this.$router.push("/home");
     },
     loginWithGoogle() {
-      const auth = getAuth(); // Inicializa a autenticação do Firebase
-      const provider = new GoogleAuthProvider(); // Cria um provedor para o Google
+  const auth = getAuth(); 
+  const provider = new GoogleAuthProvider();
 
-      signInWithPopup(auth, provider) // Tenta realizar o login com o Google
-        .then((result) => {
-          const user = result.user;
-          console.log("Usuário logado com Google:", user.email);
-          
-          // Caso precise de informações adicionais, como salvar os dados do usuário:
-          // Você pode fazer isso com Firestore ou Vuex aqui, se necessário.
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      const user = result.user;
 
-          this.$router.push("/home"); // Redireciona após o login
-        })
-        .catch((error) => {
-          console.error("Erro de autenticação com Google:", error.message);
-        });
-    }
+      localStorage.setItem("userName", user.displayName);
+      this.$router.push("/");
+    })
+    .catch((error) => {
+      console.error("Erro de autenticação com Google:", error.message);
+    });
+}
+
   },
 };
 </script>
@@ -136,7 +134,6 @@ html,
 body {
   font-family: Arial, sans-serif;
   height: 100%;
-  background: url("@/assets/img/img_fundo.png") no-repeat center center fixed;
   background-size: cover;
 }
 

@@ -8,6 +8,7 @@ import SobreView from '@/views/SobreView.vue'
 import MedicosView from '@/views/MedicosView.vue'
 import DetalhesmedicosView from '@/views/DetalhesmedicosView.vue'
 import AgendamentoConsultasView from '@/views/AgendamentoConsultasView.vue'
+import PerfilUserView from '@/views/PerfilUserView.vue'
 
 
 const router = createRouter({
@@ -59,6 +60,12 @@ const router = createRouter({
       name: 'Agendamento',
       props: true, 
       component: AgendamentoConsultasView
+    },
+    {
+      path: '/perfil',
+      name: 'perfil',
+      props: true, 
+      component: PerfilUserView
     },
   ]
 })
