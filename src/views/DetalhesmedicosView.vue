@@ -2,55 +2,72 @@
   <div>
     <Navbar />
     <div class="container py-5">
-      <h1 class="text-center mb-4">{{ medico ? medico.nomeCompleto : 'Carregando...' }}</h1>
+      <!-- Nome do Médico com Espaçamento -->
+      <h1 class="text-center mb-4 text-primary" style="margin-top: 50px;">
+        {{ medico ? medico.nomeCompleto : "Carregando..." }}
+      </h1>
 
+      <!-- Informações do Médico -->
       <div v-if="medico">
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <h4>Especialidade: {{ medico.especialidade }}</h4>
-            <h5>Preço da Consulta: R$ {{ medico.precoConsulta }}</h5>
-            <h5>CRM: {{ medico.crm }}</h5>
+        <!-- Card de Informações -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-info-circle me-2" style="color: #007bff;"></i>
+              <strong>Informações</strong>
+            </h5>
+            <p>
+              <i class="fas fa-user-md me-2" style="color: #28a745;"></i>
+              <strong>Especialidade:</strong> {{ medico.especialidade }}
+            </p>
+            <p>
+              <i class="fas fa-id-badge me-2" style="color: #17a2b8;"></i>
+              <strong>CRM:</strong> {{ medico.crm }}
+            </p>
+            <p>
+              <i class="fas fa-dollar-sign me-2" style="color: #ffc107;"></i>
+              <strong>Preço da Consulta:</strong> R$ {{ medico.valorConsulta }}
+            </p>
+            <p>
+              <i class="fas fa-phone me-2" style="color: #28a745;"></i>
+              <strong>Contato:</strong> {{ medico.telefoneConsultorio }}
+            </p>
           </div>
         </div>
 
-        <div class="row mb-4">
-          <div class="col-md-12">
-            <h4>Experiência:</h4>
-            <p>{{ medico.experiencia }}</p>
+        <!-- Experiência -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-briefcase me-2" style="color: #6c757d;"></i>
+              <strong>Experiência</strong>
+            </h5>
+            <p>{{ medico.experiencia || "Nenhuma informação disponível." }}</p>
           </div>
         </div>
 
-        <div class="mb-4">
-          <h4>Horários de Atendimento:</h4>
-          <div v-if="medico.diasAtendimento && Object.keys(medico.diasAtendimento).length > 0">
-            <ul>
-              <li v-for="(horario, dia) in medico.diasAtendimento" :key="dia">
-                <strong>{{ dia.charAt(0).toUpperCase() + dia.slice(1) }}:</strong>
-                {{ horario.inicio }} - {{ horario.fim }}
+        <!-- Horários de Atendimento -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-clock me-2" style="color: #007bff;"></i>
+              <strong>Horários de Atendimento</strong>
+            </h5>
+            <ul class="list-unstyled">
+              <li v-for="dia in diasOrdenados" :key="dia">
+                <strong>{{ formatDia(dia) }}:</strong>
+                {{ medico.diasAtendimento[dia]?.inicio || "--" }} -
+                {{ medico.diasAtendimento[dia]?.fim || "--" }}
               </li>
             </ul>
           </div>
-          <div v-else>
-            <p>Sem horários definidos.</p>
-          </div>
         </div>
+      </div>
 
-        <div class="mb-4">
-          <h4>Avaliações:</h4>
-          <div v-if="avaliacoes.length > 0">
-            <ul>
-              <li v-for="avaliacao in avaliacoes" :key="avaliacao.id">
-                <strong>{{ avaliacao.paciente }}:</strong> {{ avaliacao.comentario }} ({{ avaliacao.nota }}/5)
-              </li>
-            </ul>
-          </div>
-          <div v-else>
-            <p>Sem avaliações no momento.</p>
-          </div>
-        </div>
-
-        <div class="text-center">
-          <button class="btn btn-primary">Agendar Consulta</button>
+      <!-- Carregando -->
+      <div v-else class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
         </div>
       </div>
     </div>
@@ -71,40 +88,40 @@ export default {
   },
   data() {
     return {
-      medico: true,
-      avaliacoes: [],
-      loading: true,
+      medico: null,
+      diasOrdenados: ["segunda", "terca", "quarta", "quinta", "sexta", "sabado"],
     };
   },
   methods: {
     async fetchMedicoDetails() {
       try {
         const usuarioId = this.$route.params.id;
-        console.log('ID do Usuário (Médico):', usuarioId);
 
-        const dao = new DAOService("usuarios");
-        const usuarioData = await dao.get(usuarioId);
+        const usuariosDao = new DAOService("usuarios");
+        const usuarioData = await usuariosDao.get(usuarioId);
 
-        console.log('Dados do Usuário:', usuarioData);
+        if (usuarioData.tipo === "medico") {
+          const medicosDao = new DAOService("medicos");
+          const medicoDetails = await medicosDao.search("usuarioId", usuarioId);
 
-        if (usuarioData && usuarioData.tipo === "medico") {
-          const medicoDetails = await dao.getFromCollection("medicos", usuarioId);
-          console.log('Detalhes do Médico:', medicoDetails);
-
-          this.medico = { ...usuarioData, ...medicoDetails };
+          this.medico = { ...usuarioData, ...medicoDetails[0] };
         } else {
-          console.error("Usuário não é um médico");
+          console.error("Usuário não é um médico.");
         }
-
-        // Buscar as avaliações (caso necessário)
-        const avaliacoesDao = new DAOService("avaliacoes");
-        this.avaliacoes = await avaliacoesDao.search("medicoId", usuarioId);
-        console.log('Avaliações do Médico:', this.avaliacoes);
       } catch (error) {
         console.error("Erro ao buscar detalhes do médico: ", error);
-      } finally {
-        this.loading = false;
       }
+    },
+    formatDia(dia) {
+      const dias = {
+        segunda: "Segunda-feira",
+        terca: "Terça-feira",
+        quarta: "Quarta-feira",
+        quinta: "Quinta-feira",
+        sexta: "Sexta-feira",
+        sabado: "Sábado",
+      };
+      return dias[dia] || dia;
     },
   },
   mounted() {
@@ -115,19 +132,30 @@ export default {
 
 <style scoped>
 .container {
-  max-width: 80%;
+  max-width: 90%;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
 }
 
 .card {
   border-radius: 10px;
-  cursor: pointer;
-}
-
-.card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-ul {
-  list-style-type: none;
+.card-title {
+  font-size: 1.2rem;
+}
+
+.list-unstyled li {
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
 }
 </style>
