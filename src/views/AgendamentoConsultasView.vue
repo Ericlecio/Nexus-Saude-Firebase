@@ -1,111 +1,95 @@
 <template>
-  <div>
-    <Navbar />
-    <div class="container py-5 mt-5">
-      <div class="row justify-content-center align-items-center">
-        <div class="col-lg-10">
-          <div class="card shadow-lg border-0 rounded-3">
-            <div class="row g-0">
-              <div class="col-md-12 bg text-light p-4" style="background-color: #000524">
-                <h1 class="text-center mb-3">Nexus Saúde</h1>
-                <h3 class="text-center mb-4">Agendamento de Consultas</h3>
-                <form @submit.prevent="submitForm">
-                  <!-- Especialidade -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="especialidade" class="form-label">Selecione a Especialidade</label>
-                      <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
-                        @change="filterMedicosByEspecialidade" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
-                          {{ especialidade }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <!-- Médico -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="medicoNome" class="form-label">Médico</label>
-                      <select v-model="form.medicoNome" id="medico" class="form-select rounded-3" required
-                        @change="medicoChanged">
-                        <option value="">-</option>
-                        <option :value="medico.id" v-for="medico of medicosFiltrados">
-                          {{ medico.nomeCompleto }}
-                        </option>
-                      </select>
-                    </div>
-                  </div>
+  <Navbar />
+  <div class="container-fluid py-5 mt-5">
+    <div class="row justify-content-center align-items-center">
+      <div class="col-lg-10 col-md-10 col-sm-12"> <!-- Aumentando a largura -->
+        <div class="card shadow-lg border-0 rounded-4">
+          <div class="row g-0">
+            <!-- Imagem ao lado do formulário -->
+            <div class="col-md-5 d-none d-md-block">
+              <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem Nexus Saúde"
+                class="img-fluid rounded-start" />
+            </div>
 
-                  <!-- Data -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="data" class="form-label">Selecione a Data</label>
-                      <select v-model="form.data" id="data" class="form-select rounded-3" required>
-                        <option value="" disabled selected>Selecione</option>
-                        <option v-for="data in horariosDisponiveis" :key="data" :value="data">
-                          {{ data }}
-                        </option>
-                      </select>
-                    </div>
+            <div class="col-md-7 p-5 rounded-end custom-bg">
+              <h1 class="text-center text-light mb-4 font-weight-bold">Nexus Saúde</h1>
+              <h3 class="text-center text-light mb-5">Agendamento de Consultas</h3>
+              <form @submit.prevent="submitForm">
+            
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <label for="especialidade" class="form-label text-light">Selecione a Especialidade</label>
+                    <select v-model="form.especialidade" id="especialidade" class="form-select rounded-3"
+                      @change="filterMedicosByEspecialidade" required>
+                      <option value="" disabled selected>Selecione</option>
+                      <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
+                        {{ especialidade }}
+                      </option>
+                    </select>
                   </div>
+                  <div class="col-md-6">
+                    <label for="medicoNome" class="form-label text-light">Médico</label>
+                    <select v-model="form.medicoNome" id="medico" class="form-select rounded-3" required
+                      @change="medicoChanged">
+                      <option value="">-</option>
+                      <option :value="medico.id" v-for="medico of medicosFiltrados">
+                        {{ medico.nomeCompleto }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
-                  <!-- Paciente -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="pacienteNome" class="form-label">Paciente</label>
-                      <select v-model="form.pacienteNome" id="paciente" class="form-select rounded-3" required
-                        @change="pacienteChanged">
-                        <option value="">-</option>
-                        <option :value="paciente.id" v-for="paciente in usuarios" :key="paciente.id">
-                          {{ paciente.nomeCompleto }}
-                        </option>
-                      </select>
-                    </div>
+                <!-- Data e Paciente -->
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <label for="data" class="form-label text-light">Selecione a Data</label>
+                    <select v-model="form.data" id="data" class="form-select rounded-3" required>
+                      <option value="" disabled selected>Selecione</option>
+                      <option v-for="data in horariosDisponiveis" :key="data" :value="data">
+                        {{ data }}
+                      </option>
+                    </select>
                   </div>
+                  <div class="col-md-6">
+                    <label for="pacienteNome" class="form-label text-light">Paciente</label>
+                    <select v-model="form.pacienteNome" id="paciente" class="form-select rounded-3" required
+                      @change="pacienteChanged">
+                      <option value="">-</option>
+                      <option :value="paciente.id" v-for="paciente in usuarios" :key="paciente.id">
+                        {{ paciente.nomeCompleto }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
 
-                  <!-- Telefone do Paciente -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="pacienteTelefone" class="form-label">Telefone do Paciente</label>
-                      <input type="text" id="pacienteTelefone" v-model="form.pacienteTelefone" 
-                        class="form-control rounded-3" placeholder="(00) 00000-0000" required 
-                        :disabled="!form.pacienteNome" @input="formatPhoneNumber"/>
-                    </div>
+                <!-- Telefone do Paciente e Local -->
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <label for="pacienteTelefone" class="form-label text-light">Telefone do Paciente</label>
+                    <input type="text" id="pacienteTelefone" v-model="form.pacienteTelefone"
+                      class="form-control rounded-3" placeholder="(00) 00000-0000" required
+                      :disabled="!form.pacienteNome" @input="formatPhoneNumber" />
                   </div>
+                  <div class="col-md-6">
+                    <label for="local" class="form-label text-light">Local</label>
+                    <input type="text" id="local" v-model="form.local" class="form-control rounded-3" readonly />
+                  </div>
+                </div>
 
-                  <!-- Endereço do Paciente -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="pacienteEndereco" class="form-label">Endereço do Paciente</label>
-                      <input type="text" id="pacienteEndereco" v-model="form.pacienteEndereco" 
-                        class="form-control rounded-3" placeholder="Endereço completo" required />
-                    </div>
-                  </div>
-
-                  <!-- Observações -->
-                  <div class="row mb-3">
-                    <div class="col-md-12">
-                      <label for="observacoes" class="form-label">Observações</label>
-                      <textarea v-model="form.observacoes" id="observacoes" class="form-control rounded-3" rows="3"></textarea>
-                    </div>
-                  </div>
-
-                  <div class="text-center">
-                    <button type="submit" class="btn btn-primary rounded-3 btn-lg">
-                      Agendar Consulta
-                    </button>
-                  </div>
-                </form>
-              </div>
+                <div class="text-center">
+                  <button type="submit" class="btn btn-primary rounded-3 btn-lg shadow-lg">
+                    Agendar Consulta
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <Footer />
   </div>
+
+  <Footer />
 </template>
 
 <script>
@@ -123,7 +107,7 @@ export default {
   data() {
     return {
       medicos: [],
-      usuarios: [], // Aqui vão os pacientes
+      usuarios: [],
       medicosFiltrados: [],
       especialidades: [],
       form: {
@@ -132,7 +116,7 @@ export default {
         local: "Clínica Nexus Saúde - Palmares, PE",
         data: "",
         horario: "",
-        pacienteNome: "", // Ajuste para armazenar o nome do paciente
+        pacienteNome: "",
         pacienteTelefone: "",
         pacienteEndereco: "",
         observacoes: "",
@@ -147,19 +131,16 @@ export default {
         const dao = new DAOService("medicos");
         const daoUsuarios = new DAOService("usuarios");
 
-        // Obtendo médicos
         this.medicos = await dao.getAll();
-
-        // Obtendo usuários (pacientes)
         const usuarios = await daoUsuarios.getAll();
 
-        // Associando o nome completo do usuário (paciente) aos médicos
-        this.medicos.forEach(medico => {
-          const filteredUser = usuarios.filter(u => u.id === medico.usuarioId)[0];
+        this.medicos.forEach((medico) => {
+          const filteredUser = usuarios.filter(
+            (u) => u.id === medico.usuarioId
+          )[0];
           medico.nomeCompleto = filteredUser ? filteredUser.nomeCompleto : "";
         });
 
-        // Definindo as especialidades baseadas nos médicos
         this.especialidades = [
           ...new Set(this.medicos.map((medico) => medico.especialidade)),
         ];
@@ -172,14 +153,11 @@ export default {
     async fetchPacientes() {
       try {
         const daoUsuarios = new DAOService("usuarios");
-
-        // Obtendo todos os usuários (pacientes)
         const usuarios = await daoUsuarios.getAll();
 
-        // Filtrando apenas os pacientes
-        this.usuarios = usuarios.filter(usuario => usuario.tipo === 'paciente'); // Filtrando para pacientes
-
-        console.log('Pacientes carregados:', this.usuarios); // Para depuração, verifique a estrutura.
+        this.usuarios = usuarios.filter(
+          (usuario) => usuario.tipo === "paciente"
+        );
       } catch (error) {
         console.error("Erro ao carregar pacientes:", error);
         alert("Não foi possível carregar os pacientes. Tente novamente.");
@@ -187,8 +165,9 @@ export default {
     },
 
     filterMedicosByEspecialidade() {
-      // Filtrando médicos pela especialidade
-      this.medicosFiltrados = this.medicos.filter(medico => medico.especialidade === this.form.especialidade);
+      this.medicosFiltrados = this.medicos.filter(
+        (medico) => medico.especialidade === this.form.especialidade
+      );
       if (this.medicosFiltrados.length === 1) {
         this.form.medicoNome = this.medicosFiltrados[0].nomeCompleto;
       } else {
@@ -197,17 +176,22 @@ export default {
     },
 
     medicoChanged() {
-      // Definindo os horários disponíveis com base no médico selecionado
-      const diasSemana = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
+      const diasSemana = [
+        "segunda", "terca", "quarta", "quinta", "sexta", "sabado"
+      ];
       const dias = [];
 
-      const medicoSelecionado = this.medicosFiltrados.find(m => m.id === this.form.medicoNome);
+      const medicoSelecionado = this.medicosFiltrados.find(
+        (m) => m.id === this.form.medicoNome
+      );
 
       if (medicoSelecionado) {
-        diasSemana.forEach(dia => {
+        diasSemana.forEach((dia) => {
           const diaAtendimento = medicoSelecionado.diasAtendimento[dia];
           if (diaAtendimento.inicio && diaAtendimento.fim) {
-            dias.push(`${dia.charAt(0).toUpperCase() + dia.slice(1)}: ${diaAtendimento.inicio} às ${diaAtendimento.fim}`);
+            dias.push(
+              `${dia.charAt(0).toUpperCase() + dia.slice(1)}: ${diaAtendimento.inicio} às ${diaAtendimento.fim}`
+            );
           }
         });
       }
@@ -215,23 +199,18 @@ export default {
     },
 
     pacienteChanged() {
-      console.log("Paciente selecionado ID:", this.form.pacienteNome); // Verifique se o ID está correto.
-
-      // Encontrar o paciente selecionado pelo ID
-      const pacienteSelecionado = this.usuarios.find(paciente => paciente.id === this.form.pacienteNome);
+      const pacienteSelecionado = this.usuarios.find(
+        (paciente) => paciente.id === this.form.pacienteNome
+      );
 
       if (pacienteSelecionado) {
-        console.log("Paciente encontrado:", pacienteSelecionado); // Verifique o paciente encontrado.
-        // Preenche o telefone no form.pacienteTelefone
-        this.form.pacienteTelefone = pacienteSelecionado.telefone || '';
+        this.form.pacienteTelefone = pacienteSelecionado.telefone || "";
       } else {
-        // Limpa o campo de telefone se o paciente não for encontrado
-        this.form.pacienteTelefone = '';
+        this.form.pacienteTelefone = "";
       }
     },
 
     getTimeSlots() {
-      // Gerando os horários disponíveis de 08:00 às 18:00
       const slots = [];
       const startHour = 8;
       const endHour = 18;
@@ -247,7 +226,7 @@ export default {
     },
 
     formatPhoneNumber(event) {
-      let phone = event.target.value.replace(/\D/g, '');
+      let phone = event.target.value.replace(/\D/g, "");
       if (phone.length <= 2) {
         phone = `(${phone}`;
       } else if (phone.length <= 7) {
@@ -259,7 +238,6 @@ export default {
     },
 
     async submitForm() {
-      // Enviando os dados do agendamento para o banco de dados
       try {
         const agendamentoData = {
           especialidade: this.form.especialidade,
@@ -277,7 +255,7 @@ export default {
         await dao.insert(agendamentoData);
 
         alert("Consulta agendada com sucesso!");
-        this.$router.push("/"); // Redireciona para a página inicial
+        this.$router.push("/");
       } catch (error) {
         console.error("Erro ao agendar consulta:", error);
         alert("Não foi possível agendar a consulta. Tente novamente.");
@@ -286,11 +264,54 @@ export default {
   },
 
   mounted() {
-    // Carregando médicos e pacientes ao montar o componente
     this.fetchMedicos();
     this.fetchPacientes();
   },
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.container {
+  width: 100%;
+}
+
+.card {
+  background-color: #f8f9fa;
+  border-radius: 1rem;
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+h1,
+h3 {
+  font-weight: 600;
+}
+
+.custom-bg {
+  background-color: #0C0636;
+}
+
+.form-select,
+.form-control {
+  background-color: #f1f1f1;
+  border: 1px solid #ccc;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(38, 143, 255, 0.25);
+}
+
+button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+}
+
+button[type="submit"]:hover {
+  background-color: #0056b3;
+  transition: background-color 0.3s ease-in-out;
+}
+</style>
