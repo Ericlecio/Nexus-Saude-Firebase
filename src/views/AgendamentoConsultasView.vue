@@ -115,11 +115,9 @@ export default {
         medicoNome: "",
         local: "Clínica Nexus Saúde - Palmares, PE",
         data: "",
-        horario: "",
         pacienteNome: "",
         pacienteTelefone: "",
-        pacienteEndereco: "",
-        observacoes: "",
+
       },
       horariosDisponiveis: this.getTimeSlots(),
     };
@@ -244,11 +242,9 @@ export default {
           medicoNome: this.form.medicoNome,
           local: this.form.local,
           data: this.form.data,
-          horario: this.form.horario,
           pacienteNome: this.form.pacienteNome,
           pacienteTelefone: this.form.pacienteTelefone,
-          pacienteEndereco: this.form.pacienteEndereco,
-          observacoes: this.form.observacoes,
+    
         };
 
         const dao = new DAOService("agendamentos");

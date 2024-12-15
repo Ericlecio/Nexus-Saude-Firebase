@@ -2,13 +2,14 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginView from '../views/LoginView.vue'
 import CadastroView from '@/views/CadastroView.vue'
-import ConsultasView from '@/views/ConsultasView.vue'
+import ConsultasView from '@/views/ConsultasAgendandasView.vue'
 import ContatoView from '@/views/ContatoView.vue'  
 import SobreView from '@/views/SobreView.vue'    
 import MedicosView from '@/views/MedicosView.vue'
 import DetalhesmedicosView from '@/views/DetalhesmedicosView.vue'
 import AgendamentoConsultasView from '@/views/AgendamentoConsultasView.vue'
 import PerfilUserView from '@/views/PerfilUserView.vue'
+import ConsultasAgendandasView from '@/views/ConsultasAgendandasView.vue'
 
 
 const router = createRouter({
@@ -40,9 +41,9 @@ const router = createRouter({
       component: SobreView  
     },
     {
-      path: '/consultas',
+      path: '/consultasAgendadas',
       name: 'Consultas',
-      component: ConsultasView
+      component: ConsultasAgendandasView
     },
     {
       path: '/medicos',
