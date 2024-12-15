@@ -16,7 +16,7 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div class="div-principal">
     <Navbar />
 
     <!-- Banner -->
@@ -110,6 +110,11 @@ export default {
 
 <style scoped>
 /* Banner */
+
+.div-principal{
+  background: url("@/assets/img/img_fundo.png") no-repeat center center fixed;
+}
+
 .banner {
   background-size: cover;
   background-position: center;
