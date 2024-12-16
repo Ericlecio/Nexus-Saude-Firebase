@@ -11,8 +11,13 @@
   "dependencies": {
     "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "aos": "^2.3.4",
+    "axios": "^1.7.9",
+    "body-parser": "^1.20.3",
     "bootstrap": "^5.3.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
     "firebase": "^11.0.2",
+    "nodemailer": "^6.9.16",
     "v-mask": "^2.3.0",
     "vee-validate": "^4.14.7",
     "vue": "^3.5.12",

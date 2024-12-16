@@ -1,6 +1,7 @@
 <script>
 import Navbar from '@/components/Navbar.vue'
 import Footer from '@/components/Footer.vue'
+import axios from "axios";
 
 export default {
   data() {
@@ -11,9 +12,23 @@ export default {
     };
   },
   methods: {
-    handleSubmit() {
-      alert('Mensagem enviada com sucesso!');
+    async handleSubmit() {
+    try {
+      await axios.post("http://localhost:5173/contato", {
+        name: this.name,
+        email: this.email,
+        message: this.message,
+      });
+
+      alert("E-mail enviado com sucesso!");
+      this.name = "";
+      this.email = "";
+      this.message = "";
+    } catch (error) {
+      console.error("Erro ao enviar o e-mail:", error);
+      alert("Houve um erro ao enviar o e-mail. Tente novamente mais tarde.");
     }
+  },
   },
   components: {
     Navbar,
@@ -26,31 +41,65 @@ export default {
   <div>
     <Navbar />
 
-    <section class="banner" style="background-image: url('/img/fale_conosco_fundo.jpg')">
-      <div class="text-center">
-        <h1>Fale Conosco</h1>
-        <p>Estamos aqui para ajudar você!</p>
+    <!-- Banner Fale Conosco -->
+    <section class="banner d-flex justify-content-center align-items-center">
+      <div class="text-center banner-content">
+        <h1 class="display-4">Fale Conosco</h1>
+        <p class="lead">Estamos aqui para ajudar você!</p>
       </div>
     </section>
 
-    
+    <!-- Formulário de Contato -->
     <section class="container my-5">
-      <h2 class="section-title text-center">Entre em Contato</h2>
-      <form @submit.prevent="handleSubmit">
-        <div class="mb-3">
-          <label for="name" class="form-label">Seu Nome</label>
-          <input v-model="name" type="text" class="form-control" id="name" placeholder="Digite seu nome" required />
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-body p-5">
+              <h2 class="section-title text-center mb-4">Entre em Contato</h2>
+              <form @submit.prevent="handleSubmit">
+                <div class="mb-4">
+                  <label for="name" class="form-label fw-bold">Seu Nome</label>
+                  <input
+                    v-model="name"
+                    type="text"
+                    class="form-control form-control-lg"
+                    id="name"
+                    placeholder="Digite seu nome"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="email" class="form-label fw-bold">Seu E-mail</label>
+                  <input
+                    v-model="email"
+                    type="email"
+                    class="form-control form-control-lg"
+                    id="email"
+                    placeholder="Digite seu e-mail"
+                    required
+                  />
+                </div>
+                <div class="mb-4">
+                  <label for="message" class="form-label fw-bold">Sua Mensagem</label>
+                  <textarea
+                    v-model="message"
+                    class="form-control form-control-lg"
+                    id="message"
+                    rows="5"
+                    placeholder="Digite sua mensagem"
+                    required
+                  ></textarea>
+                </div>
+                <div class="text-center">
+                  <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
+                    Enviar Mensagem
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
-        <div class="mb-3">
-          <label for="email" class="form-label">Seu E-mail</label>
-          <input v-model="email" type="email" class="form-control" id="email" placeholder="Digite seu e-mail" required />
-        </div>
-        <div class="mb-3">
-          <label for="message" class="form-label">Sua Mensagem</label>
-          <textarea v-model="message" class="form-control" id="message" rows="4" placeholder="Digite sua mensagem" required></textarea>
-        </div>
-        <button type="submit" class="btn btn-success">Enviar Mensagem</button>
-      </form>
+      </div>
     </section>
 
     <Footer />
@@ -58,33 +107,73 @@ export default {
 </template>
 
 <style scoped>
+/* Banner com Gradiente e Sombra */
 .banner {
+  background: linear-gradient(
+    rgb(26, 26, 60),
+    rgb(26, 26, 60)
+    ),
+    url("/src/assets/img/fale_conosco_fundo.jpg") no-repeat center center;
   background-size: cover;
-  background-position: center;
-  height: 60vh;
+  height: 50vh;
   color: #fff;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.banner-content h1 {
   font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  letter-spacing: 2px;
 }
 
-.section-title {
-  margin-top: 30px;
-  font-size: 2rem;
-  color: #333;
+.banner-content p {
+  font-size: 1.2rem;
 }
 
-.container {
-  padding: 40px 0;
+/* Formulário */
+.card {
+  background-color: #f8f9fa;
+  border: none;
 }
 
-form .form-control {
+.form-control {
+  border: 1px solid #ced4da;
   border-radius: 8px;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 8px rgba(83, 186, 131, 0.7);
+  border-color: #53ba83;
+  transform: scale(1.02);
 }
 
 button {
-  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background-color: #3e9c6e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Títulos */
+.section-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.section-title::after {
+  content: "";
+  width: 50px;
+  height: 3px;
+  background-color: #53ba83;
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 </style>
