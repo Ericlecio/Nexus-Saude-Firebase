@@ -10,7 +10,7 @@ export default {
     Footer,
   },
   mounted() {
-    AOS.init(); // Inicializa as animações
+    AOS.init(); 
   },
 };
 </script>
@@ -30,11 +30,13 @@ export default {
     <!-- Missão -->
     <section class="mission-section py-5">
       <div class="container text-center">
-        <h2 class="section-title">Nossa Missão</h2>
-        <p>
-          A Nexus Saúde é uma clínica comprometida em oferecer atendimento médico de qualidade, com profissionais
-          experientes e dedicados, buscando sempre proporcionar bem-estar e segurança aos nossos pacientes.
-        </p>
+        <div class="card mission-card mx-auto" data-aos="fade-up">
+          <h2 class="section-title">Nossa Missão</h2>
+          <p>
+            A Nexus Saúde é uma clínica comprometida em oferecer atendimento médico de qualidade, com profissionais
+            experientes e dedicados, buscando sempre proporcionar bem-estar e segurança aos nossos pacientes.
+          </p>
+        </div>
       </div>
     </section>
 
@@ -62,19 +64,25 @@ export default {
         <h2 class="section-title">Nossos Valores</h2>
         <div class="row">
           <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
-            <i class="fa fa-star fa-3x mb-3 icon"></i>
-            <h5>Excelência no Atendimento</h5>
-            <p>Garantimos qualidade em cada interação com nossos pacientes.</p>
+            <div class="card value-card shadow">
+              <i class="fa fa-star fa-3x mb-3 icon"></i>
+              <h5>Excelência no Atendimento</h5>
+              <p>Garantimos qualidade em cada interação com nossos pacientes.</p>
+            </div>
           </div>
           <div class="col-md-4" data-aos="zoom-in" data-aos-delay="400">
-            <i class="fa fa-hand-holding-heart fa-3x mb-3 icon"></i>
-            <h5>Empatia e Humanização</h5>
-            <p>Trabalhamos para criar conexões verdadeiras e cuidar com humanidade.</p>
+            <div class="card value-card shadow">
+              <i class="fa fa-hand-holding-heart fa-3x mb-3 icon"></i>
+              <h5>Empatia e Humanização</h5>
+              <p>Trabalhamos para criar conexões verdadeiras e cuidar com humanidade.</p>
+            </div>
           </div>
           <div class="col-md-4" data-aos="zoom-in" data-aos-delay="600">
-            <i class="fa fa-laptop-medical fa-3x mb-3 icon"></i>
-            <h5>Inovação em Tecnologia</h5>
-            <p>Utilizamos ferramentas modernas para um atendimento eficaz.</p>
+            <div class="card value-card shadow">
+              <i class="fa fa-laptop-medical fa-3x mb-3 icon"></i>
+              <h5>Inovação em Tecnologia</h5>
+              <p>Utilizamos ferramentas modernas para um atendimento eficaz.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -109,12 +117,17 @@ export default {
 </template>
 
 <style scoped>
-/* Banner */
-
-.div-principal{
-  background: url("@/assets/img/img_fundo.png") no-repeat center center fixed;
+/* Fundo principal */
+.div-principal {
+  background: linear-gradient(
+      rgba(0, 0, 30, 0.6),
+      rgba(0, 0, 30, 0.6)
+    ),
+    url("@/assets/img/img_fundo.png") no-repeat center center fixed;
+  background-size: cover;
 }
 
+/* Banner */
 .banner {
   background-size: cover;
   background-position: center;
@@ -123,7 +136,6 @@ export default {
   align-items: center;
   justify-content: center;
   color: white;
-  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
 }
 
 .banner-content h1 {
@@ -136,29 +148,30 @@ export default {
   margin-top: 10px;
 }
 
-/* Missão, História e Valores */
-.section-title {
-  font-size: 2.5rem;
-  margin-bottom: 30px;
-  color: #333;
-}
-
-.mission-section p,
-.history-section p {
-  font-size: 1.2rem;
-  color: #555;
-  line-height: 1.8;
+/* Missão */
+.mission-card {
+  background-color: rgba(255, 255, 255, 0.9); 
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Valores */
-.values-section .icon {
-  color: #53ba83;
+.values-section .value-card {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.3s ease-in-out;
 }
 
-.values-section h5 {
-  font-size: 1.2rem;
-  margin-top: 10px;
-  font-weight: bold;
+.values-section .value-card:hover {
+  transform: translateY(-10px);
+  background-color: rgba(83, 186, 131, 0.1); 
+}
+
+.values-section .icon {
+  color: #53ba83;
 }
 
 /* Equipe */
