@@ -2,10 +2,11 @@
   <div class="div-principal">
     <Navbar />
     <div class="container my-5">
-      <!-- Título -->
+      <button class="btn-voltar" @click="voltarPagina">
+        <i class="fas fa-arrow-left me-2"></i> Voltar
+      </button>
       <h2 class="text-success text-center mb-10">Meus Agendamentos</h2>
 
-      <!-- Indicador de carregamento -->
       <div v-if="carregando" class="text-center">
         <div class="spinner-border text-success" role="status">
           <span class="visually-hidden">Carregando...</span>
@@ -13,7 +14,6 @@
         <p class="mt-2">Carregando seus agendamentos...</p>
       </div>
 
-      <!-- Lista de agendamentos -->
       <div v-else>
         <table class="table table-hover" v-if="agendamentos.length">
           <thead>
@@ -30,10 +30,10 @@
           <tbody>
             <tr v-for="(agendamento, index) in agendamentos" :key="agendamento.id">
               <td>{{ agendamento.especialidade }}</td>
-              <td>{{ agendamento.medicoNome}}</td>
+              <td>{{ agendamento.nomeDoMedico }}</td> <!-- Alterado para clareza -->
               <td>{{ agendamento.local }}</td>
               <td>{{ agendamento.data }}</td>
-              <td>{{ agendamento.pacienteNome }}</td>
+              <td>{{ agendamento.nomeDoPaciente }}</td>
               <td>{{ agendamento.pacienteTelefone }}</td>
               <td>
                 <button class="btn btn-success btn-sm me-2" @click="remarcarAgendamento(index)">Remarcar</button>
@@ -41,9 +41,9 @@
               </td>
             </tr>
           </tbody>
+
         </table>
 
-        <!-- Caso não haja agendamentos -->
         <p v-else class="text-center text-muted">Nenhum agendamento encontrado.</p>
       </div>
     </div>
@@ -52,8 +52,8 @@
 </template>
 
 <script>
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { firestore } from "@/firebase"; // Importa o Firestore configurado
+import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { firestore } from "@/firebase";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 
@@ -65,68 +65,197 @@ export default {
   },
   data() {
     return {
-      agendamentos: [], // Lista de agendamentos carregada do Firestore
-      carregando: true, // Indicador de carregamento
+      agendamentos: [],
+      carregando: true,
     };
   },
   methods: {
-    // Carregar agendamentos do Firestore
+    async buscarNomeRealDoMedico(medicoId) {
+      try {
+        const medicoRef = doc(firestore, "medicos", medicoId);
+        const medicoSnap = await getDoc(medicoRef);
+
+        if (medicoSnap.exists()) {
+          const usuarioId = medicoSnap.data().usuarioId;
+          const usuarioRef = doc(firestore, "usuarios", usuarioId);
+          const usuarioSnap = await getDoc(usuarioRef);
+
+          if (usuarioSnap.exists()) {
+            return usuarioSnap.data().nomeCompleto;
+          }
+        }
+        return "Nome não disponível";
+      } catch (error) {
+        console.error(`Erro ao buscar nome do médico:`, error);
+        return "Erro ao carregar";
+      }
+    },
+
+    async buscarNomeRealDoPaciente(usuarioId) {
+      try {
+        console.log(`Buscando paciente com usuarioId: ${usuarioId}`);
+
+        const pacientesRef = collection(firestore, "pacientes");
+        const querySnapshot = await getDocs(pacientesRef);
+
+        let pacienteDoc = null;
+        querySnapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          if (data.usuarioId === usuarioId) {
+            pacienteDoc = docSnap;
+          }
+        });
+
+        if (!pacienteDoc) {
+          console.warn(`Nenhum documento de paciente encontrado para usuarioId: ${usuarioId}`);
+          return "Nome não disponível";
+        }
+
+        console.log("Documento de paciente encontrado:", pacienteDoc.data());
+
+        const usuarioRef = doc(firestore, "usuarios", usuarioId);
+        const usuarioSnap = await getDoc(usuarioRef);
+
+        if (!usuarioSnap.exists()) {
+          console.warn(`Documento de usuário não encontrado para usuarioId: ${usuarioId}`);
+          return "Nome não disponível";
+        }
+
+        const usuarioData = usuarioSnap.data();
+        console.log("Documento de usuário encontrado:", usuarioData);
+
+        const nomeCompleto = usuarioData.nomeCompleto;
+        if (!nomeCompleto) {
+          console.warn(`Campo 'nomeCompleto' ausente ou vazio no documento de usuário: ${usuarioId}`);
+          return "Nome não disponível";
+        }
+
+        return nomeCompleto;
+      } catch (error) {
+        console.error(`Erro ao buscar nome do paciente [${usuarioId}]:`, error);
+        return "Erro ao carregar";
+      }
+    },
+
     async carregarAgendamentos() {
       try {
-        const agendamentosRef = collection(firestore, "agendamentos"); // Nome da coleção no Firestore
+        const agendamentosRef = collection(firestore, "agendamentos");
         const snapshot = await getDocs(agendamentosRef);
-        this.agendamentos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        const agendamentos = [];
+        for (const docSnap of snapshot.docs) {
+          const agendamento = { id: docSnap.id, ...docSnap.data() };
+
+          console.log("Carregando agendamento:", agendamento);
+
+          agendamento.nomeDoMedico = await this.buscarNomeRealDoMedico(agendamento.medicoNome);
+          agendamento.nomeDoPaciente = await this.buscarNomeRealDoPaciente(agendamento.pacienteNome);
+
+          agendamentos.push(agendamento);
+        }
+
+        console.log("Agendamentos carregados com sucesso:", agendamentos);
+        this.agendamentos = agendamentos;
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos. Tente novamente mais tarde.");
       } finally {
-        this.carregando = false; // Finaliza o carregamento
+        this.carregando = false;
       }
     },
 
-    // Remarcar agendamento
     async remarcarAgendamento(index) {
-      const novaDataHora = prompt("Informe a nova data e hora no formato (YYYY-MM-DD HH:mm):");
-      if (novaDataHora) {
+      const novaData = prompt("Informe a nova data e hora (Exemplo: Sexta: 07:00 às 14:30):");
+      if (novaData) {
         const agendamento = this.agendamentos[index];
-        const agendamentoRef = doc(firestore, "agendamentos", agendamento.id); // Use "agendamentos" aqui
+        const agendamentoRef = doc(firestore, "agendamentos", agendamento.id);
+
         try {
-          await updateDoc(agendamentoRef, { dataHora: novaDataHora });
-          this.agendamentos[index].dataHora = novaDataHora; // Atualiza localmente
+          await updateDoc(agendamentoRef, { data: novaData });
+          this.agendamentos[index].data = novaData;
           alert("Agendamento remarcado com sucesso.");
         } catch (error) {
           console.error("Erro ao remarcar agendamento:", error);
-          alert("Erro ao remarcar agendamento. Tente novamente.");
+          alert("Erro ao remarcar agendamento.");
         }
       }
     },
 
-    // Cancelar agendamento
-    async cancelarAgendamento(index) {
-      const agendamento = this.agendamentos[index];
-      if (confirm(`Deseja realmente cancelar o agendamento com ${agendamento.profissional}?`)) {
-        const agendamentoRef = doc(firestore, "agendamentos", agendamento.id); // Use "agendamentos" aqui também
-        try {
-          await deleteDoc(agendamentoRef);
-          this.agendamentos.splice(index, 1); // Remove o agendamento da lista local
-          alert("Agendamento cancelado com sucesso.");
-        } catch (error) {
-          console.error("Erro ao cancelar agendamento:", error);
-          alert("Erro ao cancelar agendamento. Tente novamente.");
+    async carregarAgendamentos() {
+      try {
+        const agendamentosRef = collection(firestore, "agendamentos");
+        const snapshot = await getDocs(agendamentosRef);
+
+        const agendamentos = [];
+        for (const docSnap of snapshot.docs) {
+          const agendamento = { id: docSnap.id, ...docSnap.data() };
+
+          console.log("Carregando agendamento:", agendamento);
+
+          agendamento.nomeDoMedico = await this.buscarNomeRealDoMedico(agendamento.medicoNome);
+          agendamento.nomeDoPaciente = await this.buscarNomeRealDoPaciente(agendamento.pacienteNome);
+
+          agendamentos.push(agendamento);
         }
+
+        console.log("Agendamentos carregados com sucesso:", agendamentos);
+        this.agendamentos = agendamentos;
+      } catch (error) {
+        console.error("Erro ao carregar agendamentos:", error);
+        alert("Erro ao carregar agendamentos. Tente novamente mais tarde.");
+      } finally {
+        this.carregando = false;
+      }
+    },
+    async cancelarAgendamento(index) {
+      try {
+        const agendamento = this.agendamentos[index];
+        console.log("Tentando cancelar agendamento:", agendamento);
+
+        if (!agendamento.id) {
+          console.error("ID do agendamento ausente. Não é possível cancelar.");
+          alert("Erro ao cancelar agendamento. ID não encontrado.");
+          return;
+        }
+
+        const confirmar = confirm(`Deseja realmente cancelar o agendamento com ${agendamento.nomeDoMedico}?`);
+        if (!confirmar) {
+          console.log("Cancelamento abortado pelo usuário.");
+          return;
+        }
+        const agendamentoRef = doc(firestore, "agendamentos", agendamento.id);
+
+        await deleteDoc(agendamentoRef);
+
+        this.agendamentos.splice(index, 1);
+        alert("Agendamento cancelado com sucesso.");
+        console.log("Agendamento cancelado com sucesso:", agendamento);
+      } catch (error) {
+        console.error("Erro ao cancelar agendamento:", error);
+        alert("Erro ao cancelar agendamento. Tente novamente mais tarde.");
+      }
+    },
+    voltarPagina() {
+      if (window.history.length > 1) {
+        // Se houver histórico, volta para a página anterior
+        this.$router.go(-1);
+      } else {
+        // Se não houver histórico, redireciona para a rota desejada
+        this.$router.push("/");
       }
     },
   },
-  mounted() {
-    this.carregarAgendamentos(); // Carrega os agendamentos ao montar o componente
+  async mounted() {
+    await this.carregarAgendamentos();
   },
 };
 </script>
 
 <style scoped>
-.div-principal{
+.div-principal {
   margin-top: 5%
 }
+
 .container {
   margin-top: 100%;
   background-color: #f8f9fa;
@@ -193,4 +322,20 @@ td {
   color: #6c757d;
   font-size: 16px;
 }
+.btn-voltar {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-top: 5%;
+}
+
+.btn-voltar:hover {
+  background-color: #0056b3;
+} 
 </style>

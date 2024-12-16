@@ -27,10 +27,10 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li v-if="!userName"><a class="dropdown-item" href="/login">Login</a></li>
+                        <li v-if="!userName"><a class="dropdown-item" href="/consultasAgendadas">Consultas</a></li>
                         <li v-else>
                             <a class="dropdown-item" href="/perfil">Perfil</a>
                         </li>
-                        <li v-if="userName"><a class="dropdown-item" href="/consultas">Consultas</a></li>
                         <li v-if="userName"><a class="dropdown-item" href="#" @click="logout">Sair</a></li>
                         <li><a class="dropdown-item" href="/medicos">Lista de Médicos</a></li>
                     </ul>
@@ -47,7 +47,7 @@ export default {
         return {
             isScrolled: false,
             isCollapsed: true,
-            userName: null, // Nome do usuário logado
+            userName: null, 
         };
     },
     methods: {
@@ -58,16 +58,15 @@ export default {
             this.isCollapsed = !this.isCollapsed;
         },
         logout() {
-            // Remove os dados do usuário
+       
             localStorage.removeItem("userName");
             this.userName = null;
 
-            // Redireciona para a tela de login
             this.$router.push("/login");
         },
     },
     mounted() {
-        // Recupera o nome do usuário do localStorage
+   
         this.userName = localStorage.getItem("userName");
         window.addEventListener("scroll", this.handleScroll);
     },
@@ -79,7 +78,7 @@ export default {
 </script>
 
 <style scoped>
-/* Navbar Principal */
+
 .navbar {
     background: transparent;
     color: white;
@@ -113,21 +112,21 @@ export default {
     }
 }
 
-/* Links de Navegação */
+
 .navbar-nav .nav-link {
-    color: #2c3e50; /* Cor padrão */
+    color: #2c3e50; 
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
     padding: 12px 18px;
     border-radius: 30px;
     transition: color 0.3s ease, transform 0.3s ease;
-    background: none; /* Remover o fundo do link */
+    background: none; 
 }
 
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link.active {
-    color: #53ba83; /* Cor verde do site */
+    color: #53ba83; 
     text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
 }
@@ -143,7 +142,7 @@ export default {
     color: #000524;
 }
 
-/* Menu Dropdown */
+
 .dropdown-menu {
     background-color: rgba(255, 255, 255, 0.95);
     border-radius: 10px;

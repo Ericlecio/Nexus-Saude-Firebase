@@ -13,7 +13,6 @@ export default {
   methods: {
     handleSubmit() {
       alert('Mensagem enviada com sucesso!');
-      // Aqui você pode adicionar lógica para enviar o formulário para o backend
     }
   },
   components: {
@@ -27,7 +26,6 @@ export default {
   <div>
     <Navbar />
 
-    <!-- Banner Fale Conosco -->
     <section class="banner" style="background-image: url('/img/fale_conosco_fundo.jpg')">
       <div class="text-center">
         <h1>Fale Conosco</h1>
@@ -35,7 +33,7 @@ export default {
       </div>
     </section>
 
-    <!-- Formulário de Contato -->
+    
     <section class="container my-5">
       <h2 class="section-title text-center">Entre em Contato</h2>
       <form @submit.prevent="handleSubmit">

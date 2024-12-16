@@ -11,6 +11,7 @@ export default {
   },
   data() {
     return {
+      horarios: this.gerarHorarios("07:00", "20:00", 30), // Gera a lista de horários
       diasAtendimento: {
         segunda: { inicio: "", fim: "" },
         terca: { inicio: "", fim: "" },
@@ -43,6 +44,24 @@ export default {
     };
   },
   methods: {
+    gerarHorarios(horaInicio, horaFim, intervaloMinutos) {
+    const horarios = [];
+    let [hora, minuto] = horaInicio.split(":").map(Number);
+    const [fimHora, fimMinuto] = horaFim.split(":").map(Number);
+
+    while (hora < fimHora || (hora === fimHora && minuto <= fimMinuto)) {
+      const horaFormatada = `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`;
+      horarios.push(horaFormatada);
+      minuto += intervaloMinutos;
+      if (minuto >= 60) {
+        minuto -= 60;
+        hora++;
+      }
+    }
+    return horarios;
+  },
+
+
     formatCPF(value) {
       const onlyNumbers = value.replace(/\D/g, "");
       return onlyNumbers
@@ -137,8 +156,8 @@ export default {
 <template>
   <div>
     <Navbar />
-    <div class="container py-5 mt-5" >
-      <div class="row justify-content-center align-items-center" >
+    <div class="container py-5 mt-5">
+      <div class="row justify-content-center align-items-center">
         <!-- Coluna para a Imagem -->
         <div class="col-md-4 d-flex justify-content-center">
 
@@ -151,7 +170,7 @@ export default {
         <div class="col-md-6">
           <div class="card shadow-lg border-0 rounded-3">
             <div class="row g-0">
-              <div class="col-md-12 bg text-light p-4" style="background-color: #000524; border-radius: 2%;" >
+              <div class="col-md-12 bg text-light p-4" style="background-color: #000524; border-radius: 2%;">
                 <h1 class="text-center mb-3">Nexus Saúde</h1>
                 <h3 class="text-center mb-4">Cadastro de Usuário</h3>
                 <form @submit.prevent="submitForm">
@@ -248,54 +267,22 @@ export default {
 
                       <!-- Horários de Atendimento -->
                       <div class="row mb-3">
-                        <div class="col-md-14">
+                        <div class="col-md-12">
                           <h5>Horários de Atendimento</h5>
                           <div class="row">
-                            <div class="col-md-4">
-                              <label for="segundaInicio">Segunda</label>
-                              <input v-model="diasAtendimento.segunda.inicio" type="time" id="segundaInicio"
-                                class="form-control" />
-                              <input v-model="diasAtendimento.segunda.fim" type="time" id="segundaFim"
-                                class="form-control" />
-                            </div>
-                            <div class="col-md-4">
-                              <label for="tercaInicio">Terça</label>
-                              <input v-model="diasAtendimento.terca.inicio" type="time" id="tercaInicio"
-                                class="form-control" />
-                              <input v-model="diasAtendimento.terca.fim" type="time" id="tercaFim"
-                                class="form-control" />
-                            </div>
-                            <div class="col-md-4">
-                              <label for="quartaInicio">Quarta</label>
-                              <input v-model="diasAtendimento.quarta.inicio" type="time" id="quartaInicio"
-                                class="form-control" />
-                              <input v-model="diasAtendimento.quarta.fim" type="time" id="quartaFim"
-                                class="form-control" />
-                            </div>
-                            <div class="col-md-4">
-                              <label for="quintaInicio">Quinta</label>
-                              <input v-model="diasAtendimento.quinta.inicio" type="time" id="quintaInicio"
-                                class="form-control" />
-                              <input v-model="diasAtendimento.quinta.fim" type="time" id="quintaFim"
-                                class="form-control" />
-                            </div>
-                            <div class="col-md-4">
-                              <label for="sextaInicio">Sexta</label>
-                              <input v-model="diasAtendimento.sexta.inicio" type="time" id="sextaInicio"
-                                class="form-control" />
-                              <input v-model="diasAtendimento.sexta.fim" type="time" id="sextaFim"
-                                class="form-control" />
-                            </div>
-                            <div class="col-md-4">
-                              <label for="sabadoInicio">Sábado</label>
-                              <input v-model="diasAtendimento.sabado.inicio" type="time" id="sabadoInicio"
-                                class="form-control" />
-                              <input v-model="diasAtendimento.sabado.fim" type="time" id="sabadoFim"
-                                class="form-control" />
+                            <div class="col-md-4" v-for="(dia, key) in diasAtendimento" :key="key">
+                              <label :for="`${key}Inicio`">{{ key.charAt(0).toUpperCase() + key.slice(1) }}</label>
+                              <select v-model="diasAtendimento[key].inicio" :id="`${key}Inicio`" class="form-select">
+                                <option v-for="hora in horarios" :key="hora" :value="hora">{{ hora }}</option>
+                              </select>
+                              <select v-model="diasAtendimento[key].fim" :id="`${key}Fim`" class="form-select">
+                                <option v-for="hora in horarios" :key="hora" :value="hora">{{ hora }}</option>
+                              </select>
                             </div>
                           </div>
                         </div>
                       </div>
+
                     </div>
 
                     <!-- Formulário do Paciente -->
@@ -346,9 +333,9 @@ export default {
 </template>
 
 <style scoped>
-.text-center button{
-    margin-right:10px;
-    margin-left: 10px;
-    width: 30%;
+.text-center button {
+  margin-right: 10px;
+  margin-left: 10px;
+  width: 30%;
 }
 </style>

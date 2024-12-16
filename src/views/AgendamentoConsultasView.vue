@@ -2,10 +2,10 @@
   <Navbar />
   <div class="container-fluid py-5 mt-5">
     <div class="row justify-content-center align-items-center">
-      <div class="col-lg-10 col-md-10 col-sm-12"> <!-- Aumentando a largura -->
+      <div class="col-lg-10 col-md-10 col-sm-12">
         <div class="card shadow-lg border-0 rounded-4">
           <div class="row g-0">
-            <!-- Imagem ao lado do formulário -->
+
             <div class="col-md-5 d-none d-md-block">
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem Nexus Saúde"
                 class="img-fluid rounded-start" />
@@ -15,7 +15,7 @@
               <h1 class="text-center text-light mb-4 font-weight-bold">Nexus Saúde</h1>
               <h3 class="text-center text-light mb-5">Agendamento de Consultas</h3>
               <form @submit.prevent="submitForm">
-            
+
                 <div class="row mb-4">
                   <div class="col-md-6">
                     <label for="especialidade" class="form-label text-light">Selecione a Especialidade</label>
@@ -62,7 +62,7 @@
                   </div>
                 </div>
 
-                <!-- Telefone do Paciente e Local -->
+
                 <div class="row mb-4">
                   <div class="col-md-6">
                     <label for="pacienteTelefone" class="form-label text-light">Telefone do Paciente</label>
@@ -76,10 +76,10 @@
                   </div>
                 </div>
 
+
                 <div class="text-center">
-                  <button type="submit" class="btn btn-primary rounded-3 btn-lg shadow-lg">
-                    Agendar Consulta
-                  </button>
+                  <button class="btn btn-primary rounded-3 btn-lg shadow-lg" @click="voltarPagina">Voltar</button>
+                  <button type="submit" class="btn btn-primary rounded-3 btn-lg shadow-lg">Agendar Consulta</button>
                 </div>
               </form>
             </div>
@@ -244,7 +244,7 @@ export default {
           data: this.form.data,
           pacienteNome: this.form.pacienteNome,
           pacienteTelefone: this.form.pacienteTelefone,
-    
+
         };
 
         const dao = new DAOService("agendamentos");
@@ -255,6 +255,15 @@ export default {
       } catch (error) {
         console.error("Erro ao agendar consulta:", error);
         alert("Não foi possível agendar a consulta. Tente novamente.");
+      }
+    },
+    voltarPagina() {
+      if (window.history.length > 1) {
+
+        this.$router.go(-1);
+      } else {
+
+        this.$router.push("/");
       }
     },
   },
@@ -295,6 +304,12 @@ h3 {
   border: 1px solid #ccc;
 }
 
+.text-center button {
+  margin-left: 5%;
+  margin-right: 5%;
+
+}
+
 .form-select:focus,
 .form-control:focus {
   border-color: #007bff;
@@ -309,5 +324,22 @@ button[type="submit"] {
 button[type="submit"]:hover {
   background-color: #0056b3;
   transition: background-color 0.3s ease-in-out;
+}
+
+.btn-voltar {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.btn-voltar:hover {
+  background-color: #0056b3;
 }
 </style>

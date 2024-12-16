@@ -11,7 +11,6 @@ export default {
 <template>
     <footer>
         <div class="container">
-            <!-- Logo e Informações de Contato -->
             <div class="logo">
                 <img src="/src/assets/img/NexusSaude_icon.png" alt="Nexus Saúde Logo">
                 <p><i class="bi bi-telephone"></i> 3661-0000</p>
@@ -19,7 +18,6 @@ export default {
                 <p><i class="bi bi-geo-alt"></i> Rua Exemplo, 123 - Cidade, Estado</p>
             </div>
 
-            <!-- Links de Navegação -->
             <ul class="nav-links">
                 <li><a href="#">Home</a></li>
                 <li><a href="#">Quem Somos</a></li>
@@ -30,7 +28,6 @@ export default {
                 <li><a href="#">FAQ</a></li>
             </ul>
 
-            <!-- Seção de Mídia Social -->
             <div class="social-section">
                 <h5>Acompanhem nossas redes sociais</h5>
                 <div class="social-media">
@@ -41,7 +38,6 @@ export default {
                 </div>
             </div>
 
-            <!-- Inscrição no Newsletter -->
             <div class="newsletter">
                 <h5>Receba novidades</h5>
                 <form @submit.prevent="subscribe">

@@ -2,6 +2,11 @@
   <div>
     <Navbar />
     <div class="container py-5">
+
+      <button class="btn-voltar" @click="voltarPagina">
+        <i class="fas fa-arrow-left me-2"></i> Voltar
+      </button>
+
       <h1 class="text-center mb-4">Lista de Médicos</h1>
 
       <div v-if="loading" class="text-center">
@@ -57,6 +62,15 @@ export default {
     goToMedicoDetails(id) {
       this.$router.push({ name: 'DetalhesMedicos', params: { id } });
     },
+    voltarPagina() {
+      if (window.history.length > 1) {
+        // Se houver histórico, volta para a página anterior
+        this.$router.go(-1);
+      } else {
+        // Se não houver histórico, redireciona para a rota desejada
+        this.$router.push("/");
+      }
+    },
   },
   mounted() {
     this.fetchMedicos();
@@ -76,5 +90,21 @@ export default {
 
 .card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.btn-voltar {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  margin-top: 5%;
+}
+
+.btn-voltar:hover {
+  background-color: #0056b3;
 }
 </style>

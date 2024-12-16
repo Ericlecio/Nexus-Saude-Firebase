@@ -121,6 +121,72 @@
                 </div>
               </div>
             </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                  Quais são os horários de atendimento?
+                </button>
+              </h2>
+              <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree">
+                <div class="accordion-body">
+                  Nosso atendimento ocorre de segunda a sexta, das 8h às 18h, e aos sábados das 8h às 12h.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingFour">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                  Como posso cancelar ou remarcar uma consulta?
+                </button>
+              </h2>
+              <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour">
+                <div class="accordion-body">
+                  Para cancelar ou remarcar sua consulta, acesse sua conta em nosso site ou entre em contato pelo
+                  telefone.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingFive">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                  Quais especialidades estão disponíveis?
+                </button>
+              </h2>
+              <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive">
+                <div class="accordion-body">
+                  Temos diversas especialidades, incluindo cardiologia, dermatologia, pediatria, ortopedia e mais.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingSix">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+                  Existe estacionamento no local?
+                </button>
+              </h2>
+              <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix">
+                <div class="accordion-body">
+                  Sim, oferecemos estacionamento gratuito para nossos pacientes.
+                </div>
+              </div>
+            </div>
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingSeven">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseSeven" aria-expanded="false" aria-controls="collapseSeven">
+                  Atendem emergências?
+                </button>
+              </h2>
+              <div id="collapseSeven" class="accordion-collapse collapse" aria-labelledby="headingSeven">
+                <div class="accordion-body">
+                  Sim, oferecemos atendimento emergencial para casos de urgência médica.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -236,7 +302,6 @@ html {
   opacity: 1;
   transition: opacity 1s ease-out;
   backdrop-filter: blur(5px);
-  /* Adiciona o desfoque */
 }
 
 .loading-logo {

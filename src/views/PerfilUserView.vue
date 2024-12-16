@@ -21,19 +21,19 @@
             <p>{{ userType }}</p>
           </div>
   
-          <!-- Se for médico, mostra o CRM e especialidade -->
+  
           <div v-if="userType === 'medico'" class="info-item">
             <label>CRM:</label>
             <p>{{ userCrm }}</p>
           </div>
   
-          <!-- Se for médico, inclui a especialidade -->
+        
           <div v-if="userType === 'medico'" class="info-item">
             <label>Especialidade:</label>
             <input v-model="userSpecialty" type="text" placeholder="Digite sua especialidade" />
           </div>
   
-          <!-- Se for paciente, mostra informações adicionais específicas -->
+ 
           <div v-if="userType === 'paciente'" class="info-item">
             <label>Idade:</label>
             <p>{{ userAge }} anos</p>
@@ -43,7 +43,7 @@
             <p>{{ userAddress }}</p>
           </div>
   
-          <!-- Formulário de Cadastro com dados adicionais -->
+    
           <div v-if="userType === 'paciente' || userType === 'medico'" class="info-item">
             <label>Informações adicionais</label>
             <div v-if="userType === 'medico'">
@@ -79,22 +79,22 @@
     },
     data() {
       return {
-        userName: localStorage.getItem("userName") || "Usuário", // Assume que o nome foi salvo na autenticação
-        userEmail: "usuario@exemplo.com", // Exemplo de email
-        userType: "paciente", // Pode ser "paciente" ou "medico"
-        userCrm: "123456", // CRM do médico
-        userSpecialty: "", // Especialidade do médico
-        userAge: 30, // Idade do paciente
-        userAddress: "Rua Exemplo, 123, Bairro", // Endereço do paciente
+        userName: localStorage.getItem("userName") || "Usuário", 
+        userEmail: "usuario@exemplo.com",
+        userType: "paciente", 
+        userCrm: "123456",
+        userSpecialty: "", 
+        userAge: 30, 
+        userAddress: "Rua Exemplo, 123, Bairro", 
       };
     },
     methods: {
       editProfile() {
-        this.$router.push("/editar-perfil"); // Redireciona para página de edição do perfil
+        this.$router.push("/editar-perfil"); 
       },
       logout() {
-        localStorage.removeItem("userName"); // Limpa as informações do usuário
-        this.$router.push("/login"); // Redireciona para a página de login
+        localStorage.removeItem("userName"); 
+        this.$router.push("/login"); 
       },
     },
   };

@@ -71,7 +71,7 @@
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { useRouter } from "vue-router";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth"; // Importando autenticação do Firebase
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 export default {
   name: "LoginScreen",
