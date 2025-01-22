@@ -19,17 +19,11 @@
         </div>
         <form @submit.prevent="login">
           <div v-if="userType === 'paciente'">
-            <div class="input-group">
-              <i class="fas fa-user"></i>
-              <input type="email" v-model="email" placeholder="E-mail" required class="input-field" />
-            </div>
-            <div class="input-group">
-              <i class="fas fa-lock"></i>
-              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required class="input-field" />
-            </div>
-            <div class="show-password" @click="togglePassword">
-              <span>{{ showPassword ? 'Ocultar Senha' : 'Mostrar Senha' }}</span>
-            </div>
+            <div class="btn-container">
+            <button type="button" @click="loginWithGoogle" class="btn-google">
+              Login com Google
+            </button>
+          </div>
           </div>
           <div v-if="userType === 'medico'">
             <div class="input-group">
@@ -42,20 +36,23 @@
             </div>
             <div class="input-group">
               <i class="fas fa-lock"></i>
-              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required class="input-field" />
+              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required
+                class="input-field" />
             </div>
             <div class="show-password" @click="togglePassword">
-              <span>{{ showPassword ? 'Ocultar Senha' : 'Mostrar Senha' }}</span>
+              <span>{{
+                showPassword ? "Ocultar Senha" : "Mostrar Senha"
+              }}</span>
             </div>
-          </div>
-          <div class="options">
+            <div class="options">
             <label><input type="checkbox" /> Lembrar Sempre</label>
             <a href="#">Esqueceu a Senha?</a>
           </div>
           <div class="btn-container">
             <button type="submit" class="btn">Entrar</button>
-            <button type="button" @click="loginWithGoogle" class="btn-google">Login com Google</button>
           </div>
+          </div>
+          
         </form>
       </div>
       <div class="logo-container">
@@ -67,12 +64,12 @@
   <Footer />
 </template>
 
-
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import { useRouter } from "vue-router";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 export default {
   name: "LoginScreen",
@@ -82,9 +79,9 @@ export default {
   },
   data() {
     return {
-      userType: "paciente", 
+      userType: "paciente",
       email: "",
-      crm: "", 
+      crm: "",
       password: "",
       showPassword: false,
     };
@@ -100,26 +97,47 @@ export default {
       if (this.userType === "paciente") {
         console.log("Paciente logado com e-mail: ", this.email);
       } else if (this.userType === "medico") {
-        console.log("Médico logado com e-mail: ", this.email, " CRM: ", this.crm);
+        console.log(
+          "Médico logado com e-mail: ",
+          this.email,
+          " CRM: ",
+          this.crm
+        );
       }
-      this.$router.push("/home");
-    },
-    loginWithGoogle() {
-  const auth = getAuth(); 
-  const provider = new GoogleAuthProvider();
-
-  signInWithPopup(auth, provider)
-    .then((result) => {
-      const user = result.user;
-
-      localStorage.setItem("userName", user.displayName);
       this.$router.push("/");
-    })
-    .catch((error) => {
-      console.error("Erro de autenticação com Google:", error.message);
-    });
-}
+    },
+    async loginWithGoogle() {
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      const db = getFirestore();
 
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        // Verifica se o usuário já existe no banco de dados
+        const userRef = doc(db, "pacientes", user.uid);
+        const docSnap = await getDoc(userRef);
+
+        if (!docSnap.exists()) {
+          // Se não existir, cria o cadastro do paciente automaticamente
+          await setDoc(userRef, {
+            nomeCompleto: user.displayName || "Nome não informado",
+            email: user.email,
+            telefone: user.phoneNumber || "Não informado",
+            planoSaude: "",
+            usuarioId: user.uid,
+            tipo: "paciente",
+            dataCadastro: new Date().toISOString(),
+          });
+        }
+
+        localStorage.setItem("userName", user.displayName);
+        this.$router.push("/");
+      } catch (error) {
+        console.error("Erro de autenticação com Google:", error.message);
+      }
+    },
   },
 };
 </script>
@@ -185,6 +203,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -208,6 +227,7 @@ body {
     opacity: 0;
     transform: scale(0.8);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -363,15 +383,15 @@ h1 {
   padding: 15px;
   border: 2px solid white;
   border-radius: 0 20px 20px 0;
-  background-color:#53ba83;
+  background-color: #53ba83;
   color: white;
   font-size: 18px;
   cursor: pointer;
   margin-bottom: 20px;
   transition: background-color 0.2s, transform 0.2s;
-}y
+}
 
-.btn-google:hover {
+y .btn-google:hover {
   background-color: #000524;
   transform: scale(1.05);
 }
