@@ -49,10 +49,8 @@ export default {
   methods: {
     async fetchMedicos() {
       try {
-        const dao = new DAOService("usuarios");
-        const usuarios = await dao.getAll();
-
-        this.medicos = usuarios.filter(usuario => usuario.tipo === "medico");
+        const dao = new DAOService("medicos");
+        this.medicos = await dao.getAll();
       } catch (error) {
         console.error("Erro ao buscar médicos: ", error);
       } finally {
@@ -64,10 +62,8 @@ export default {
     },
     voltarPagina() {
       if (window.history.length > 1) {
-        // Se houver histórico, volta para a página anterior
         this.$router.go(-1);
       } else {
-        // Se não houver histórico, redireciona para a rota desejada
         this.$router.push("/");
       }
     },
@@ -91,6 +87,7 @@ export default {
 .card:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
+
 .btn-voltar {
   background-color: #007bff;
   color: white;
