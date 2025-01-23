@@ -20,10 +20,10 @@
         <form @submit.prevent="login">
           <div v-if="userType === 'paciente'">
             <div class="btn-container">
-            <button type="button" @click="loginWithGoogle" class="btn-google">
-              Login com Google
-            </button>
-          </div>
+              <button type="button" @click="loginWithGoogle" class="btn-google">
+                Login com Google
+              </button>
+            </div>
           </div>
           <div v-if="userType === 'medico'">
             <div class="input-group">
@@ -40,19 +40,16 @@
                 class="input-field" />
             </div>
             <div class="show-password" @click="togglePassword">
-              <span>{{
-                showPassword ? "Ocultar Senha" : "Mostrar Senha"
-              }}</span>
+              <span>{{ showPassword ? "Ocultar Senha" : "Mostrar Senha" }}</span>
             </div>
             <div class="options">
-            <label><input type="checkbox" /> Lembrar Sempre</label>
-            <a href="#">Esqueceu a Senha?</a>
+              <label><input type="checkbox" /> Lembrar Sempre</label>
+              <a href="#">Esqueceu a Senha?</a>
+            </div>
+            <div class="btn-container">
+              <button type="submit" class="btn">Entrar</button>
+            </div>
           </div>
-          <div class="btn-container">
-            <button type="submit" class="btn">Entrar</button>
-          </div>
-          </div>
-          
         </form>
       </div>
       <div class="logo-container">
@@ -67,9 +64,8 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import { useRouter } from "vue-router";
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 export default {
   name: "LoginScreen",
@@ -93,54 +89,76 @@ export default {
     goToCadastro() {
       this.$router.push("/cadastro");
     },
-    login() {
-      if (this.userType === "paciente") {
-        console.log("Paciente logado com e-mail: ", this.email);
-      } else if (this.userType === "medico") {
-        console.log(
-          "Médico logado com e-mail: ",
-          this.email,
-          " CRM: ",
-          this.crm
-        );
-      }
-      this.$router.push("/");
-    },
-    async loginWithGoogle() {
-      const auth = getAuth();
-      const provider = new GoogleAuthProvider();
+    async login() {
+  if (this.userType === "medico") {
+    try {
       const db = getFirestore();
+      const q = query(collection(db, "medicos"), where("email", "==", this.email), where("crm", "==", this.crm));
+      const querySnapshot = await getDocs(q);
 
-      try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-
-        // Verifica se o usuário já existe no banco de dados
-        const userRef = doc(db, "pacientes", user.uid);
-        const docSnap = await getDoc(userRef);
-
-        if (!docSnap.exists()) {
-          // Se não existir, cria o cadastro do paciente automaticamente
-          await setDoc(userRef, {
-            nomeCompleto: user.displayName || "Nome não informado",
-            email: user.email,
-            telefone: user.phoneNumber || "Não informado",
-            planoSaude: "",
-            usuarioId: user.uid,
-            tipo: "paciente",
-            dataCadastro: new Date().toISOString(),
-          });
+      if (!querySnapshot.empty) {
+        const medico = querySnapshot.docs[0].data();
+        
+        // Verificando a senha digitada com a armazenada
+        if (medico.senha === this.password) {
+          // Armazenando os dados do médico no localStorage com tipo
+          localStorage.setItem("user", JSON.stringify({
+            nomeCompleto: medico.nomeCompleto,
+            email: medico.email,
+            crm: medico.crm,
+            tipo: "medico"  // Adicionando tipo para diferenciar
+          }));
+          this.$router.push("/");
+        } else {
+          alert("Senha incorreta!");
         }
-
-        localStorage.setItem("userName", user.displayName);
-        this.$router.push("/");
-      } catch (error) {
-        console.error("Erro de autenticação com Google:", error.message);
+      } else {
+        alert("Usuário não encontrado!");
       }
+    } catch (error) {
+      console.error("Erro ao autenticar médico: ", error);
+      alert("Erro ao autenticar. Verifique suas credenciais.");
+    }
+  }
+}
+,
+    async loginWithGoogle() {
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+  const db = getFirestore();
+
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Verifica se o paciente já está cadastrado no banco de dados
+    const userRef = collection(db, "pacientes");
+    const q = query(userRef, where("email", "==", user.email));
+    const querySnapshot = await getDocs(q);
+
+    if (!querySnapshot.empty) {
+      const paciente = querySnapshot.docs[0].data();
+
+      // Armazena os dados do paciente no localStorage
+      localStorage.setItem("user", JSON.stringify({
+        nomeCompleto: paciente.nomeCompleto || user.displayName,
+        email: paciente.email || user.email,
+        tipo: "paciente"
+      }));
+
+      this.$router.push("/");
+    } else {
+      alert("Paciente não encontrado. Verifique seu e-mail.");
+    }
+  } catch (error) {
+    console.error("Erro de autenticação com Google:", error.message);
+    alert("Erro ao autenticar com Google.");
+  }
     },
   },
 };
 </script>
+
 
 <style scoped>
 * {
