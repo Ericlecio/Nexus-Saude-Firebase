@@ -2,9 +2,9 @@
   <div>
     <Navbar />
     <div class="container py-5 mt-5">
-      <div class="row justify-content-center">
+      <div class="row justify-content-center" >
         <div class="col-md-10">
-          <div class="card shadow-lg border-0 rounded-4 p-5 bg-light">
+          <div class="card shadow-lg border-0 rounded-4 p-5 bg-light" >
             <div class="text-center d-flex align-items-center justify-content-center mb-3">
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde"
                 class="img-fluid logo-small me-3" />

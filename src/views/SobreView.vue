@@ -1,20 +1,3 @@
-<script>
-import Navbar from "@/components/Navbar.vue";
-import Footer from "@/components/Footer.vue";
-import AOS from "aos";
-import "aos/dist/aos.css";
-
-export default {
-  components: {
-    Navbar,
-    Footer,
-  },
-  mounted() {
-    AOS.init(); 
-  },
-};
-</script>
-
 <template>
   <div class="div-principal">
     <Navbar />
@@ -116,13 +99,29 @@ export default {
   </div>
 </template>
 
+<script>
+import Navbar from "@/components/Navbar.vue";
+import Footer from "@/components/Footer.vue";
+import AOS from "aos";
+import "aos/dist/aos.css";
+
+export default {
+  components: {
+    Navbar,
+    Footer,
+  },
+  mounted() {
+    AOS.init();
+  },
+};
+</script>
+
+
 <style scoped>
 /* Fundo principal */
 .div-principal {
-  background: linear-gradient(
-      rgba(0, 0, 30, 0.6),
-      rgba(0, 0, 30, 0.6)
-    ),
+  background: linear-gradient(rgba(0, 0, 30, 0.6),
+      rgba(0, 0, 30, 0.6)),
     url("@/assets/img/img_fundo.png") no-repeat center center fixed;
   background-size: cover;
 }
@@ -150,7 +149,7 @@ export default {
 
 /* Missão */
 .mission-card {
-  background-color: rgba(255, 255, 255, 0.9); 
+  background-color: rgba(255, 255, 255, 0.9);
   padding: 30px;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -167,7 +166,7 @@ export default {
 
 .values-section .value-card:hover {
   transform: translateY(-10px);
-  background-color: rgba(83, 186, 131, 0.1); 
+  background-color: rgba(83, 186, 131, 0.1);
 }
 
 .values-section .icon {

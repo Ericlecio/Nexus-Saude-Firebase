@@ -22,7 +22,6 @@
               <th>Nome do Profissional</th>
               <th>Local</th>
               <th>Data e Hora</th>
-              <th>Nome do Paciente</th>
               <th>Telefone do Paciente</th>
               <th>Ações</th>
             </tr>
@@ -30,10 +29,9 @@
           <tbody>
             <tr v-for="(agendamento, index) in agendamentos" :key="agendamento.id">
               <td>{{ agendamento.especialidade }}</td>
-              <td>{{ agendamento.nomeDoMedico }}</td> <!-- Alterado para clareza -->
+              <td>{{ agendamento.medicoNome || 'Nome não disponível' }}</td>
               <td>{{ agendamento.local }}</td>
               <td>{{ agendamento.data }}</td>
-              <td>{{ agendamento.nomeDoPaciente }}</td>
               <td>{{ agendamento.pacienteTelefone }}</td>
               <td>
                 <button class="btn btn-success btn-sm me-2" @click="remarcarAgendamento(index)">Remarcar</button>
@@ -41,7 +39,6 @@
               </td>
             </tr>
           </tbody>
-
         </table>
 
         <p v-else class="text-center text-muted">Nenhum agendamento encontrado.</p>
@@ -52,8 +49,8 @@
 </template>
 
 <script>
-import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import { firestore } from "@/firebase";
+import { collection, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
+import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 
@@ -67,95 +64,42 @@ export default {
     return {
       agendamentos: [],
       carregando: true,
+      pacienteLogado: null,
     };
   },
   methods: {
-    async buscarNomeRealDoMedico(medicoId) {
-      try {
-        const medicoRef = doc(firestore, "medicos", medicoId);
-        const medicoSnap = await getDoc(medicoRef);
-
-        if (medicoSnap.exists()) {
-          const usuarioId = medicoSnap.data().usuarioId;
-          const usuarioRef = doc(firestore, "usuarios", usuarioId);
-          const usuarioSnap = await getDoc(usuarioRef);
-
-          if (usuarioSnap.exists()) {
-            return usuarioSnap.data().nomeCompleto;
-          }
-        }
-        return "Nome não disponível";
-      } catch (error) {
-        console.error(`Erro ao buscar nome do médico:`, error);
-        return "Erro ao carregar";
-      }
-    },
-
-    async buscarNomeRealDoPaciente(usuarioId) {
-      try {
-        console.log(`Buscando paciente com usuarioId: ${usuarioId}`);
-
-        const pacientesRef = collection(firestore, "pacientes");
-        const querySnapshot = await getDocs(pacientesRef);
-
-        let pacienteDoc = null;
-        querySnapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          if (data.usuarioId === usuarioId) {
-            pacienteDoc = docSnap;
-          }
-        });
-
-        if (!pacienteDoc) {
-          console.warn(`Nenhum documento de paciente encontrado para usuarioId: ${usuarioId}`);
-          return "Nome não disponível";
-        }
-
-        console.log("Documento de paciente encontrado:", pacienteDoc.data());
-
-        const usuarioRef = doc(firestore, "usuarios", usuarioId);
-        const usuarioSnap = await getDoc(usuarioRef);
-
-        if (!usuarioSnap.exists()) {
-          console.warn(`Documento de usuário não encontrado para usuarioId: ${usuarioId}`);
-          return "Nome não disponível";
-        }
-
-        const usuarioData = usuarioSnap.data();
-        console.log("Documento de usuário encontrado:", usuarioData);
-
-        const nomeCompleto = usuarioData.nomeCompleto;
-        if (!nomeCompleto) {
-          console.warn(`Campo 'nomeCompleto' ausente ou vazio no documento de usuário: ${usuarioId}`);
-          return "Nome não disponível";
-        }
-
-        return nomeCompleto;
-      } catch (error) {
-        console.error(`Erro ao buscar nome do paciente [${usuarioId}]:`, error);
-        return "Erro ao carregar";
-      }
-    },
-
     async carregarAgendamentos() {
       try {
-        const agendamentosRef = collection(firestore, "agendamentos");
-        const snapshot = await getDocs(agendamentosRef);
+        const user = JSON.parse(localStorage.getItem("user"));
 
-        const agendamentos = [];
-        for (const docSnap of snapshot.docs) {
-          const agendamento = { id: docSnap.id, ...docSnap.data() };
-
-          console.log("Carregando agendamento:", agendamento);
-
-          agendamento.nomeDoMedico = await this.buscarNomeRealDoMedico(agendamento.medicoNome);
-          agendamento.nomeDoPaciente = await this.buscarNomeRealDoPaciente(agendamento.pacienteNome);
-
-          agendamentos.push(agendamento);
+        if (!user || user.tipo !== "paciente" || !user.usuarioId) {
+          console.warn("Nenhum paciente logado encontrado. Redirecionando...");
+          alert("Apenas pacientes podem acessar esta página. Faça login.");
+          this.$router.push("/login");
+          return;
         }
 
-        console.log("Agendamentos carregados com sucesso:", agendamentos);
-        this.agendamentos = agendamentos;
+        this.pacienteLogado = user;
+        console.log("Paciente logado encontrado:", this.pacienteLogado);
+
+        const db = getFirestore();
+        const agendamentosRef = collection(db, "agendamentos");
+
+        // Busca os agendamentos do paciente logado
+        const q = query(agendamentosRef, where("pacienteId", "==", this.pacienteLogado.usuarioId));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+          console.warn("Nenhum agendamento encontrado para este paciente.");
+          this.agendamentos = [];
+        } else {
+          this.agendamentos = snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data(),
+          }));
+        }
+
+        console.log("Agendamentos carregados com sucesso:", this.agendamentos);
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos. Tente novamente mais tarde.");
@@ -164,85 +108,27 @@ export default {
       }
     },
 
-    async remarcarAgendamento(index) {
-      const novaData = prompt("Informe a nova data e hora (Exemplo: Sexta: 07:00 às 14:30):");
-      if (novaData) {
-        const agendamento = this.agendamentos[index];
-        const agendamentoRef = doc(firestore, "agendamentos", agendamento.id);
 
-        try {
-          await updateDoc(agendamentoRef, { data: novaData });
-          this.agendamentos[index].data = novaData;
-          alert("Agendamento remarcado com sucesso.");
-        } catch (error) {
-          console.error("Erro ao remarcar agendamento:", error);
-          alert("Erro ao remarcar agendamento.");
-        }
-      }
-    },
-
-    async carregarAgendamentos() {
-      try {
-        const agendamentosRef = collection(firestore, "agendamentos");
-        const snapshot = await getDocs(agendamentosRef);
-
-        const agendamentos = [];
-        for (const docSnap of snapshot.docs) {
-          const agendamento = { id: docSnap.id, ...docSnap.data() };
-
-          console.log("Carregando agendamento:", agendamento);
-
-          agendamento.nomeDoMedico = await this.buscarNomeRealDoMedico(agendamento.medicoNome);
-          agendamento.nomeDoPaciente = await this.buscarNomeRealDoPaciente(agendamento.pacienteNome);
-
-          agendamentos.push(agendamento);
-        }
-
-        console.log("Agendamentos carregados com sucesso:", agendamentos);
-        this.agendamentos = agendamentos;
-      } catch (error) {
-        console.error("Erro ao carregar agendamentos:", error);
-        alert("Erro ao carregar agendamentos. Tente novamente mais tarde.");
-      } finally {
-        this.carregando = false;
-      }
-    },
     async cancelarAgendamento(index) {
       try {
         const agendamento = this.agendamentos[index];
-        console.log("Tentando cancelar agendamento:", agendamento);
+        const confirmar = confirm(`Deseja realmente cancelar o agendamento com ${agendamento.medicoNome}?`);
 
-        if (!agendamento.id) {
-          console.error("ID do agendamento ausente. Não é possível cancelar.");
-          alert("Erro ao cancelar agendamento. ID não encontrado.");
-          return;
-        }
+        if (!confirmar) return;
 
-        const confirmar = confirm(`Deseja realmente cancelar o agendamento com ${agendamento.nomeDoMedico}?`);
-        if (!confirmar) {
-          console.log("Cancelamento abortado pelo usuário.");
-          return;
-        }
-        const agendamentoRef = doc(firestore, "agendamentos", agendamento.id);
-
-        await deleteDoc(agendamentoRef);
+        const db = getFirestore();
+        await deleteDoc(doc(db, "agendamentos", agendamento.id));
 
         this.agendamentos.splice(index, 1);
         alert("Agendamento cancelado com sucesso.");
-        console.log("Agendamento cancelado com sucesso:", agendamento);
       } catch (error) {
         console.error("Erro ao cancelar agendamento:", error);
-        alert("Erro ao cancelar agendamento. Tente novamente mais tarde.");
+        alert("Erro ao cancelar agendamento. Tente novamente.");
       }
     },
+
     voltarPagina() {
-      if (window.history.length > 1) {
-        // Se houver histórico, volta para a página anterior
-        this.$router.go(-1);
-      } else {
-        // Se não houver histórico, redireciona para a rota desejada
-        this.$router.push("/");
-      }
+      this.$router.push("/");
     },
   },
   async mounted() {
@@ -251,13 +137,14 @@ export default {
 };
 </script>
 
+
+
 <style scoped>
 .div-principal {
-  margin-top: 5%
+  margin-top: 5%;
 }
 
 .container {
-  margin-top: 100%;
   background-color: #f8f9fa;
   padding: 30px;
   border-radius: 15px;
@@ -322,6 +209,7 @@ td {
   color: #6c757d;
   font-size: 16px;
 }
+
 .btn-voltar {
   background-color: #007bff;
   color: white;
@@ -330,12 +218,10 @@ td {
   border-radius: 5px;
   font-size: 1rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  margin-top: 5%;
+  margin-bottom: 20px;
 }
 
 .btn-voltar:hover {
   background-color: #0056b3;
-} 
+}
 </style>

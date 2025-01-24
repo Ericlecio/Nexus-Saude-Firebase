@@ -7,7 +7,7 @@
         <i class="fas fa-arrow-left me-2"></i> Voltar
       </button>
 
-      <h1 class="text-center mb-4 text-primary" style="margin-top: 50px;">
+      <h1 class="text-center mb-4 text-primary" style="margin-top: 50px; ">
         {{ medico ? medico.nomeCompleto : "Carregando..." }}
       </h1>
 
@@ -129,6 +129,7 @@ export default {
       showModal: false,
       campoSelecionado: "",
       formEdit: {},
+      
     };
   },
   methods: {

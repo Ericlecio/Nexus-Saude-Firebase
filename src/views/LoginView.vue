@@ -21,7 +21,7 @@
           <div v-if="userType === 'paciente'">
             <div class="btn-container">
               <button type="button" @click="loginWithGoogle" class="btn-google">
-                Login com Google
+                <i class="fab fa-google"></i> Login com Google
               </button>
             </div>
           </div>
@@ -32,8 +32,10 @@
             </div>
             <div class="input-group">
               <i class="fas fa-id-card"></i>
-              <input type="text" v-model="crm" placeholder="CRM" required class="input-field" />
+              <input type="text" v-model="crm" placeholder="CRM" required class="input-field" pattern="\d{6}"
+                maxlength="6" @input="validarCRM" />
             </div>
+
             <div class="input-group">
               <i class="fas fa-lock"></i>
               <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required
@@ -53,8 +55,8 @@
         </form>
       </div>
       <div class="logo-container">
-        <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" />
-        <a href="#" class="create-account" @click.prevent="goToCadastro">Criar Conta</a>
+        <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" class="logo" />
+        <a href="#" class="create-account" @click.prevent="goToCadastro">Criar Conta Médica</a>
       </div>
     </div>
   </div>
@@ -64,7 +66,7 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 export default {
@@ -87,78 +89,86 @@ export default {
       this.showPassword = !this.showPassword;
     },
     goToCadastro() {
+      // Redireciona para a página de cadastro
       this.$router.push("/cadastro");
     },
+
     async login() {
-  if (this.userType === "medico") {
-    try {
-      const db = getFirestore();
-      const q = query(collection(db, "medicos"), where("email", "==", this.email), where("crm", "==", this.crm));
-      const querySnapshot = await getDocs(q);
+      if (this.userType === "medico") {
+        try {
+          const db = getFirestore();
+          const q = query(collection(db, "medicos"), where("email", "==", this.email), where("crm", "==", this.crm));
+          const querySnapshot = await getDocs(q);
 
-      if (!querySnapshot.empty) {
-        const medico = querySnapshot.docs[0].data();
-        
-        // Verificando a senha digitada com a armazenada
-        if (medico.senha === this.password) {
-          // Armazenando os dados do médico no localStorage com tipo
-          localStorage.setItem("user", JSON.stringify({
-            nomeCompleto: medico.nomeCompleto,
-            email: medico.email,
-            crm: medico.crm,
-            tipo: "medico"  // Adicionando tipo para diferenciar
-          }));
-          this.$router.push("/");
-        } else {
-          alert("Senha incorreta!");
+          if (!querySnapshot.empty) {
+            const medicoDoc = querySnapshot.docs[0];
+            const medico = medicoDoc.data();
+
+            if (medico.senha === this.password) {
+              localStorage.setItem("user", JSON.stringify({
+                id: medicoDoc.id,  // Adicionando o ID do documento do médico
+                nomeCompleto: medico.nomeCompleto,
+                email: medico.email,
+                crm: medico.crm,
+                tipo: "medico"
+              }));
+              this.$router.push("/");
+            } else {
+              alert("Senha incorreta!");
+            }
+          } else {
+            alert("Usuário não encontrado!");
+          }
+        } catch (error) {
+          console.error("Erro ao autenticar médico: ", error);
+          alert("Erro ao autenticar. Verifique suas credenciais.");
         }
-      } else {
-        alert("Usuário não encontrado!");
       }
-    } catch (error) {
-      console.error("Erro ao autenticar médico: ", error);
-      alert("Erro ao autenticar. Verifique suas credenciais.");
     }
-  }
-}
-,
+    ,
+
     async loginWithGoogle() {
-  const auth = getAuth();
-  const provider = new GoogleAuthProvider();
-  const db = getFirestore();
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      const db = getFirestore();
 
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
 
-    // Verifica se o paciente já está cadastrado no banco de dados
-    const userRef = collection(db, "pacientes");
-    const q = query(userRef, where("email", "==", user.email));
-    const querySnapshot = await getDocs(q);
+        // Verifica se o paciente já existe no Firestore
+        const userRef = doc(db, "pacientes", user.uid);
+        const docSnap = await getDoc(userRef);
 
-    if (!querySnapshot.empty) {
-      const paciente = querySnapshot.docs[0].data();
+        if (!docSnap.exists()) {
+          await setDoc(userRef, {
+            nomeCompleto: user.displayName || "Nome não informado",
+            email: user.email,
+            telefone: user.phoneNumber || "Não informado",
+            planoSaude: "",
+            usuarioId: user.uid,  // Certifique-se de que este campo está sendo salvo corretamente
+            tipo: "paciente",
+            dataCadastro: new Date().toISOString(),
+          });
+        }
 
-      // Armazena os dados do paciente no localStorage
-      localStorage.setItem("user", JSON.stringify({
-        nomeCompleto: paciente.nomeCompleto || user.displayName,
-        email: paciente.email || user.email,
-        tipo: "paciente"
-      }));
+        // Salvar informações no localStorage para uso na navbar
+        localStorage.setItem("user", JSON.stringify({
+          nomeCompleto: user.displayName,
+          email: user.email,
+          usuarioId: user.uid,  // Corrigido para garantir que o ID seja salvo corretamente
+          tipo: "paciente"
+        }));
 
-      this.$router.push("/");
-    } else {
-      alert("Paciente não encontrado. Verifique seu e-mail.");
+        this.$router.push("/");
+      } catch (error) {
+        console.error("Erro de autenticação com Google:", error.message);
+        alert("Erro ao autenticar com o Google. Tente novamente.");
+      }
     }
-  } catch (error) {
-    console.error("Erro de autenticação com Google:", error.message);
-    alert("Erro ao autenticar com Google.");
-  }
-    },
   },
 };
 </script>
-
 
 <style scoped>
 * {
@@ -169,17 +179,21 @@ export default {
 
 html,
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Poppins", sans-serif;
   height: 100%;
-  background-size: cover;
+  background: linear-gradient(to right, #000524, #53ba83);
 }
 
 .main-container {
-  height: 100%;
+  margin-top: 65px;
+  /* Adiciona espaçamento entre a navbar e o conteúdo */
   display: flex;
   justify-content: center;
   align-items: center;
-  margin: 8% 0 5% 0;
+  min-height: calc(100vh - 80px);
+  /* Garante que o conteúdo ocupe o espaço correto */
+  padding: 20px 20px;
+  /* Espaçamento interno para melhor layout */
   animation: fadeIn 1s ease-in-out;
 }
 
@@ -197,153 +211,117 @@ body {
 
 .login-container {
   display: flex;
-  width: 80%;
-  height: 88%;
-  max-width: 900px;
-  background-color: #000524;
-  border-radius: 8px;
+  width: 90%;
+  max-width: 1100px;
+  background-color: #fff;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 15px 30px rgb(26, 26, 60);
 }
 
 .login-form {
   flex: 1;
-  padding: 40px;
+  padding: 50px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  opacity: 0;
-  animation: fadeInForm 1s ease-in-out forwards;
 }
 
-@keyframes fadeInForm {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.login-form header {
+  text-align: center;
 }
 
 .logo-container {
   flex: 1;
+  background-color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  padding: 20px;
-  background-color: white;
-  opacity: 0;
-  animation: fadeInLogo 1s ease-in-out forwards;
+  padding: 30px;
+  color: #000524;
 }
 
-@keyframes fadeInLogo {
-  0% {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+.login-container a {
+  color: #000524;
+  ;
 }
 
-.header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: 0px;
-}
+.logo {
+  max-width: 70%;
+  height: auto;
+  margin-bottom: 20px;
 
-h2 {
-  margin-bottom: 10px;
-  font-size: 24px;
-  color: white;
 }
 
 h1 {
-  margin-bottom: 10px;
-  font-size: 32px;
-  color: white;
+  color: #000524;
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+h2 {
+  color: #53ba83;
+  font-size: 1.5rem;
+  margin-bottom: 20px;
 }
 
 .user-type-selector {
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
-  color: white;
+  margin-bottom: 30px;
 }
 
 .user-type-selector label {
-  margin: 0 10px;
+  font-size: 1.1rem;
+  color: #000524;
+  margin: 0 15px;
 }
 
 .input-group {
   position: relative;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .input-group i {
   position: absolute;
   top: 50%;
+  left: 15px;
   transform: translateY(-50%);
-  color: #ccc;
-}
-
-.input-group .fas.fa-user,
-.input-group .fas.fa-lock,
-.input-group .fas.fa-id-card {
-  left: 10px;
-}
-
-.input-group .fas {
-  right: 10px;
-  cursor: pointer;
+  color: #999;
 }
 
 .input-field {
   width: 100%;
-  padding: 15px 15px 15px 40px;
-  border: 2px solid transparent;
-  border-radius: 20px;
-  background-color: #fff;
-  font-size: 16px;
+  padding: 15px 15px 15px 50px;
+  border-radius: 25px;
+  border: 1px solid #ccc;
   outline: none;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  font-size: 1rem;
 }
 
 .input-field:focus {
   border-color: #53ba83;
-  box-shadow: 0 0 5px #53ba83;
+  box-shadow: 0 0 8px rgba(83, 186, 131, 0.5);
 }
 
 .show-password {
   text-align: center;
-  margin-top: 5px;
   color: #53ba83;
   cursor: pointer;
-}
-
-.show-password span {
-  font-size: 14px;
 }
 
 .options {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
+  font-size: 0.9rem;
   margin-bottom: 20px;
-  color: #fff;
 }
 
 .options a {
-  color: white;
+  color: #000524;
   text-decoration: none;
+  font-weight: bold;
 }
 
 .options a:hover {
@@ -351,66 +329,196 @@ h1 {
 }
 
 .btn-container {
-  display: flex;
-  justify-content: center;
+  text-align: center;
 }
 
 .btn {
-  width: 50%;
+  width: 100%;
   padding: 15px;
-  border: 2px solid white;
-  border-radius: 20px 0 0 20px;
-  background-color: #000524;
-  color: white;
-  font-size: 18px;
+  border: none;
+  border-radius: 25px;
+  background-color: #53ba83;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
   cursor: pointer;
-  margin-bottom: 20px;
-  transition: background-color 0.2s, transform 0.2s;
+  transition: 0.3s ease;
 }
 
 .btn:hover {
-  background-color: #53ba83;
-  transform: scale(1.05);
+  background-color: #000524;
 }
 
-.create-account {
-  display: block;
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  color: rgb(255, 255, 255);
+  margin-bottom: 30px;
+  /* Espaçamento inferior aumentado */
+}
+
+.header h1,
+.header h2 {
+  text-align: center;
+  width: 100%;
+}
+
+.btn {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 25px;
+  background-color: #28a745;
+  /* Cor verde */
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #218838;
+  /* Tom mais escuro de verde ao passar o mouse */
+}
+
+
+.create-account {
+  text-align: center;
+  color: white;
+  font-size: 1.1rem;
   text-decoration: none;
-  background-color: #000524;
-  font-size: 16px;
-  transition: background-color 0.1s ease, color 0.1s ease;
-  padding: 20px;
-  border-radius: 20px;
+  font-weight: bold;
+  transition: 0.3s ease;
 }
 
 .create-account:hover {
-  background-color: #53ba83;
-  color: white;
-}
-
-.logo-container img {
-  max-width: 80%;
-  height: auto;
-  margin-bottom: 20px;
+  text-decoration: underline;
 }
 
 .btn-google {
-  width: 50%;
+  width: 100%;
   padding: 15px;
-  border: 2px solid white;
-  border-radius: 0 20px 20px 0;
-  background-color: #53ba83;
-  color: white;
-  font-size: 18px;
+  border: none;
+  border-radius: 25px;
+  background-color: #db4437;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: bold;
   cursor: pointer;
-  margin-bottom: 20px;
-  transition: background-color 0.2s, transform 0.2s;
+  transition: 0.3s ease;
 }
 
-y .btn-google:hover {
-  background-color: #000524;
-  transform: scale(1.05);
+.btn-google:hover {
+  background-color: #b2301b;
 }
+
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column-reverse;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: none;
+    border-radius: 10px;
+  }
+
+  .login-form {
+    padding: 30px;
+    text-align: center;
+  }
+
+  .logo-container {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .logo {
+    max-width: 60%;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+  }
+
+  .user-type-selector {
+    flex-direction: column;
+  }
+
+  .user-type-selector label {
+    margin-bottom: 10px;
+  }
+
+  .input-group {
+    margin-bottom: 15px;
+  }
+
+  .input-field {
+    padding: 12px 12px 12px 40px;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+  .btn-google {
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+  .options {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .options a {
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 10px;
+    max-width: 100%;
+    box-shadow: none;
+  }
+
+  .login-form {
+    padding: 20px;
+  }
+
+  .logo {
+    max-width: 50%;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  h2 {
+    font-size: 1rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .btn-google {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .create-account {
+    font-size: 1rem;
+  }
+}
+
+
 </style>

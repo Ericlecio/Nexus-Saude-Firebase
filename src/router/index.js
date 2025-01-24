@@ -10,6 +10,9 @@ import AgendamentoConsultasView from '@/views/AgendamentoConsultasView.vue'
 import ConsultasAgendandasView from '@/views/ConsultasAgendandasView.vue'
 import PerfilMedico from '@/views/PerfilMedico.vue'
 import PerfilPaciente from '@/views/PerfilPaciente.vue'
+import AgendaMedica from '@/views/AgendaMedica.vue'
+
+
 
 
 
@@ -74,6 +77,12 @@ const router = createRouter({
       name: 'perfil',
       props: true, 
       component: PerfilPaciente
+    },
+    {
+      path: '/agendaMedica',
+      name: 'agenda',
+      props: true, 
+      component: AgendaMedica
     },
   ]
 })

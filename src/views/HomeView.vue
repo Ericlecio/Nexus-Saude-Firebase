@@ -11,7 +11,8 @@
         <div class="text-center">
           <h1>Cuide da sua Saúde com Profissionais de Confiança</h1>
           <p>Consultas rápidas e seguras ao alcance de um clique</p>
-          <a href="/Agendamento" class="btn btn-success btn-lg">MARQUE SUA CONSULTA</a>
+          <!-- Exibe o botão apenas se o usuário for paciente -->
+          <a v-if="isPaciente" href="/Agendamento" class="btn btn-success btn-lg">MARQUE SUA CONSULTA</a>
         </div>
       </section>
       <br>
@@ -55,38 +56,6 @@
                 <p class="card-text">Cuide da saúde do seu coração com nossos especialistas.</p>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="testimonial bg-light py-5" data-aos="zoom-in">
-        <div class="container">
-          <h2 class="section-title text-center">Depoimentos</h2>
-          <div id="testimonialCarousel" class="carousel slide" data-bs-ride="carousel">
-            <div class="carousel-inner">
-              <div class="carousel-item active">
-                <blockquote class="blockquote">
-                  <p>"A Nexus Saúde me proporcionou um atendimento rápido e eficiente. Recomendo!"</p>
-                  <footer class="blockquote-footer">João da Silva</footer>
-                </blockquote>
-              </div>
-              <div class="carousel-item">
-                <blockquote class="blockquote">
-                  <p>"Melhor clínica que já fui, médicos atenciosos e estrutura de primeira."</p>
-                  <footer class="blockquote-footer">Maria Oliveira</footer>
-                </blockquote>
-              </div>
-            </div>
-            <button class="carousel-control-prev" type="button" data-bs-target="#testimonialCarousel"
-              data-bs-slide="prev">
-              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#testimonialCarousel"
-              data-bs-slide="next">
-              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="visually-hidden">Next</span>
-            </button>
           </div>
         </div>
       </section>
@@ -206,6 +175,7 @@ export default {
   data() {
     return {
       loading: true,
+      isPaciente: false,
     };
   },
   mounted() {
@@ -213,14 +183,18 @@ export default {
       this.loading = false;
       AOS.init();
     }, 1000);
-  },
-  beforeDestroy() {
-    window.removeEventListener('scroll', this.handleScroll);
+
+    this.verificarTipoUsuario();
   },
   methods: {
-    handleScroll() {
-      this.scrolled = window.scrollY > 50;
-    },
+    verificarTipoUsuario() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      if (user && user.tipo === "paciente") {
+        this.isPaciente = true;
+      } else {
+        this.isPaciente = false;
+      }
+    }
   },
   components: {
     Navbar,
