@@ -240,26 +240,27 @@ export default {
     },
 
     async submitForm() {
-      try {
-        const db = getFirestore();
-        await addDoc(collection(db, "agendamentos"), {
-          especialidade: this.form.especialidade,
-          medicoId: this.form.medicoId,
-          medicoNome: this.form.medicoNome,
-          local: this.form.local,
-          data: this.form.data,
-          pacienteId: this.pacienteLogado.usuarioId, // Adicionando o ID do paciente
-          pacienteNome: this.pacienteLogado.nomeCompleto,
-          pacienteTelefone: this.pacienteLogado.telefone,
-        });
+  try {
+    const db = getFirestore();
+    await addDoc(collection(db, "agendamentos"), {
+      especialidade: this.form.especialidade,
+      medicoId: this.form.medicoId,
+      medicoNome: this.form.medicoNome,
+      local: this.form.local,
+      data: this.form.data,
+      pacienteId: this.pacienteLogado.usuarioId, // Adicionando o ID do paciente
+      pacienteNome: this.pacienteLogado.nomeCompleto,
+      pacienteTelefone: this.pacienteLogado.telefone,
+      situacao: "Confirmada",  // Adicionando o campo de situação com valor padrão
+    });
 
-        alert("Consulta agendada com sucesso!");
-        this.$router.push("/");
-      } catch (error) {
-        console.error("Erro ao agendar consulta:", error);
-        alert("Não foi possível agendar a consulta. Tente novamente.");
-      }
-    },
+    alert("Consulta agendada com sucesso!");
+    this.$router.push("/");
+  } catch (error) {
+    console.error("Erro ao agendar consulta:", error);
+    alert("Não foi possível agendar a consulta. Tente novamente.");
+  }
+},
 
     voltarPagina() {
       this.$router.go(-1);

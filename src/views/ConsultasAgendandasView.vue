@@ -1,55 +1,96 @@
 <template>
+  <Navbar />
+  <br>
   <div class="div-principal">
-    <Navbar />
     <div class="container my-5">
-      <button class="btn-voltar" @click="voltarPagina">
+      <button class="btn btn-primary btn-back" @click="voltarPagina">
         <i class="fas fa-arrow-left me-2"></i> Voltar
       </button>
-      <h2 class="text-success text-center mb-10">Meus Agendamentos</h2>
+
+      <h2 class="text-center text-primary fw-bold mb-4">Meus Agendamentos</h2>
 
       <div v-if="carregando" class="text-center">
-        <div class="spinner-border text-success" role="status">
+        <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Carregando...</span>
         </div>
-        <p class="mt-2">Carregando seus agendamentos...</p>
+        <p class="mt-3 text-muted">Carregando seus agendamentos...</p>
       </div>
 
       <div v-else>
-        <table class="table table-hover" v-if="agendamentos.length">
-          <thead>
-            <tr>
-              <th>Especialidade</th>
-              <th>Nome do Profissional</th>
-              <th>Local</th>
-              <th>Data e Hora</th>
-              <th>Telefone do Paciente</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(agendamento, index) in agendamentos" :key="agendamento.id">
-              <td>{{ agendamento.especialidade }}</td>
-              <td>{{ agendamento.medicoNome || 'Nome não disponível' }}</td>
-              <td>{{ agendamento.local }}</td>
-              <td>{{ agendamento.data }}</td>
-              <td>{{ agendamento.pacienteTelefone }}</td>
-              <td>
-                <button class="btn btn-success btn-sm me-2" @click="remarcarAgendamento(index)">Remarcar</button>
-                <button class="btn btn-danger btn-sm" @click="cancelarAgendamento(index)">Cancelar</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Menu de Filtros -->
+        <ul class="nav nav-pills justify-content-center mb-4">
+          <li class="nav-item" v-for="opcao in opcoesFiltro" :key="opcao.valor">
+            <a class="nav-link" :class="{ active: filtroSituacao === opcao.valor }"
+              @click="filtroSituacao = opcao.valor">
+              {{ opcao.label }}
+            </a>
+          </li>
+        </ul>
 
-        <p v-else class="text-center text-muted">Nenhum agendamento encontrado.</p>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover shadow-sm">
+            <thead class="table-primary">
+              <tr>
+                <th>Especialidade</th>
+                <th>Profissional</th>
+                <th>Local</th>
+                <th>Data e Hora</th>
+                <th>Telefone</th>
+                <th>Situação</th>
+                <th class="text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="agendamento in agendamentosFiltrados" :key="agendamento.id"
+                :class="{ 'consulta-cancelada': agendamento.situacao.toLowerCase().includes('cancelada') }">
+                <td>{{ agendamento.especialidade || 'Não informado' }}</td>
+                <td>{{ agendamento.medicoNome || 'Nome não disponível' }}</td>
+                <td>{{ agendamento.local || 'Não informado' }}</td>
+                <td>{{ agendamento.data || 'Não informado' }}</td>
+                <td>{{ agendamento.pacienteTelefone || 'Não informado' }}</td>
+                <td>{{ agendamento.situacao || 'Não informado' }}</td>
+                <td class="text-center">
+                  <button v-if="!agendamento.situacao.toLowerCase().includes('cancelada')"
+                    class="btn btn-sm btn-success me-2" @click="remarcarAgendamento(agendamento.id)">
+                    <i class="fas fa-calendar-alt"></i> Remarcar
+                  </button>
+                  <button v-if="agendamento.situacao.toLowerCase().includes('cancelada')" class="btn btn-sm btn-danger"
+                    @click="confirmarExclusao(agendamento.id)">
+                    <i class="fas fa-trash"></i> Excluir
+                  </button>
+                  <button v-else class="btn btn-sm btn-warning" @click="confirmarCancelamento(agendamento.id)">
+                    <i class="fas fa-ban"></i> Cancelar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p v-if="!agendamentosFiltrados.length" class="text-center text-muted">Nenhum agendamento encontrado.</p>
       </div>
     </div>
+
+    <!-- Modal de confirmação de cancelamento -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h4 class="text-center text-danger fw-bold">Confirmar Cancelamento</h4>
+        <p class="text-center">
+          Tem certeza de que deseja cancelar esta consulta? Essa ação não pode ser desfeita.
+        </p>
+        <div class="text-center mt-3">
+          <button class="btn btn-danger me-3" @click="cancelarAgendamento">Confirmar</button>
+          <button class="btn btn-secondary" @click="showModal = false">Fechar</button>
+        </div>
+      </div>
+    </div>
+
     <Footer />
   </div>
 </template>
 
 <script>
-import { collection, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -64,66 +105,79 @@ export default {
     return {
       agendamentos: [],
       carregando: true,
-      pacienteLogado: null,
+      showModal: false,
+      agendamentoSelecionado: null,
+      filtroSituacao: "todas",
+      opcoesFiltro: [
+        { label: "Todas", valor: "todas" },
+        { label: "Confirmadas", valor: "Confirmada" },
+        { label: "Canceladas pelo Paciente", valor: "Cancelada pelo paciente" },
+        { label: "Canceladas pelo Médico", valor: "Cancelada pelo médico" },
+      ],
     };
+  },
+  computed: {
+    agendamentosFiltrados() {
+      let filtrados = [...this.agendamentos];
+
+      if (this.filtroSituacao !== "todas") {
+        filtrados = filtrados.filter(agendamento => agendamento.situacao === this.filtroSituacao);
+      }
+
+      filtrados.sort((a, b) => new Date(a.data) - new Date(b.data));
+
+      return filtrados;
+    }
   },
   methods: {
     async carregarAgendamentos() {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
-
         if (!user || user.tipo !== "paciente" || !user.usuarioId) {
-          console.warn("Nenhum paciente logado encontrado. Redirecionando...");
           alert("Apenas pacientes podem acessar esta página. Faça login.");
           this.$router.push("/login");
           return;
         }
 
-        this.pacienteLogado = user;
-        console.log("Paciente logado encontrado:", this.pacienteLogado);
-
         const db = getFirestore();
-        const agendamentosRef = collection(db, "agendamentos");
-
-        // Busca os agendamentos do paciente logado
-        const q = query(agendamentosRef, where("pacienteId", "==", this.pacienteLogado.usuarioId));
+        const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.usuarioId));
         const snapshot = await getDocs(q);
 
-        if (snapshot.empty) {
-          console.warn("Nenhum agendamento encontrado para este paciente.");
-          this.agendamentos = [];
-        } else {
-          this.agendamentos = snapshot.docs.map((docSnap) => ({
-            id: docSnap.id,
-            ...docSnap.data(),
-          }));
-        }
+        this.agendamentos = snapshot.empty ? [] : snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
 
-        console.log("Agendamentos carregados com sucesso:", this.agendamentos);
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
-        alert("Erro ao carregar agendamentos. Tente novamente mais tarde.");
+        alert("Erro ao carregar agendamentos.");
       } finally {
         this.carregando = false;
       }
     },
 
+    confirmarCancelamento(id) {
+      this.agendamentoSelecionado = id;
+      this.showModal = true;
+    },
 
-    async cancelarAgendamento(index) {
+    async cancelarAgendamento() {
       try {
-        const agendamento = this.agendamentos[index];
-        const confirmar = confirm(`Deseja realmente cancelar o agendamento com ${agendamento.medicoNome}?`);
-
-        if (!confirmar) return;
-
         const db = getFirestore();
-        await deleteDoc(doc(db, "agendamentos", agendamento.id));
+        const agendamentoRef = doc(db, "agendamentos", this.agendamentoSelecionado);
 
-        this.agendamentos.splice(index, 1);
-        alert("Agendamento cancelado com sucesso.");
+        await updateDoc(agendamentoRef, { situacao: "Cancelada pelo paciente" });
+
+        const index = this.agendamentos.findIndex(a => a.id === this.agendamentoSelecionado);
+        if (index !== -1) {
+          this.agendamentos[index].situacao = "Cancelada pelo paciente";
+        }
+
+        this.showModal = false;
+        alert("Consulta cancelada com sucesso.");
       } catch (error) {
         console.error("Erro ao cancelar agendamento:", error);
-        alert("Erro ao cancelar agendamento. Tente novamente.");
+        alert("Erro ao cancelar consulta. Tente novamente.");
       }
     },
 
@@ -137,91 +191,54 @@ export default {
 };
 </script>
 
-
-
 <style scoped>
 .div-principal {
   margin-top: 5%;
 }
 
-.container {
-  background-color: #f8f9fa;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-  font-size: 26px;
-  font-weight: 600;
-  color: #28a745;
-  margin-bottom: 30px;
-}
-
-table {
-  background-color: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-th {
-  background-color: #007bff;
-  color: white;
-  text-align: center;
-}
-
-td {
-  text-align: center;
-  vertical-align: middle;
-  padding: 10px;
-}
-
-.btn {
-  border-radius: 30px;
-  font-size: 14px;
-  padding: 8px 18px;
-  transition: background-color 0.3s ease;
-}
-
-.btn-success {
-  background-color: #28a745;
-}
-
-.btn-success:hover {
-  background-color: #218838;
-}
-
-.btn-danger {
-  background-color: #dc3545;
-}
-
-.btn-danger:hover {
-  background-color: #c82333;
-}
-
-.spinner-border {
-  width: 3rem;
-  height: 3rem;
-}
-
-.text-muted {
-  color: #6c757d;
-  font-size: 16px;
-}
-
-.btn-voltar {
-  background-color: #007bff;
-  color: white;
+.btn-back {
+  border-radius: 10px;
   padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-bottom: 20px;
 }
 
-.btn-voltar:hover {
-  background-color: #0056b3;
+.nav-pills .nav-link {
+  color: #53ba83;
+  cursor: pointer;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #53ba83;
+  color: white;
+}
+
+.table {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.consulta-cancelada td {
+  text-decoration: line-through;
+  background: rgba(0, 0, 30, 0.1);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
 }
 </style>

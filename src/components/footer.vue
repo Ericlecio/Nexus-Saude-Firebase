@@ -3,6 +3,9 @@ export default {
     methods: {
         scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        },
+        subscribe() {
+            alert("Inscrição realizada com sucesso!");
         }
     }
 };
@@ -11,25 +14,28 @@ export default {
 <template>
     <footer>
         <div class="container">
-            <div class="logo">
+            <div class="footer-section logo">
                 <img src="/src/assets/img/NexusSaude_icon.png" alt="Nexus Saúde Logo">
                 <p><i class="bi bi-telephone"></i> 3661-0000</p>
                 <p><i class="bi bi-envelope"></i> contato@nexussaude.com.br</p>
                 <p><i class="bi bi-geo-alt"></i> Rua Exemplo, 123 - Cidade, Estado</p>
             </div>
 
-            <ul class="nav-links">
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Quem Somos</a></li>
-                <li><a href="#">Fale Conosco</a></li>
-                <li><a href="#">Política de Privacidade</a></li>
-                <li><a href="#">Termos de Uso</a></li>
-                <li><a href="#">Mapa do Site</a></li>
-                <li><a href="#">FAQ</a></li>
-            </ul>
+            <div class="footer-section">
+                <h5>Links úteis</h5>
+                <ul class="nav-links">
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#">Quem Somos</a></li>
+                    <li><a href="#">Fale Conosco</a></li>
+                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="#">Termos de Uso</a></li>
+                    <li><a href="#">Mapa do Site</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
 
-            <div class="social-section">
-                <h5>Acompanhem nossas redes sociais</h5>
+            <div class="footer-section social-section">
+                <h5>Acompanhe nossas redes</h5>
                 <div class="social-media">
                     <a href="#"><i class="bi bi-instagram"></i></a>
                     <a href="#"><i class="bi bi-linkedin"></i></a>
@@ -38,7 +44,7 @@ export default {
                 </div>
             </div>
 
-            <div class="newsletter">
+            <div class="footer-section newsletter">
                 <h5>Receba novidades</h5>
                 <form @submit.prevent="subscribe">
                     <input type="email" placeholder="Seu e-mail" required>
@@ -61,122 +67,152 @@ export default {
 footer {
     background-color: #1a1a3c;
     color: #fff;
-    padding: 20px 0;
+    padding: 40px 20px;
     font-size: 0.9rem;
     text-align: center;
 }
 
-footer .container {
+.container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: start;
-    gap: 20px;
+    justify-content: center;
+    gap: 40px;
 }
 
-footer .logo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.footer-section {
+    max-width: 300px;
     text-align: center;
 }
 
-footer .logo img {
-    width: 50px;
-    margin-bottom: 10px;
+.logo img {
+    width: 80px;
+    margin-bottom: 15px;
 }
 
-footer .nav-links {
+.nav-links {
     list-style: none;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
 }
 
-footer .nav-links li a {
-    color: #fff;
-    text-decoration: none;
-}
-
-footer .nav-links li a:hover {
-    text-decoration: underline;
-}
-
-footer .social-section h5 {
-    font-size: 1rem;
+.nav-links li {
     margin-bottom: 10px;
 }
 
-footer .social-media {
+.nav-links li a {
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.nav-links li a:hover {
+    text-decoration: underline;
+    color: #00ff9d;
+}
+
+.social-media {
     display: flex;
     gap: 15px;
     justify-content: center;
+    margin-top: 10px;
 }
 
-footer .social-media a {
+.social-media a {
     color: #00ff9d;
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     transition: transform 0.3s ease, color 0.3s ease;
 }
 
-footer .social-media a:hover {
+.social-media a:hover {
     transform: scale(1.2);
     color: #fff;
 }
 
-footer .newsletter {
-    text-align: center;
-}
-
-footer .newsletter h5 {
-    font-size: 1rem;
+.newsletter input {
+    padding: 10px;
+    width: 100%;
+    max-width: 250px;
+    border: none;
+    border-radius: 5px;
     margin-bottom: 10px;
 }
 
-footer .newsletter input {
-    padding: 5px;
-    margin-top: 10px;
-    width: 80%;
-    max-width: 200px;
+.newsletter button {
+    padding: 10px 20px;
     border: none;
-    border-radius: 3px;
-}
-
-footer .newsletter button {
-    padding: 5px 10px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 3px;
+    border-radius: 5px;
     background-color: #00ff9d;
     color: #1a1a3c;
+    font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-footer .newsletter button:hover {
+.newsletter button:hover {
     background-color: #fff;
     color: #1a1a3c;
 }
 
-footer .back-to-top {
-    margin-top: 15px;
+.back-to-top {
+    margin-top: 20px;
 }
 
-footer .back-to-top a {
+.back-to-top a {
     color: #00ff9d;
     text-decoration: none;
     font-size: 1.2rem;
 }
 
-footer .back-to-top a:hover {
+.back-to-top a:hover {
     color: #fff;
     text-decoration: underline;
 }
 
-footer .copyright {
+.copyright {
     font-size: 0.8rem;
-    margin-top: 10px;
+    margin-top: 20px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .footer-section {
+        max-width: 100%;
+    }
+
+    .newsletter input,
+    .newsletter button {
+        width: 100%;
+    }
+
+    .social-media {
+        gap: 10px;
+    }
+
+    .nav-links li {
+        margin-bottom: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    footer {
+        font-size: 0.8rem;
+    }
+
+    .logo img {
+        width: 60px;
+    }
+
+    .social-media a {
+        font-size: 1.5rem;
+    }
+
+    .back-to-top a {
+        font-size: 1rem;
+    }
 }
 </style>

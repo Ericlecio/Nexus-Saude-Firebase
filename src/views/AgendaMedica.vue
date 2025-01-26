@@ -1,54 +1,91 @@
 <template>
+    <Navbar />
+    <br />
     <div class="div-principal">
-        <Navbar />
         <div class="container my-5">
-            <button class="btn-voltar" @click="voltarPagina">
+            <button class="btn btn-primary btn-back" @click="voltarPagina">
                 <i class="fas fa-arrow-left me-2"></i> Voltar
             </button>
-            <h2 class="text-success text-center mb-10">Minhas Consultas</h2>
+
+            <h2 class="text-center text-primary fw-bold mb-4">Minhas Consultas</h2>
 
             <div v-if="carregando" class="text-center">
-                <div class="spinner-border text-success" role="status">
+                <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Carregando...</span>
                 </div>
-                <p class="mt-2">Carregando suas consultas...</p>
+                <p class="mt-3 text-muted">Carregando suas consultas...</p>
             </div>
 
             <div v-else>
-                <table class="table table-hover" v-if="consultas.length">
-                    <thead>
-                        <tr>
-                            <th>Especialidade</th>
-                            <th>Paciente</th>
-                            <th>Telefone</th>
-                            <th>Local</th>
-                            <th>Data e Hora</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(consulta, index) in consultas" :key="consulta.id">
-                            <td>{{ consulta.especialidade }}</td>
-                            <td>{{ consulta.pacienteNome }}</td>
-                            <td>{{ consulta.pacienteTelefone }}</td>
-                            <td>{{ consulta.local }}</td>
-                            <td>{{ consulta.data }}</td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" @click="cancelarConsulta(index)">Cancelar</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Menu de Filtros -->
+                <ul class="nav nav-pills justify-content-center mb-4">
+                    <li class="nav-item" v-for="opcao in opcoesFiltro" :key="opcao.valor">
+                        <a class="nav-link" :class="{ active: filtroSituacao === opcao.valor }"
+                            @click="filtroSituacao = opcao.valor">
+                            {{ opcao.label }}
+                        </a>
+                    </li>
+                </ul>
 
-                <p v-else class="text-center text-muted">Nenhuma consulta encontrada.</p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover shadow-sm">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Especialidade</th>
+                                <th>Paciente</th>
+                                <th>Telefone</th>
+                                <th>Local</th>
+                                <th>Data e Hora</th>
+                                <th>Situação</th>
+                                <th class="text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="consulta in consultasFiltradas" :key="consulta.id"
+                                :class="{ 'consulta-cancelada': consulta.situacao.toLowerCase().includes('cancelada') }">
+                                <td>{{ consulta.especialidade || 'Não informado' }}</td>
+                                <td>{{ consulta.pacienteNome || 'Não disponível' }}</td>
+                                <td>{{ consulta.pacienteTelefone || 'Não informado' }}</td>
+                                <td>{{ consulta.local || 'Não informado' }}</td>
+                                <td>{{ consulta.data || 'Não informado' }}</td>
+                                <td>{{ consulta.situacao || 'Não informado' }}</td>
+                                <td class="text-center">
+                                    <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
+                                        @click="confirmarCancelamento(consulta.id)">
+                                        <i class="fas fa-ban"></i> Cancelar
+                                    </button>
+                                    <button v-if="consulta.situacao.toLowerCase().includes('cancelada')"
+                                        class="btn btn-sm btn-danger" @click="confirmarExclusao(consulta.id)">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p v-if="!consultasFiltradas.length" class="text-center text-muted">Nenhuma consulta encontrada.</p>
             </div>
         </div>
+
+        <!-- Modal de confirmação de cancelamento/exclusão -->
+        <div v-if="showModal" class="modal-overlay">
+            <div class="modal-content">
+                <h4 class="text-center text-danger fw-bold">{{ modalMensagem.titulo }}</h4>
+                <p class="text-center">{{ modalMensagem.texto }}</p>
+                <div class="text-center mt-3">
+                    <button class="btn btn-danger me-3" @click="confirmarAcaoModal">Confirmar</button>
+                    <button class="btn btn-secondary" @click="showModal = false">Fechar</button>
+                </div>
+            </div>
+        </div>
+
         <Footer />
     </div>
 </template>
 
 <script>
-import { collection, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -63,66 +100,91 @@ export default {
         return {
             consultas: [],
             carregando: true,
-            medicoLogado: null,
+            showModal: false,
+            consultaSelecionada: null,
+            acaoSelecionada: null,
+            modalMensagem: { titulo: "", texto: "" },
+            filtroSituacao: "todas",
+            opcoesFiltro: [
+                { label: "Todas", valor: "todas" },
+                { label: "Confirmadas", valor: "Confirmada" },
+                { label: "Canceladas pelo Paciente", valor: "Cancelada pelo paciente" },
+                { label: "Canceladas pelo Médico", valor: "Cancelada pelo médico" },
+            ],
         };
+    },
+    computed: {
+        consultasFiltradas() {
+            let filtradas = [...this.consultas];
+
+            if (this.filtroSituacao !== "todas") {
+                filtradas = filtradas.filter(consulta => consulta.situacao === this.filtroSituacao);
+            }
+
+            filtradas.sort((a, b) => new Date(a.data) - new Date(b.data));
+            return filtradas;
+        },
     },
     methods: {
         async carregarConsultas() {
             try {
                 const user = JSON.parse(localStorage.getItem("user"));
-
                 if (!user || user.tipo !== "medico" || !user.id) {
-                    console.warn("Nenhum médico logado encontrado. Redirecionando...");
                     alert("Apenas médicos podem acessar esta página. Faça login.");
                     this.$router.push("/login");
                     return;
                 }
 
-                this.medicoLogado = user;
-                console.log("Médico logado encontrado:", this.medicoLogado);
-
                 const db = getFirestore();
-                const agendamentosRef = collection(db, "agendamentos");
-
-                // Busca os agendamentos do médico logado usando o ID salvo no localStorage
-                const q = query(agendamentosRef, where("medicoId", "==", this.medicoLogado.id));
+                const q = query(collection(db, "agendamentos"), where("medicoId", "==", user.id));
                 const snapshot = await getDocs(q);
 
-                if (snapshot.empty) {
-                    console.warn("Nenhuma consulta encontrada para este médico.");
-                    this.consultas = [];
-                } else {
-                    this.consultas = snapshot.docs.map((docSnap) => ({
-                        id: docSnap.id,
-                        ...docSnap.data(),
-                    }));
-                }
-
-                console.log("Consultas carregadas com sucesso:", this.consultas);
+                this.consultas = snapshot.empty ? [] : snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
             } catch (error) {
                 console.error("Erro ao carregar consultas:", error);
-                alert("Erro ao carregar consultas. Tente novamente mais tarde.");
+                alert("Erro ao carregar consultas.");
             } finally {
                 this.carregando = false;
             }
         },
 
-        async cancelarConsulta(index) {
-            try {
-                const consulta = this.consultas[index];
-                const confirmar = confirm(`Deseja realmente cancelar a consulta de ${consulta.pacienteNome}?`);
+        confirmarCancelamento(id) {
+            this.consultaSelecionada = id;
+            this.acaoSelecionada = "cancelar";
+            this.modalMensagem = {
+                titulo: "Confirmar Cancelamento",
+                texto: "Tem certeza de que deseja cancelar esta consulta?",
+            };
+            this.showModal = true;
+        },
 
-                if (!confirmar) return;
+        async cancelarConsulta() {
+            const db = getFirestore();
+            await updateDoc(doc(db, "agendamentos", this.consultaSelecionada), { situacao: "Cancelada pelo médico" });
+            this.consultas = this.consultas.map(c => c.id === this.consultaSelecionada ? { ...c, situacao: "Cancelada pelo médico" } : c);
+            this.showModal = false;
+        },
 
-                const db = getFirestore();
-                await deleteDoc(doc(db, "agendamentos", consulta.id));
+        confirmarExclusao(id) {
+            this.consultaSelecionada = id;
+            this.acaoSelecionada = "excluir";
+            this.modalMensagem = {
+                titulo: "Confirmar Exclusão",
+                texto: "Tem certeza de que deseja excluir esta consulta permanentemente?",
+            };
+            this.showModal = true;
+        },
 
-                this.consultas.splice(index, 1);
-                alert("Consulta cancelada com sucesso.");
-            } catch (error) {
-                console.error("Erro ao cancelar consulta:", error);
-                alert("Erro ao cancelar consulta. Tente novamente.");
-            }
+        async excluirConsulta() {
+            const db = getFirestore();
+            await deleteDoc(doc(db, "agendamentos", this.consultaSelecionada));
+            this.consultas = this.consultas.filter(c => c.id !== this.consultaSelecionada);
+            this.showModal = false;
+        },
+
+        async confirmarAcaoModal() {
+            if (this.acaoSelecionada === "cancelar") await this.cancelarConsulta();
+            else if (this.acaoSelecionada === "excluir") await this.excluirConsulta();
         },
 
         voltarPagina() {
@@ -135,81 +197,55 @@ export default {
 };
 </script>
 
+
 <style scoped>
 .div-principal {
     margin-top: 5%;
 }
 
-.container {
-    background-color: #f8f9fa;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-    font-size: 26px;
-    font-weight: 600;
-    color: #28a745;
-    margin-bottom: 30px;
-}
-
-table {
-    background-color: #fff;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-th {
-    background-color: #007bff;
-    color: white;
-    text-align: center;
-}
-
-td {
-    text-align: center;
-    vertical-align: middle;
-    padding: 10px;
-}
-
-.btn {
-    border-radius: 30px;
-    font-size: 14px;
-    padding: 8px 18px;
-    transition: background-color 0.3s ease;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-}
-
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
-}
-
-.text-muted {
-    color: #6c757d;
-    font-size: 16px;
-}
-
-.btn-voltar {
-    background-color: #007bff;
-    color: white;
+.btn-back {
+    border-radius: 10px;
     padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    font-size: 1rem;
-    cursor: pointer;
-    margin-bottom: 20px;
 }
 
-.btn-voltar:hover {
-    background-color: #0056b3;
+.nav-pills .nav-link {
+    color: #53ba83;
+    cursor: pointer;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #53ba83;
+    color: white;
+}
+
+.table {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.consulta-cancelada td {
+    text-decoration: line-through;
+    background: rgba(0, 0, 30, 0.1);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
 }
 </style>
