@@ -1,6 +1,6 @@
 <template>
   <Navbar />
-  <br>
+  <br />
   <div class="div-principal">
     <div class="container my-5">
       <button class="btn btn-primary btn-back" @click="voltarPagina">
@@ -41,8 +41,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="agendamento in agendamentosFiltrados" :key="agendamento.id"
-                :class="{ 'consulta-cancelada': agendamento.situacao.toLowerCase().includes('cancelada') }">
+              <tr v-for="agendamento in agendamentosFiltrados" :key="agendamento.id" :class="{
+                'consulta-cancelada': agendamento.situacao
+                  .toLowerCase()
+                  .includes('cancelada'),
+              }">
                 <td>{{ agendamento.especialidade || 'Não informado' }}</td>
                 <td>{{ agendamento.medicoNome || 'Nome não disponível' }}</td>
                 <td>{{ agendamento.local || 'Não informado' }}</td>
@@ -51,14 +54,7 @@
                 <td>{{ agendamento.situacao || 'Não informado' }}</td>
                 <td class="text-center">
                   <button v-if="!agendamento.situacao.toLowerCase().includes('cancelada')"
-                    class="btn btn-sm btn-success me-2" @click="remarcarAgendamento(agendamento.id)">
-                    <i class="fas fa-calendar-alt"></i> Remarcar
-                  </button>
-                  <button v-if="agendamento.situacao.toLowerCase().includes('cancelada')" class="btn btn-sm btn-danger"
-                    @click="confirmarExclusao(agendamento.id)">
-                    <i class="fas fa-trash"></i> Excluir
-                  </button>
-                  <button v-else class="btn btn-sm btn-warning" @click="confirmarCancelamento(agendamento.id)">
+                    class="btn btn-sm btn-warning" @click="confirmarCancelamento(agendamento.id)">
                     <i class="fas fa-ban"></i> Cancelar
                   </button>
                 </td>
@@ -67,19 +63,21 @@
           </table>
         </div>
 
-        <p v-if="!agendamentosFiltrados.length" class="text-center text-muted">Nenhum agendamento encontrado.</p>
+        <p v-if="!agendamentosFiltrados.length" class="text-center text-muted">
+          Nenhum agendamento encontrado.
+        </p>
       </div>
     </div>
 
-    <!-- Modal de confirmação de cancelamento -->
+    <!-- Modal de confirmação -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
-        <h4 class="text-center text-danger fw-bold">Confirmar Cancelamento</h4>
-        <p class="text-center">
-          Tem certeza de que deseja cancelar esta consulta? Essa ação não pode ser desfeita.
-        </p>
+        <h4 class="text-center text-danger fw-bold">{{ modalMensagem.titulo }}</h4>
+        <p class="text-center">{{ modalMensagem.texto }}</p>
         <div class="text-center mt-3">
-          <button class="btn btn-danger me-3" @click="cancelarAgendamento">Confirmar</button>
+          <button class="btn btn-danger me-3" @click="confirmarAcaoModal">
+            Confirmar
+          </button>
           <button class="btn btn-secondary" @click="showModal = false">Fechar</button>
         </div>
       </div>
@@ -90,7 +88,7 @@
 </template>
 
 <script>
-import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, updateDoc, arrayUnion, getDoc, deleteDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -107,6 +105,8 @@ export default {
       carregando: true,
       showModal: false,
       agendamentoSelecionado: null,
+      acaoSelecionada: null,
+      modalMensagem: { titulo: "", texto: "" },
       filtroSituacao: "todas",
       opcoesFiltro: [
         { label: "Todas", valor: "todas" },
@@ -119,15 +119,12 @@ export default {
   computed: {
     agendamentosFiltrados() {
       let filtrados = [...this.agendamentos];
-
       if (this.filtroSituacao !== "todas") {
-        filtrados = filtrados.filter(agendamento => agendamento.situacao === this.filtroSituacao);
+        filtrados = filtrados.filter((agendamento) => agendamento.situacao === this.filtroSituacao);
       }
-
       filtrados.sort((a, b) => new Date(a.data) - new Date(b.data));
-
       return filtrados;
-    }
+    },
   },
   methods: {
     async carregarAgendamentos() {
@@ -143,11 +140,12 @@ export default {
         const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.usuarioId));
         const snapshot = await getDocs(q);
 
-        this.agendamentos = snapshot.empty ? [] : snapshot.docs.map(docSnap => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
-
+        this.agendamentos = snapshot.empty
+          ? []
+          : snapshot.docs.map((docSnap) => ({
+            id: docSnap.id,
+            ...docSnap.data(),
+          }));
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos.");
@@ -155,32 +153,85 @@ export default {
         this.carregando = false;
       }
     },
-
     confirmarCancelamento(id) {
       this.agendamentoSelecionado = id;
+      this.acaoSelecionada = "cancelar";
+      this.modalMensagem = {
+        titulo: "Confirmar Cancelamento",
+        texto: "Tem certeza de que deseja cancelar esta consulta?",
+      };
       this.showModal = true;
     },
+    async cancelarConsulta() {
+      const db = getFirestore();
+      const consultaRef = doc(db, "agendamentos", this.agendamentoSelecionado);
 
-    async cancelarAgendamento() {
       try {
-        const db = getFirestore();
-        const agendamentoRef = doc(db, "agendamentos", this.agendamentoSelecionado);
+        const consultaSnap = await getDoc(consultaRef);
 
-        await updateDoc(agendamentoRef, { situacao: "Cancelada pelo paciente" });
+        if (consultaSnap.exists()) {
+          const consulta = consultaSnap.data();
 
-        const index = this.agendamentos.findIndex(a => a.id === this.agendamentoSelecionado);
-        if (index !== -1) {
-          this.agendamentos[index].situacao = "Cancelada pelo paciente";
+          // Copiar o registro para a tabela do médico
+          const medicoRef = doc(db, "medicos", consulta.medicoId);
+          await updateDoc(medicoRef, {
+            agenda: arrayUnion({
+              id: consultaRef.id, // Inclui o ID original da consulta
+              ...consulta,
+            }),
+          });
+
+          // Copiar o registro para a tabela do paciente
+          const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
+          await updateDoc(pacienteRef, {
+            consultas: arrayUnion({
+              id: consultaRef.id, // Inclui o ID original da consulta
+              ...consulta,
+            }),
+          });
+
+          // Remover apenas o registro específico da tabela agendamentos
+          await deleteDoc(consultaRef);
+
+          // Atualizar a lista de agendamentos na interface
+          this.agendamentos = this.agendamentos.filter(
+            (a) => a.id !== this.agendamentoSelecionado
+          );
+
+          alert("Consulta cancelada com sucesso. Foi movida para as tabelas de médico e paciente.");
+        } else {
+          alert("Consulta não encontrada.");
         }
-
-        this.showModal = false;
-        alert("Consulta cancelada com sucesso.");
       } catch (error) {
-        console.error("Erro ao cancelar agendamento:", error);
+        console.error("Erro ao cancelar consulta:", error);
         alert("Erro ao cancelar consulta. Tente novamente.");
+      } finally {
+        this.showModal = false;
+      }
+    }
+    ,
+
+    async excluirConsulta() {
+      const db = getFirestore();
+      const agendamentoRef = doc(db, "agendamentos", this.agendamentoSelecionado);
+      try {
+        await deleteDoc(agendamentoRef);
+        this.agendamentos = this.agendamentos.filter((a) => a.id !== this.agendamentoSelecionado);
+        alert("Consulta excluída com sucesso.");
+      } catch (error) {
+        console.error("Erro ao excluir consulta:", error);
+        alert("Erro ao excluir consulta. Tente novamente.");
+      } finally {
+        this.showModal = false;
       }
     },
-
+    async confirmarAcaoModal() {
+      if (this.acaoSelecionada === "cancelar") {
+        await this.cancelarConsulta();
+      } else if (this.acaoSelecionada === "excluir") {
+        await this.excluirConsulta();
+      }
+    },
     voltarPagina() {
       this.$router.push("/");
     },
@@ -190,6 +241,8 @@ export default {
   },
 };
 </script>
+
+
 
 <style scoped>
 .div-principal {

@@ -43,11 +43,16 @@
                     <label for="data" class="form-label text-dark fw-bold">Horários Disponíveis</label>
                     <select v-model="form.data" id="data" class="form-select" required>
                       <option value="" disabled selected>Selecione</option>
-                      <option v-for="horario in horariosDisponiveis" :key="horario" :value="horario">
-                        {{ horario }}
+                      <option v-for="horario in horariosDisponiveis" :key="horario.horario" :value="horario.horario"
+                        :class="{ 'text-success': horario.disponivel, 'text-danger': !horario.disponivel }"
+                        :disabled="!horario.disponivel">
+                        {{ horario.horario }}
                       </option>
                     </select>
+
+
                   </div>
+
                   <div class="col-md-6">
                     <label for="pacienteNome" class="form-label text-dark fw-bold">Paciente</label>
                     <input type="text" id="pacienteNome" v-model="form.pacienteNome" class="form-control" readonly />
@@ -131,7 +136,6 @@ export default {
           alert("Apenas pacientes podem agendar consultas. Faça login.");
           this.$router.push("/login");
         } else {
-          // Buscar os dados do paciente no Firestore
           const db = getFirestore();
           const q = query(
             collection(db, "pacientes"),
@@ -143,8 +147,7 @@ export default {
             const pacienteData = querySnapshot.docs[0].data();
             this.pacienteLogado = pacienteData;
             this.form.pacienteNome = pacienteData.nomeCompleto;
-            this.form.pacienteTelefone =
-              pacienteData.telefone || "Não informado";
+            this.form.pacienteTelefone = pacienteData.telefone || "Não informado";
           } else {
             alert("Informações do paciente não encontradas.");
           }
@@ -197,73 +200,117 @@ export default {
       }
     },
 
-    carregarHorarios(medico) {
+
+    async carregarHorarios(medico) {
       if (medico.diasAtendimento) {
+        const hoje = new Date(); // Data e hora atual
+        const diasSemana = {
+          segunda: 1,
+          terca: 2,
+          quarta: 3,
+          quinta: 4,
+          sexta: 5,
+          sabado: 6,
+        };
+
         const horarios = [];
-        const diasSemana = [
-          "segunda",
-          "terca",
-          "quarta",
-          "quinta",
-          "sexta",
-          "sabado",
-        ];
 
-        diasSemana.forEach((dia) => {
-          const diaAtendimento = medico.diasAtendimento[dia];
-          if (diaAtendimento && diaAtendimento.inicio && diaAtendimento.fim) {
-            horarios.push(
-              `${this.formatDia(dia)}: ${diaAtendimento.inicio} - ${diaAtendimento.fim
-              }`
+        for (const [dia, horariosDia] of Object.entries(medico.diasAtendimento)) {
+          if (horariosDia && horariosDia.length > 0) {
+            // Calcular a próxima data correspondente ao dia da semana
+            const diff = (diasSemana[dia] - hoje.getDay() + 7) % 7;
+            const proximaData = new Date(hoje);
+            proximaData.setDate(hoje.getDate() + diff);
+            proximaData.setHours(0, 0, 0, 0); // Resetar para início do dia
+
+            // Verificar a disponibilidade de cada horário e se o horário já passou
+            const horariosDiaDisponiveis = await Promise.all(
+              horariosDia.map(async (horario) => {
+                const [hora, minuto] = horario.split(":").map(Number);
+                const horarioCompleto = new Date(proximaData);
+                horarioCompleto.setHours(hora, minuto, 0, 0);
+
+                const disponivel =
+                  horarioCompleto > hoje && // Apenas horários futuros
+                  (await this.verificarDisponibilidade(medico.id, horarioCompleto.toISOString()));
+
+                return {
+                  horario: `${proximaData.toLocaleDateString()} ${horario}`,
+                  disponivel,
+                };
+              })
             );
-          }
-        });
 
-        this.horariosDisponiveis = horarios.length
+            horarios.push(...horariosDiaDisponiveis);
+          }
+        }
+
+        this.horariosDisponiveis = horarios.filter((h) => h.disponivel).length
           ? horarios
-          : ["Nenhum horário disponível"];
+          : [{ horario: "Nenhum horário disponível", disponivel: false }];
       } else {
-        this.horariosDisponiveis = ["Nenhum horário disponível"];
+        this.horariosDisponiveis = [{ horario: "Nenhum horário disponível", disponivel: false }];
       }
     },
 
-    formatDia(dia) {
-      const dias = {
-        segunda: "Segunda-feira",
-        terca: "Terça-feira",
-        quarta: "Quarta-feira",
-        quinta: "Quinta-feira",
-        sexta: "Sexta-feira",
-        sabado: "Sábado",
-      };
-      return dias[dia] || dia;
+    async verificarDisponibilidade(medicoId, horario) {
+      const db = getFirestore();
+      const q = query(
+        collection(db, "agendamentos"),
+        where("medicoId", "==", medicoId),
+        where("data", "==", horario)
+      );
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.empty; // Retorna true se estiver disponível
+    },
+
+
+    calcularProximaData(diaSemana, dataAtual) {
+      const diasSemana = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+      const diaIndex = diasSemana.indexOf(diaSemana.toLowerCase());
+      const hojeIndex = dataAtual.getDay();
+      const diferenca = (diaIndex - hojeIndex + 7) % 7 || 7;
+      const proximaData = new Date(dataAtual);
+      proximaData.setDate(dataAtual.getDate() + diferenca);
+      return proximaData;
     },
 
     async submitForm() {
-  try {
-    const db = getFirestore();
-    await addDoc(collection(db, "agendamentos"), {
-      especialidade: this.form.especialidade,
-      medicoId: this.form.medicoId,
-      medicoNome: this.form.medicoNome,
-      local: this.form.local,
-      data: this.form.data,
-      pacienteId: this.pacienteLogado.usuarioId, // Adicionando o ID do paciente
-      pacienteNome: this.pacienteLogado.nomeCompleto,
-      pacienteTelefone: this.pacienteLogado.telefone,
-      situacao: "Confirmada",  // Adicionando o campo de situação com valor padrão
-    });
+      try {
+        const db = getFirestore();
+        const q = query(
+          collection(db, "agendamentos"),
+          where("medicoId", "==", this.form.medicoId),
+          where("data", "==", this.form.data)
+        );
 
-    alert("Consulta agendada com sucesso!");
-    this.$router.push("/");
-  } catch (error) {
-    console.error("Erro ao agendar consulta:", error);
-    alert("Não foi possível agendar a consulta. Tente novamente.");
-  }
-},
+        const querySnapshot = await getDocs(q);
 
-    voltarPagina() {
-      this.$router.go(-1);
+        if (!querySnapshot.empty) {
+          alert("Este horário já está ocupado. Por favor, escolha outro horário.");
+          return;
+        }
+
+        // Salvar o agendamento no banco de dados
+        await addDoc(collection(db, "agendamentos"), {
+          especialidade: this.form.especialidade,
+          medicoId: this.form.medicoId,
+          medicoNome: this.form.medicoNome,
+          local: this.form.local,
+          data: this.form.data,
+          pacienteId: this.pacienteLogado.usuarioId, // Adicionando o ID do paciente
+          pacienteNome: this.pacienteLogado.nomeCompleto,
+          pacienteTelefone: this.pacienteLogado.telefone,
+          situacao: "Confirmada", // Adicionando o campo de situação com valor padrão
+        });
+
+        alert("Consulta agendada com sucesso!");
+        this.$router.push("/");
+      } catch (error) {
+        console.error("Erro ao agendar consulta:", error);
+        alert("Não foi possível agendar a consulta. Tente novamente.");
+      }
     },
   },
 
@@ -273,6 +320,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .card {
@@ -302,5 +350,20 @@ export default {
 
 .bg-white {
   background-color: #fff;
+}
+
+.text-muted.text-decoration-line-through {
+  color: #6c757d;
+  text-decoration: line-through;
+}
+
+.text-success {
+  color: #28a745 !important;
+  /* Verde */
+}
+
+.text-danger {
+  color: #dc3545 !important;
+  /* Vermelho */
 }
 </style>

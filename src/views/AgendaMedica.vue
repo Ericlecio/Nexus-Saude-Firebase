@@ -52,7 +52,15 @@
                                 <td class="text-center">
                                     <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
                                         @click="confirmarCancelamento(consulta.id)">
-                                        <i class="fas fa-ban"></i> Cancelar
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
+                                        @click="confirmarPresença(consulta.id)">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                    <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
+                                        @click="ausente(consulta.id)">
+                                        <i class="fas fa-times-circle"></i>
                                     </button>
                                     <button v-if="consulta.situacao.toLowerCase().includes('cancelada')"
                                         class="btn btn-sm btn-danger" @click="confirmarExclusao(consulta.id)">
@@ -85,7 +93,17 @@
 </template>
 
 <script>
-import { collection, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import {
+    collection,
+    getDocs,
+    query,
+    where,
+    doc,
+    updateDoc,
+    arrayUnion,
+    getDoc,
+    deleteDoc,
+} from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -110,6 +128,7 @@ export default {
                 { label: "Confirmadas", valor: "Confirmada" },
                 { label: "Canceladas pelo Paciente", valor: "Cancelada pelo paciente" },
                 { label: "Canceladas pelo Médico", valor: "Cancelada pelo médico" },
+                { label: "Finalizadas", valor: "Finalizada" },
             ],
         };
     },
@@ -118,7 +137,9 @@ export default {
             let filtradas = [...this.consultas];
 
             if (this.filtroSituacao !== "todas") {
-                filtradas = filtradas.filter(consulta => consulta.situacao === this.filtroSituacao);
+                filtradas = filtradas.filter(
+                    (consulta) => consulta.situacao === this.filtroSituacao
+                );
             }
 
             filtradas.sort((a, b) => new Date(a.data) - new Date(b.data));
@@ -136,10 +157,18 @@ export default {
                 }
 
                 const db = getFirestore();
-                const q = query(collection(db, "agendamentos"), where("medicoId", "==", user.id));
+                const q = query(
+                    collection(db, "agendamentos"),
+                    where("medicoId", "==", user.id)
+                );
                 const snapshot = await getDocs(q);
 
-                this.consultas = snapshot.empty ? [] : snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+                this.consultas = snapshot.empty
+                    ? []
+                    : snapshot.docs.map((docSnap) => ({
+                        id: docSnap.id,
+                        ...docSnap.data(),
+                    }));
             } catch (error) {
                 console.error("Erro ao carregar consultas:", error);
                 alert("Erro ao carregar consultas.");
@@ -160,9 +189,47 @@ export default {
 
         async cancelarConsulta() {
             const db = getFirestore();
-            await updateDoc(doc(db, "agendamentos", this.consultaSelecionada), { situacao: "Cancelada pelo médico" });
-            this.consultas = this.consultas.map(c => c.id === this.consultaSelecionada ? { ...c, situacao: "Cancelada pelo médico" } : c);
-            this.showModal = false;
+            const consultaRef = doc(db, "agendamentos", this.consultaSelecionada);
+
+            try {
+                const consultaSnap = await getDoc(consultaRef);
+
+                if (consultaSnap.exists()) {
+                    const consulta = consultaSnap.data();
+                    consulta.situacao = "Cancelada pelo médico";
+
+                    // Adicionar consulta à agenda do médico
+                    const medicoRef = doc(db, "medicos", consulta.medicoId);
+                    await updateDoc(medicoRef, {
+                        agenda: arrayUnion(consulta),
+                    });
+
+                    // Adicionar consulta à lista de consultas do paciente
+                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
+                    await updateDoc(pacienteRef, {
+                        consultas: arrayUnion(consulta),
+                    });
+
+                    // Remover a consulta da tabela agendamentos
+                    await deleteDoc(consultaRef);
+
+                    // Atualizar a lista de consultas na interface
+                    this.consultas = this.consultas.filter(
+                        (c) => c.id !== this.consultaSelecionada
+                    );
+
+                    alert(
+                        "Consulta cancelada, movida para a agenda do médico e registrada nas consultas do paciente."
+                    );
+                } else {
+                    alert("Consulta não encontrada.");
+                }
+            } catch (error) {
+                console.error("Erro ao cancelar a consulta:", error);
+                alert("Erro ao cancelar a consulta. Tente novamente.");
+            } finally {
+                this.showModal = false;
+            }
         },
 
         confirmarExclusao(id) {
@@ -177,14 +244,139 @@ export default {
 
         async excluirConsulta() {
             const db = getFirestore();
-            await deleteDoc(doc(db, "agendamentos", this.consultaSelecionada));
-            this.consultas = this.consultas.filter(c => c.id !== this.consultaSelecionada);
-            this.showModal = false;
+            try {
+                const consultaRef = doc(db, "agendamentos", this.consultaSelecionada);
+
+                // Verificar e excluir
+                const consultaSnap = await getDoc(consultaRef);
+                if (consultaSnap.exists()) {
+                    const consulta = consultaSnap.data();
+
+                    // Adicionar consulta à agenda do médico
+                    const medicoRef = doc(db, "medicos", consulta.medicoId);
+                    await updateDoc(medicoRef, {
+                        agenda: arrayUnion(consulta),
+                    });
+
+                    // Adicionar consulta à lista de consultas do paciente
+                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
+                    await updateDoc(pacienteRef, {
+                        consultas: arrayUnion(consulta),
+                    });
+
+                    // Remover consulta da tabela agendamentos
+                    await deleteDoc(consultaRef);
+
+                    this.consultas = this.consultas.filter(
+                        (c) => c.id !== this.consultaSelecionada
+                    );
+
+                    alert(
+                        "Consulta excluída e registrada na agenda do médico e na lista de consultas do paciente."
+                    );
+                } else {
+                    alert("Consulta não encontrada para exclusão.");
+                }
+            } catch (error) {
+                console.error("Erro ao excluir consulta:", error);
+                alert("Erro ao excluir consulta. Tente novamente.");
+            } finally {
+                this.showModal = false;
+            }
         },
 
         async confirmarAcaoModal() {
             if (this.acaoSelecionada === "cancelar") await this.cancelarConsulta();
             else if (this.acaoSelecionada === "excluir") await this.excluirConsulta();
+        },
+        confirmarCancelamento(id) {
+            this.consultaSelecionada = id;
+            this.acaoSelecionada = "cancelar";
+            this.modalMensagem = {
+                titulo: "Confirmar Cancelamento",
+                texto: "Tem certeza de que deseja cancelar esta consulta?",
+            };
+            this.showModal = true;
+        },
+
+        confirmarPresenca(id) {
+            this.consultaSelecionada = id;
+            this.acaoSelecionada = "presente";
+            this.modalMensagem = {
+                titulo: "Confirmar Presença",
+                texto: "Deseja confirmar que o paciente esteve presente na consulta?",
+            };
+            this.showModal = true;
+        },
+
+        confirmarAusente(id) {
+            this.consultaSelecionada = id;
+            this.acaoSelecionada = "ausente";
+            this.modalMensagem = {
+                titulo: "Confirmar Ausência",
+                texto: "Deseja confirmar que o paciente esteve ausente na consulta?",
+            };
+            this.showModal = true;
+        },
+
+        async confirmarAcaoModal() {
+            if (this.acaoSelecionada === "cancelar") {
+                await this.cancelarConsulta();
+            } else if (this.acaoSelecionada === "presente") {
+                await this.marcarPresente(this.consultaSelecionada);
+            } else if (this.acaoSelecionada === "ausente") {
+                await this.marcarAusente(this.consultaSelecionada);
+            }
+            this.showModal = false;
+        },
+
+        async marcarPresente(id) {
+            await this.atualizarSituacaoConsulta(id, "Presente");
+        },
+
+        async marcarAusente(id) {
+            await this.atualizarSituacaoConsulta(id, "Ausente");
+        },
+
+        async atualizarSituacaoConsulta(id, situacao) {
+            const db = getFirestore();
+            const consultaRef = doc(db, "agendamentos", id);
+
+            try {
+                const consultaSnap = await getDoc(consultaRef);
+
+                if (consultaSnap.exists()) {
+                    const consulta = consultaSnap.data();
+                    consulta.situacao = situacao;
+
+                    // Adicionar consulta à agenda do médico
+                    const medicoRef = doc(db, "medicos", consulta.medicoId);
+                    await updateDoc(medicoRef, {
+                        agenda: arrayUnion(consulta),
+                    });
+
+                    // Adicionar consulta à lista de consultas do paciente
+                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
+                    await updateDoc(pacienteRef, {
+                        consultas: arrayUnion(consulta),
+                    });
+
+                    // Remover a consulta da tabela agendamentos
+                    await deleteDoc(consultaRef);
+
+                    // Atualizar a lista de consultas na interface
+                    this.consultas = this.consultas.filter((c) => c.id !== id);
+
+                    alert(
+                        `Consulta marcada como ${situacao}, movida para a agenda do médico e registrada nas consultas do paciente.`
+                    );
+                } else {
+                    alert("Consulta não encontrada.");
+                }
+            } catch (error) {
+                console.error(`Erro ao marcar consulta como ${situacao}:`, error);
+                alert(`Erro ao marcar consulta como ${situacao}. Tente novamente.`);
+            }
         },
 
         voltarPagina() {

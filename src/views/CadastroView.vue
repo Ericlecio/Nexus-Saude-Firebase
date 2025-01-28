@@ -2,9 +2,9 @@
   <div>
     <Navbar />
     <div class="container py-5 mt-5">
-      <div class="row justify-content-center" >
+      <div class="row justify-content-center">
         <div class="col-md-10">
-          <div class="card shadow-lg border-0 rounded-4 p-5 bg-light" >
+          <div class="card shadow-lg border-0 rounded-4 p-5 bg-light">
             <div class="text-center d-flex align-items-center justify-content-center mb-3">
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde"
                 class="img-fluid logo-small me-3" />
@@ -79,6 +79,16 @@
                   </select>
                 </div>
                 <div class="col-md-3">
+                  <label for="tempoConsulta" class="form-label">Tempo Médio de Consulta</label>
+                  <select v-model="form.tempoConsulta" id="tempoConsulta" class="form-select" required>
+                    <option value="" disabled selected>Selecione</option>
+                    <option value="15">15 minutos</option>
+                    <option value="30">30 minutos</option>
+                    <option value="45">45 minutos</option>
+                    <option value="60">1 hora</option>
+                  </select>
+                </div>
+                <div class="col-md-3">
                   <label for="senha" class="form-label">Senha</label>
                   <div class="input-group">
                     <input :type="showPassword ? 'text' : 'password'" v-model="form.senha" id="senha"
@@ -137,7 +147,7 @@ export default {
         "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR",
         "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
       ],
-      horarios: this.gerarHorarios("07:00", "20:00", 30),
+      horarios: this.gerarHorarios("07:00", "20:00", 15),
       diasAtendimento: {
         segunda: { inicio: "", fim: "" },
         terca: { inicio: "", fim: "" },
@@ -189,10 +199,10 @@ export default {
         crm: "",
         especialidade: "",
         valorConsulta: 0,
+        tempoConsulta: "", // Novo campo
       },
       showPassword: false,
       crmInvalido: false,
-      ufs: ["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"],
     };
   },
   methods: {
@@ -264,19 +274,37 @@ export default {
         return;
       }
 
+      if (!this.form.tempoConsulta) {
+        alert("Por favor, selecione o tempo médio de consulta.");
+        return;
+      }
+
       try {
+        // Gerar os horários disponíveis para cada dia de atendimento
+        const diasComHorarios = {};
+        Object.entries(this.diasAtendimento).forEach(([dia, { inicio, fim }]) => {
+          if (inicio && fim) {
+            diasComHorarios[dia] = this.gerarHorarios(inicio, fim, parseInt(this.form.tempoConsulta));
+          }
+        });
+
         const medicoDao = new DAOService("medicos");
-        await medicoDao.insert({ ...this.form, diasAtendimento: this.diasAtendimento });
+        await medicoDao.insert({
+          ...this.form,
+          diasAtendimento: diasComHorarios,
+        });
+
         alert("Médico cadastrado com sucesso!");
         this.$router.push("/");
       } catch (error) {
         console.error("Erro ao cadastrar médico: ", error);
         alert("Erro ao cadastrar médico. Tente novamente.");
       }
-    }
+    },
   },
 };
 </script>
+
 
 
 
