@@ -9,21 +9,11 @@
         </div>
         <div class="user-type-selector">
           <label>
-            <input
-              type="radio"
-              name="userType"
-              value="paciente"
-              v-model="userType"
-            />
+            <input type="radio" name="userType" value="paciente" v-model="userType" />
             Paciente
           </label>
           <label>
-            <input
-              type="radio"
-              name="userType"
-              value="medico"
-              v-model="userType"
-            />
+            <input type="radio" name="userType" value="medico" v-model="userType" />
             Médico
           </label>
         </div>
@@ -38,37 +28,18 @@
           <div v-if="userType === 'medico'">
             <div class="input-group">
               <i class="fas fa-user"></i>
-              <input
-                type="email"
-                v-model="email"
-                placeholder="E-mail"
-                required
-                class="input-field"
-              />
+              <input type="email" v-model="email" placeholder="E-mail" required class="input-field" />
             </div>
             <div class="input-group">
               <i class="fas fa-id-card"></i>
-              <input
-                type="text"
-                v-model="crm"
-                placeholder="CRM"
-                required
-                class="input-field"
-                pattern="\d{6}"
-                maxlength="6"
-                @input="validarCRM"
-              />
+              <input type="text" v-model="crm" placeholder="CRM" required class="input-field" pattern="\d{6}"
+                maxlength="6" @input="validarCRM" />
             </div>
 
             <div class="input-group">
               <i class="fas fa-lock"></i>
-              <input
-                :type="showPassword ? 'text' : 'password'"
-                v-model="password"
-                placeholder="Senha"
-                required
-                class="input-field"
-              />
+              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required
+                class="input-field" />
             </div>
             <div class="show-password" @click="togglePassword">
               <span>{{
@@ -86,14 +57,8 @@
         </form>
       </div>
       <div class="logo-container">
-        <img
-          src="@/assets/img/NexusSaude_vertical.png"
-          alt="Logo Nexus Saúde"
-          class="logo"
-        />
-        <a href="#" class="create-account" @click.prevent="goToCadastro"
-          >Criar Conta Médica</a
-        >
+        <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" class="logo" />
+        <a href="#" class="create-account" @click.prevent="goToCadastro">Criar Conta Médica</a>
       </div>
     </div>
   </div>
@@ -149,6 +114,13 @@ export default {
     async login() {
       if (this.userType === "medico") {
         try {
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) {
+            alert("Você já está logado!");
+            this.$router.push("/");
+            return;
+          }
+
           const db = getFirestore();
           const q = query(
             collection(db, "medicos"),
@@ -184,8 +156,16 @@ export default {
           alert("Erro ao autenticar. Verifique suas credenciais.");
         }
       }
-    },
+    }
+    ,
     async loginWithGoogle() {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        alert("Você já está logado!");
+        this.$router.push("/");
+        return;
+      }
+
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
       const db = getFirestore();
