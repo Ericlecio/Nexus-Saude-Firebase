@@ -148,6 +148,29 @@
         </form>
       </div>
     </div>
+
+
+    <!-- Modal de Exclusão -->
+    <div v-if="showModalDelete" class="modal-overlay">
+      <div class="modal-content">
+        <h4 class="text-danger">Confirmação de Exclusão</h4>
+        <p>
+          Tem certeza de que deseja excluir sua conta? Todos os seus dados serão apagados permanentemente.
+        </p>
+        <div class="text-center mt-3">
+          <button class="btn btn-danger" @click="deletarConta">
+            Confirmar
+          </button>
+          <button class="btn btn-secondary ms-2" @click="fecharModal">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+
+
   </div>
 </template>
 
@@ -161,7 +184,7 @@ import {
   query,
   where,
   getDocs,
-  updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 
 export default {
@@ -175,6 +198,7 @@ export default {
       medico: null,
       medicoId: null,
       showModalEdit: false,
+      showModalDelete: false, // Novo modal para confirmação da exclusão
       campoSelecionado: "",
       formEdit: null,
       hoje: new Date().toISOString().split("T")[0],
@@ -195,7 +219,7 @@ export default {
           if (!querySnapshot.empty) {
             this.medicoId = querySnapshot.docs[0].id;
             this.medico = querySnapshot.docs[0].data();
-            this.formEdit = JSON.parse(JSON.stringify(this.medico)); // Cópia para edição
+            this.formEdit = JSON.parse(JSON.stringify(this.medico));
           } else {
             alert("Médico não encontrado.");
             this.$router.push("/");
@@ -208,28 +232,61 @@ export default {
         console.error("Erro ao carregar perfil:", error);
       }
     },
+
     abrirModal(campo) {
       this.campoSelecionado = campo;
       this.showModalEdit = true;
     },
+
     fecharModal() {
       this.showModalEdit = false;
+      this.showModalDelete = false;
       this.campoSelecionado = "";
     },
-    async salvarEdicao() {
+
+
+    confirmarExclusao() {
+      console.log("Abrindo modal de exclusão...");
+      this.showModalDelete = true; // Exibe o modal de exclusão antes de deletar
+    },
+
+    async deletarConta() {
       try {
         const db = getFirestore();
         const medicoRef = doc(db, "medicos", this.medicoId);
 
-        await updateDoc(medicoRef, this.formEdit);
-        this.medico = { ...this.formEdit };
+        console.log("Tentando excluir médico:", this.medicoId);
 
-        alert("Informações atualizadas com sucesso!");
-        this.fecharModal();
+        // Buscar todos os agendamentos onde o médico está registrado
+        const agendamentosQuery = query(
+          collection(db, "agendamentos"),
+          where("medicoId", "==", this.medicoId)
+        );
+        const agendamentosSnapshot = await getDocs(agendamentosQuery);
+
+        // Excluir agendamentos um por um
+        if (!agendamentosSnapshot.empty) {
+          for (const agendamento of agendamentosSnapshot.docs) {
+            await deleteDoc(agendamento.ref);
+            console.log(`Agendamento ${agendamento.id} excluído.`);
+          }
+        }
+
+        // Excluir apenas o registro do médico
+        await deleteDoc(medicoRef);
+        console.log(`Médico ${this.medicoId} excluído.`);
+
+        // Remover informações do usuário do localStorage e redirecionar
+        localStorage.removeItem("user");
+        alert("Conta excluída com sucesso.");
+        this.$router.push("/");
       } catch (error) {
-        console.error("Erro ao atualizar:", error);
+        console.error("Erro ao excluir conta:", error);
+        alert(`Erro ao excluir conta: ${error.message}`);
       }
     },
+
+
     formatDia(dia) {
       const dias = {
         segunda: "Segunda-feira",
@@ -248,8 +305,6 @@ export default {
   },
 };
 </script>
-
-
 
 <style scoped>
 .container {

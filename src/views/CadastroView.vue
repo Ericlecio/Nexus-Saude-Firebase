@@ -18,7 +18,6 @@
                   <label for="nomeCompleto" class="form-label">Nome Completo</label>
                   <input v-model="form.nomeCompleto" type="text" id="nomeCompleto" class="form-control"
                     placeholder="Digite seu nome completo" required @input="validarNome" />
-
                 </div>
 
                 <!-- CPF -->

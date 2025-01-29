@@ -69,9 +69,11 @@
         </div>
 
         <!-- Botão de Exclusão -->
+        <!-- Botão de Exclusão -->
         <button class="btn btn-danger" @click="confirmarExclusao">
           Excluir Conta
         </button>
+
       </div>
 
       <div v-else class="text-center mt-5">
@@ -128,6 +130,7 @@
     </div>
 
     <!-- Modal de Exclusão -->
+    <!-- Modal de Exclusão -->
     <div v-if="showModalDelete" class="modal-overlay">
       <div class="modal-content">
         <h4 class="text-danger">Confirmação de Exclusão</h4>
@@ -145,6 +148,7 @@
         </div>
       </div>
     </div>
+
 
     <Footer />
   </div>
@@ -255,33 +259,43 @@ export default {
         digito1 === parseInt(cpf[9]) && digito2 === parseInt(cpf[10])
       );
     },
-    async salvarEdicao() {
-      try {
-        const db = getFirestore();
-        const pacienteRef = doc(db, "pacientes", this.pacienteId);
-
-        await updateDoc(pacienteRef, this.formEdit);
-        this.paciente = { ...this.formEdit };
-        localStorage.setItem("user", JSON.stringify(this.paciente));
-
-        alert("Informações atualizadas com sucesso!");
-        this.fecharModal();
-      } catch (error) {
-        console.error("Erro ao atualizar:", error);
-      }
+    confirmarExclusao() {
+      console.log("Abrindo modal de exclusão...");
+      this.showModalDelete = true; // Exibe o modal
     },
     async deletarConta() {
       try {
         const db = getFirestore();
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
-        await deleteDoc(pacienteRef);
 
+        console.log("Tentando excluir paciente:", this.pacienteId);
+
+        // Buscar todos os agendamentos do paciente
+        const agendamentosQuery = query(
+          collection(db, "agendamentos"),
+          where("pacienteId", "==", this.pacienteId)
+        );
+        const agendamentosSnapshot = await getDocs(agendamentosQuery);
+
+        // Excluir agendamentos um por um (sem batch para evitar remoção da coleção)
+        if (!agendamentosSnapshot.empty) {
+          for (const agendamento of agendamentosSnapshot.docs) {
+            await deleteDoc(agendamento.ref);
+            console.log(`Agendamento ${agendamento.id} excluído.`);
+          }
+        }
+
+        // Excluir apenas o registro do paciente
+        await deleteDoc(pacienteRef);
+        console.log(`Paciente ${this.pacienteId} excluído.`);
+
+        // Remover informações do usuário do localStorage e redirecionar
         localStorage.removeItem("user");
         alert("Conta excluída com sucesso.");
         this.$router.push("/");
       } catch (error) {
         console.error("Erro ao excluir conta:", error);
-        alert("Erro ao excluir conta.");
+        alert(`Erro ao excluir conta: ${error.message}`);
       }
     },
   },
@@ -290,52 +304,6 @@ export default {
   },
 };
 </script>
-
-<style scoped>
-.container {
-  max-width: 90%;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.btn-voltar {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-bottom: 20px;
-}
-
-.btn-voltar:hover {
-  background-color: #0056b3;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  width: 90%;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-}
-</style>
 
 <style scoped>
 .container {
