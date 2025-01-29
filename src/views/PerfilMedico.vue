@@ -7,7 +7,7 @@
         <i class="fas fa-arrow-left me-2"></i> Voltar
       </button>
 
-      <h1 class="text-center mb-4 text-primary" style="margin-top: 50px; ">
+      <h1 class="text-center mb-4 text-primary">
         {{ medico ? medico.nomeCompleto : "Carregando..." }}
       </h1>
 
@@ -16,27 +16,20 @@
         <div class="card shadow-sm mb-4">
           <div class="card-body">
             <h5 class="card-title mb-3">
-              <i class="fas fa-info-circle me-2" style="color: #007bff;"></i>
+              <i class="fas fa-info-circle me-2 text-primary"></i>
               <strong>Informações Pessoais</strong>
               <i class="fas fa-edit ms-2 text-primary cursor-pointer" @click="abrirModal('info')"></i>
             </h5>
             <p><strong>Nome Completo:</strong> {{ medico.nomeCompleto }}</p>
-            <p><strong>CPF:</strong> {{ formatCPF(medico.cpf) }}</p>
-            <p><strong>Sexo:</strong> {{ medico.sexo }}</p>
-            <p><strong>Data de Nascimento:</strong> {{ formatDate(medico.dataNascimento) }}</p>
-          </div>
-        </div>
-
-        <!-- Contato -->
-        <div class="card shadow-sm mb-4">
-          <div class="card-body">
-            <h5 class="card-title mb-3">
-              <i class="fas fa-phone me-2" style="color: #28a745;"></i>
-              <strong>Contato</strong>
-              <i class="fas fa-edit ms-2 text-primary cursor-pointer" @click="abrirModal('contato')"></i>
-            </h5>
             <p><strong>E-mail:</strong> {{ medico.email }}</p>
-            <p><strong>Telefone:</strong> {{ formatPhone(medico.telefoneConsultorio) }}</p>
+            <p><strong>Telefone:</strong> {{ medico.telefone }}</p>
+            <p><strong>CRM:</strong> {{ medico.crm || "Não informado" }}</p>
+            <p><strong>Especialidade:</strong> {{ medico.especialidade || "Não informado" }}</p>
+            <p><strong>Sexo:</strong> {{ medico.sexo }}</p>
+            <p>
+              <strong>Data de Nascimento:</strong>
+              {{ medico.dataNascimento || "Não informado" }}
+            </p>
           </div>
         </div>
 
@@ -44,20 +37,55 @@
         <div class="card shadow-sm mb-4">
           <div class="card-body">
             <h5 class="card-title mb-3">
-              <i class="fas fa-clock me-2" style="color: #007bff;"></i>
+              <i class="fas fa-clock me-2 text-primary"></i>
               <strong>Horários de Atendimento</strong>
               <i class="fas fa-edit ms-2 text-primary cursor-pointer" @click="abrirModal('horarios')"></i>
             </h5>
             <ul class="list-unstyled">
-              <li v-for="(horario, dia) in medico.diasAtendimento" :key="dia">
-                <strong>{{ formatDia(dia) }}:</strong>
-                {{ horario.inicio || "--:--" }} - {{ horario.fim || "--:--" }}
+              <li v-for="(horarios, dia) in medico.diasAtendimento" :key="dia">
+                <strong>{{ formatDia(dia) }}:</strong> {{ horarios.join(", ") }}
               </li>
             </ul>
           </div>
         </div>
 
-        <button class="btn btn-danger" @click="deletarMedico">Excluir Médico</button>
+        <!-- Histórico de Consultas -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-calendar-check me-2 text-primary"></i>
+              <strong>Histórico de Consultas</strong>
+            </h5>
+            <div v-if="medico.agenda && medico.agenda.length">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Paciente</th>
+                    <th>Especialidade</th>
+                    <th>Local</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="consulta in medico.agenda" :key="consulta.id">
+                    <td>{{ consulta.data }}</td>
+                    <td>{{ consulta.pacienteNome }}</td>
+                    <td>{{ consulta.especialidade }}</td>
+                    <td>{{ consulta.local }}</td>
+                    <td>{{ consulta.situacao }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-muted">Nenhuma consulta encontrada.</p>
+          </div>
+        </div>
+
+        <!-- Botão de Exclusão -->
+        <button class="btn btn-danger" @click="confirmarExclusao">
+          Excluir Conta
+        </button>
       </div>
 
       <div v-else class="text-center mt-5">
@@ -68,54 +96,73 @@
     </div>
 
     <!-- Modal de Edição -->
-    <div v-if="showModal" class="modal-overlay">
+    <div v-if="showModalEdit" class="modal-overlay">
       <div class="modal-content">
-        <h4>Editar {{ campoSelecionado }}</h4>
+        <h4 v-if="campoSelecionado === 'info'">Editar Informações Pessoais</h4>
+        <h4 v-if="campoSelecionado === 'horarios'">Editar Horários de Atendimento</h4>
+
         <form @submit.prevent="salvarEdicao">
-          <div v-if="campoSelecionado === 'info'">
+          <!-- Modal para Informações Pessoais -->
+          <template v-if="campoSelecionado === 'info'">
             <label>Nome Completo</label>
             <input v-model="formEdit.nomeCompleto" type="text" class="form-control" required />
 
-            <label>CPF</label>
-            <input v-model="formEdit.cpf" @input="handleCPFInput" type="text" class="form-control" required />
-
-            <label>Sexo</label>
-            <select v-model="formEdit.sexo" class="form-select" required>
-              <option value="M">Masculino</option>
-              <option value="F">Feminino</option>
-              <option value="O">Outro</option>
-            </select>
-
-            <label>Data de Nascimento</label>
-            <input v-model="formEdit.dataNascimento" type="date" class="form-control" required />
-          </div>
-
-          <div v-if="campoSelecionado === 'contato'">
             <label>E-mail</label>
             <input v-model="formEdit.email" type="email" class="form-control" required />
 
             <label>Telefone</label>
-            <input v-model="formEdit.telefoneConsultorio" @input="handlePhoneInput" type="text" class="form-control"
-              required />
-          </div>
+            <input v-model="formEdit.telefone" type="text" class="form-control" required />
+
+            <label>CRM</label>
+            <input v-model="formEdit.crm" type="text" class="form-control" />
+
+            <label>Especialidade</label>
+            <input v-model="formEdit.especialidade" type="text" class="form-control" />
+
+            <label>Sexo</label>
+            <select v-model="formEdit.sexo" class="form-control">
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+              <option value="Outro">Outro</option>
+            </select>
+
+            <label>Data de Nascimento</label>
+            <input v-model="formEdit.dataNascimento" type="date" class="form-control" required :max="hoje" />
+          </template>
+
+          <!-- Modal para Horários de Atendimento -->
+          <template v-if="campoSelecionado === 'horarios'">
+            <div v-for="(horarios, dia) in formEdit.diasAtendimento" :key="dia">
+              <label>{{ formatDia(dia) }}</label>
+              <input v-model="formEdit.diasAtendimento[dia]" type="text" class="form-control"
+                placeholder="Digite os horários separados por vírgula" />
+            </div>
+          </template>
 
           <div class="mt-3 text-center">
             <button type="submit" class="btn btn-success">Salvar</button>
-            <button type="button" class="btn btn-secondary ms-2" @click="fecharModal">Cancelar</button>
+            <button type="button" class="btn btn-secondary ms-2" @click="fecharModal">
+              Cancelar
+            </button>
           </div>
         </form>
       </div>
     </div>
-
-    <Footer />
   </div>
 </template>
 
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import { getFirestore, doc,collection, query, where, getDocs, updateDoc } from "firebase/firestore";
-
+import {
+  getFirestore,
+  doc,
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
 
 export default {
   name: "PerfilMedico",
@@ -126,10 +173,11 @@ export default {
   data() {
     return {
       medico: null,
-      showModal: false,
+      medicoId: null,
+      showModalEdit: false,
       campoSelecionado: "",
-      formEdit: {},
-      
+      formEdit: null,
+      hoje: new Date().toISOString().split("T")[0],
     };
   },
   methods: {
@@ -138,89 +186,50 @@ export default {
         const user = JSON.parse(localStorage.getItem("user"));
         if (user && user.tipo === "medico") {
           const db = getFirestore();
-          const q = query(collection(db, "medicos"), where("email", "==", user.email));
+          const q = query(
+            collection(db, "medicos"),
+            where("email", "==", user.email)
+          );
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
-            const medicoData = querySnapshot.docs[0].data();
-            this.medicoId = querySnapshot.docs[0].id; // Armazena o ID do documento
-            this.medico = medicoData;
-            this.formEdit = { ...this.medico };
+            this.medicoId = querySnapshot.docs[0].id;
+            this.medico = querySnapshot.docs[0].data();
+            this.formEdit = JSON.parse(JSON.stringify(this.medico)); // Cópia para edição
           } else {
-            alert("Informações do médico não encontradas no banco de dados.");
+            alert("Médico não encontrado.");
+            this.$router.push("/");
           }
         } else {
-          alert("Acesso negado! Redirecionando...");
+          alert("Acesso negado!");
           this.$router.push("/");
         }
       } catch (error) {
-        console.error("Erro ao carregar perfil do médico:", error);
-        alert("Erro ao carregar perfil.");
-        this.$router.push("/");
+        console.error("Erro ao carregar perfil:", error);
       }
     },
-
     abrirModal(campo) {
       this.campoSelecionado = campo;
-      this.formEdit = { ...this.medico };
-      this.showModal = true;
+      this.showModalEdit = true;
     },
-
-
-async salvarEdicao() {
-  try {
-    if (!this.medicoId) {
-      console.error("ID do médico não encontrado.");
-      alert("Erro ao atualizar informações. Tente novamente.");
-      return;
-    }
-
-    const db = getFirestore();
-    const medicoRef = doc(db, "medicos", this.medicoId);
-
-    await updateDoc(medicoRef, {
-      nomeCompleto: this.formEdit.nomeCompleto,
-      cpf: this.formEdit.cpf,
-      sexo: this.formEdit.sexo,
-      dataNascimento: this.formEdit.dataNascimento,
-      email: this.formEdit.email,
-      telefoneConsultorio: this.formEdit.telefoneConsultorio,
-    });
-
-    this.medico = { ...this.formEdit };
-    alert("Informações atualizadas com sucesso!");
-    this.fecharModal();
-  } catch (error) {
-    console.error("Erro ao atualizar informações:", error);
-    alert("Erro ao atualizar informações.");
-  }
-},
-
-
     fecharModal() {
-      this.showModal = false;
+      this.showModalEdit = false;
+      this.campoSelecionado = "";
     },
+    async salvarEdicao() {
+      try {
+        const db = getFirestore();
+        const medicoRef = doc(db, "medicos", this.medicoId);
 
-    deletarMedico() {
-      if (confirm("Tem certeza que deseja excluir sua conta?")) {
-        localStorage.removeItem("user");
-        alert("Conta excluída com sucesso.");
-        this.$router.push("/");
+        await updateDoc(medicoRef, this.formEdit);
+        this.medico = { ...this.formEdit };
+
+        alert("Informações atualizadas com sucesso!");
+        this.fecharModal();
+      } catch (error) {
+        console.error("Erro ao atualizar:", error);
       }
     },
-
-    formatCPF(cpf) {
-      return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-    },
-
-    formatPhone(phone) {
-      return phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-    },
-
-    formatDate(date) {
-      return new Date(date).toLocaleDateString("pt-BR");
-    },
-
     formatDia(dia) {
       const dias = {
         segunda: "Segunda-feira",
@@ -229,25 +238,9 @@ async salvarEdicao() {
         quinta: "Quinta-feira",
         sexta: "Sexta-feira",
         sabado: "Sábado",
+        domingo: "Domingo",
       };
       return dias[dia] || dia;
-    },
-
-    handleCPFInput(event) {
-      this.formEdit.cpf = event.target.value
-        .replace(/\D/g, "")
-        .replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4")
-        .slice(0, 14);
-    },
-
-    handlePhoneInput(event) {
-      let phone = event.target.value.replace(/\D/g, "");
-      phone = phone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-      this.formEdit.telefoneConsultorio = phone.slice(0, 15);
-    },
-
-    voltarPagina() {
-      this.$router.push("/");
     },
   },
   mounted() {
@@ -293,10 +286,6 @@ async salvarEdicao() {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-button {
-  width: 100px;
 }
 
 .modal-content {

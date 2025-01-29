@@ -9,11 +9,21 @@
         </div>
         <div class="user-type-selector">
           <label>
-            <input type="radio" name="userType" value="paciente" v-model="userType" />
+            <input
+              type="radio"
+              name="userType"
+              value="paciente"
+              v-model="userType"
+            />
             Paciente
           </label>
           <label>
-            <input type="radio" name="userType" value="medico" v-model="userType" />
+            <input
+              type="radio"
+              name="userType"
+              value="medico"
+              v-model="userType"
+            />
             Médico
           </label>
         </div>
@@ -28,21 +38,42 @@
           <div v-if="userType === 'medico'">
             <div class="input-group">
               <i class="fas fa-user"></i>
-              <input type="email" v-model="email" placeholder="E-mail" required class="input-field" />
+              <input
+                type="email"
+                v-model="email"
+                placeholder="E-mail"
+                required
+                class="input-field"
+              />
             </div>
             <div class="input-group">
               <i class="fas fa-id-card"></i>
-              <input type="text" v-model="crm" placeholder="CRM" required class="input-field" pattern="\d{6}"
-                maxlength="6" @input="validarCRM" />
+              <input
+                type="text"
+                v-model="crm"
+                placeholder="CRM"
+                required
+                class="input-field"
+                pattern="\d{6}"
+                maxlength="6"
+                @input="validarCRM"
+              />
             </div>
 
             <div class="input-group">
               <i class="fas fa-lock"></i>
-              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required
-                class="input-field" />
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                v-model="password"
+                placeholder="Senha"
+                required
+                class="input-field"
+              />
             </div>
             <div class="show-password" @click="togglePassword">
-              <span>{{ showPassword ? "Ocultar Senha" : "Mostrar Senha" }}</span>
+              <span>{{
+                showPassword ? "Ocultar Senha" : "Mostrar Senha"
+              }}</span>
             </div>
             <div class="options">
               <label><input type="checkbox" /> Lembrar Sempre</label>
@@ -55,8 +86,14 @@
         </form>
       </div>
       <div class="logo-container">
-        <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" class="logo" />
-        <a href="#" class="create-account" @click.prevent="goToCadastro">Criar Conta Médica</a>
+        <img
+          src="@/assets/img/NexusSaude_vertical.png"
+          alt="Logo Nexus Saúde"
+          class="logo"
+        />
+        <a href="#" class="create-account" @click.prevent="goToCadastro"
+          >Criar Conta Médica</a
+        >
       </div>
     </div>
   </div>
@@ -66,7 +103,16 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  setDoc,
+  getDoc,
+} from "firebase/firestore";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 export default {
@@ -77,27 +123,38 @@ export default {
   },
   data() {
     return {
-      userType: "paciente",
+      userType: "paciente", // Aba padrão
       email: "",
       crm: "",
       password: "",
       showPassword: false,
     };
   },
+  created() {
+    const { userType, email, crm, senha } = this.$route.query;
+
+    // Preenche os campos automaticamente com base nos parâmetros da URL
+    if (userType) this.userType = userType;
+    if (email) this.email = email;
+    if (crm) this.crm = crm;
+    if (senha) this.password = senha;
+  },
   methods: {
     togglePassword() {
       this.showPassword = !this.showPassword;
     },
     goToCadastro() {
-      // Redireciona para a página de cadastro
       this.$router.push("/cadastro");
     },
-
     async login() {
       if (this.userType === "medico") {
         try {
           const db = getFirestore();
-          const q = query(collection(db, "medicos"), where("email", "==", this.email), where("crm", "==", this.crm));
+          const q = query(
+            collection(db, "medicos"),
+            where("email", "==", this.email),
+            where("crm", "==", this.crm)
+          );
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
@@ -105,13 +162,16 @@ export default {
             const medico = medicoDoc.data();
 
             if (medico.senha === this.password) {
-              localStorage.setItem("user", JSON.stringify({
-                id: medicoDoc.id,  // Adicionando o ID do documento do médico
-                nomeCompleto: medico.nomeCompleto,
-                email: medico.email,
-                crm: medico.crm,
-                tipo: "medico"
-              }));
+              localStorage.setItem(
+                "user",
+                JSON.stringify({
+                  id: medicoDoc.id,
+                  nomeCompleto: medico.nomeCompleto,
+                  email: medico.email,
+                  crm: medico.crm,
+                  tipo: "medico",
+                })
+              );
               this.$router.push("/");
             } else {
               alert("Senha incorreta!");
@@ -124,9 +184,7 @@ export default {
           alert("Erro ao autenticar. Verifique suas credenciais.");
         }
       }
-    }
-    ,
-
+    },
     async loginWithGoogle() {
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
@@ -136,7 +194,6 @@ export default {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
 
-        // Verifica se o paciente já existe no Firestore
         const userRef = doc(db, "pacientes", user.uid);
         const docSnap = await getDoc(userRef);
 
@@ -146,26 +203,28 @@ export default {
             email: user.email,
             telefone: user.phoneNumber || "Não informado",
             planoSaude: "",
-            usuarioId: user.uid,  // Certifique-se de que este campo está sendo salvo corretamente
+            usuarioId: user.uid,
             tipo: "paciente",
             dataCadastro: new Date().toISOString(),
           });
         }
 
-        // Salvar informações no localStorage para uso na navbar
-        localStorage.setItem("user", JSON.stringify({
-          nomeCompleto: user.displayName,
-          email: user.email,
-          usuarioId: user.uid,  // Corrigido para garantir que o ID seja salvo corretamente
-          tipo: "paciente"
-        }));
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            nomeCompleto: user.displayName,
+            email: user.email,
+            usuarioId: user.uid,
+            tipo: "paciente",
+          })
+        );
 
         this.$router.push("/");
       } catch (error) {
         console.error("Erro de autenticação com Google:", error.message);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
-    }
+    },
   },
 };
 </script>
@@ -244,14 +303,12 @@ body {
 
 .login-container a {
   color: #000524;
-  ;
 }
 
 .logo {
   max-width: 70%;
   height: auto;
   margin-bottom: 20px;
-
 }
 
 h1 {
@@ -382,7 +439,6 @@ h2 {
   background-color: #218838;
   /* Tom mais escuro de verde ao passar o mouse */
 }
-
 
 .create-account {
   text-align: center;
@@ -519,6 +575,4 @@ h2 {
     font-size: 1rem;
   }
 }
-
-
 </style>
