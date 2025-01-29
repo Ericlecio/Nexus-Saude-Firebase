@@ -298,6 +298,31 @@ export default {
         alert(`Erro ao excluir conta: ${error.message}`);
       }
     },
+    async salvarEdicao() {
+      try {
+        if (!this.pacienteId) {
+          console.error("ID do paciente não encontrado.");
+          alert("Erro ao atualizar dados. ID do paciente não encontrado.");
+          return;
+        }
+
+        const db = getFirestore();
+        const pacienteRef = doc(db, "pacientes", this.pacienteId);
+
+        console.log("Atualizando dados do paciente:", this.formEdit);
+
+        await updateDoc(pacienteRef, this.formEdit);
+
+        // Atualizar localmente os dados do paciente
+        this.paciente = { ...this.formEdit };
+
+        alert("Informações atualizadas com sucesso!");
+        this.fecharModal();
+      } catch (error) {
+        console.error("Erro ao atualizar paciente:", error);
+        alert("Erro ao atualizar paciente. Tente novamente.");
+      }
+    },
   },
   mounted() {
     this.carregarPerfil();

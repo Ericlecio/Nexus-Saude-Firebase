@@ -42,9 +42,7 @@
             </thead>
             <tbody>
               <tr v-for="agendamento in agendamentosFiltrados" :key="agendamento.id" :class="{
-                'consulta-cancelada': agendamento.situacao
-                  .toLowerCase()
-                  .includes('cancelada'),
+                'consulta-cancelada': agendamento.situacao.toLowerCase().includes('cancelada'),
               }">
                 <td>{{ agendamento.especialidade || 'Não informado' }}</td>
                 <td>{{ agendamento.medicoNome || 'Nome não disponível' }}</td>
@@ -53,8 +51,8 @@
                 <td>{{ agendamento.pacienteTelefone || 'Não informado' }}</td>
                 <td>{{ agendamento.situacao || 'Não informado' }}</td>
                 <td class="text-center">
-                  <button v-if="!agendamento.situacao.toLowerCase().includes('cancelada')"
-                    class="btn btn-sm btn-warning" @click="confirmarCancelamento(agendamento.id)">
+                  <button v-if="agendamento.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
+                    @click="confirmarCancelamento(agendamento.id)">
                     <i class="fas fa-ban"></i> Cancelar
                   </button>
                 </td>
@@ -107,9 +105,8 @@ export default {
       agendamentoSelecionado: null,
       acaoSelecionada: null,
       modalMensagem: { titulo: "", texto: "" },
-      filtroSituacao: "todas",
+      filtroSituacao: "Confirmada",
       opcoesFiltro: [
-        { label: "Todas", valor: "todas" },
         { label: "Confirmadas", valor: "Confirmada" },
         { label: "Canceladas pelo Paciente", valor: "Cancelada pelo paciente" },
         { label: "Canceladas pelo Médico", valor: "Cancelada pelo médico" },
@@ -118,12 +115,17 @@ export default {
   },
   computed: {
     agendamentosFiltrados() {
-      let filtrados = [...this.agendamentos];
-      if (this.filtroSituacao !== "todas") {
-        filtrados = filtrados.filter((agendamento) => agendamento.situacao === this.filtroSituacao);
-      }
-      filtrados.sort((a, b) => new Date(a.data) - new Date(b.data));
-      return filtrados;
+      return this.agendamentos.filter(
+        (agendamento) => agendamento.situacao === this.filtroSituacao
+      );
+    },
+  },
+  watch: {
+    filtroSituacao: {
+      handler() {
+        this.carregarAgendamentos();
+      },
+      immediate: true, // Para carregar corretamente na inicialização
     },
   },
   methods: {
@@ -137,15 +139,31 @@ export default {
         }
 
         const db = getFirestore();
-        const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.usuarioId));
-        const snapshot = await getDocs(q);
 
-        this.agendamentos = snapshot.empty
-          ? []
-          : snapshot.docs.map((docSnap) => ({
-            id: docSnap.id,
-            ...docSnap.data(),
-          }));
+        // Se o filtro for "Confirmadas", buscar na tabela agendamentos
+        if (this.filtroSituacao === "Confirmada") {
+          const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.usuarioId));
+          const snapshot = await getDocs(q);
+          this.agendamentos = snapshot.empty
+            ? []
+            : snapshot.docs.map((docSnap) => ({
+              id: docSnap.id,
+              ...docSnap.data(),
+            }));
+        } else {
+          // Se for "Canceladas pelo Paciente" ou "Canceladas pelo Médico", buscar na tabela pacientes > consultas
+          const pacienteRef = doc(db, "pacientes", user.usuarioId);
+          const pacienteSnap = await getDoc(pacienteRef);
+
+          if (pacienteSnap.exists()) {
+            const pacienteData = pacienteSnap.data();
+            this.agendamentos = (pacienteData.consultas || []).filter(
+              (consulta) => consulta.situacao === this.filtroSituacao
+            );
+          } else {
+            this.agendamentos = [];
+          }
+        }
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos.");
@@ -172,25 +190,30 @@ export default {
         if (consultaSnap.exists()) {
           const consulta = consultaSnap.data();
 
-          // Copiar o registro para a tabela do médico
-          const medicoRef = doc(db, "medicos", consulta.medicoId);
-          await updateDoc(medicoRef, {
-            agenda: arrayUnion({
-              id: consultaRef.id, // Inclui o ID original da consulta
-              ...consulta,
-            }),
-          });
+          // Atualizar a situação antes de remover
+          await updateDoc(consultaRef, { situacao: "Cancelada pelo paciente" });
 
           // Copiar o registro para a tabela do paciente
           const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
           await updateDoc(pacienteRef, {
             consultas: arrayUnion({
-              id: consultaRef.id, // Inclui o ID original da consulta
+              id: consultaRef.id,
               ...consulta,
+              situacao: "Cancelada pelo paciente",
             }),
           });
 
-          // Remover apenas o registro específico da tabela agendamentos
+          // Copiar o registro para a agenda do médico
+          const medicoRef = doc(db, "medicos", consulta.medicoId);
+          await updateDoc(medicoRef, {
+            agenda: arrayUnion({
+              id: consultaRef.id,
+              ...consulta,
+              situacao: "Cancelada pelo paciente",
+            }),
+          });
+
+          // Remover o registro da tabela agendamentos
           await deleteDoc(consultaRef);
 
           // Atualizar a lista de agendamentos na interface
@@ -198,7 +221,7 @@ export default {
             (a) => a.id !== this.agendamentoSelecionado
           );
 
-          alert("Consulta cancelada com sucesso. Foi movida para as tabelas de médico e paciente.");
+          alert("Consulta cancelada com sucesso e movida para o histórico do paciente e do médico.");
         } else {
           alert("Consulta não encontrada.");
         }
@@ -208,28 +231,10 @@ export default {
       } finally {
         this.showModal = false;
       }
-    }
-    ,
-
-    async excluirConsulta() {
-      const db = getFirestore();
-      const agendamentoRef = doc(db, "agendamentos", this.agendamentoSelecionado);
-      try {
-        await deleteDoc(agendamentoRef);
-        this.agendamentos = this.agendamentos.filter((a) => a.id !== this.agendamentoSelecionado);
-        alert("Consulta excluída com sucesso.");
-      } catch (error) {
-        console.error("Erro ao excluir consulta:", error);
-        alert("Erro ao excluir consulta. Tente novamente.");
-      } finally {
-        this.showModal = false;
-      }
     },
     async confirmarAcaoModal() {
       if (this.acaoSelecionada === "cancelar") {
         await this.cancelarConsulta();
-      } else if (this.acaoSelecionada === "excluir") {
-        await this.excluirConsulta();
       }
     },
     voltarPagina() {
@@ -241,8 +246,6 @@ export default {
   },
 };
 </script>
-
-
 
 <style scoped>
 .div-principal {
