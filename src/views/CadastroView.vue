@@ -5,14 +5,9 @@
       <div class="row justify-content-center">
         <div class="col-md-10">
           <div class="card shadow-lg border-0 rounded-4 p-5 bg-light">
-            <div
-              class="text-center d-flex align-items-center justify-content-center mb-3"
-            >
-              <img
-                src="@/assets/img/NexusSaude_vertical.png"
-                alt="Logo Nexus Saúde"
-                class="img-fluid logo-small me-3"
-              />
+            <div class="text-center d-flex align-items-center justify-content-center mb-3">
+              <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde"
+                class="img-fluid logo-small me-3" />
               <h1 class="text-primary fw-bold">Nexus Saúde</h1>
             </div>
             <h3 class="text-center text-muted mb-5">Cadastro de Médico</h3>
@@ -20,42 +15,23 @@
               <div class="row g-4">
                 <!-- Nome Completo -->
                 <div class="col-md-3">
-                  <label for="nomeCompleto" class="form-label"
-                    >Nome Completo</label
-                  >
-                  <input
-                    v-model="form.nomeCompleto"
-                    type="text"
-                    id="nomeCompleto"
-                    class="form-control"
-                    placeholder="Digite seu nome completo"
-                    required
-                  />
+                  <label for="nomeCompleto" class="form-label">Nome Completo</label>
+                  <input v-model="form.nomeCompleto" type="text" id="nomeCompleto" class="form-control"
+                    placeholder="Digite seu nome completo" required @input="validarNome" />
+
                 </div>
 
                 <!-- CPF -->
                 <div class="col-md-3">
                   <label for="cpf" class="form-label">CPF</label>
-                  <input
-                    v-model="form.cpf"
-                    @input="handleCPFInput"
-                    type="text"
-                    id="cpf"
-                    class="form-control"
-                    placeholder="Digite seu CPF"
-                    required
-                  />
+                  <input v-model="form.cpf" @input="handleCPFInput" type="text" id="cpf" class="form-control"
+                    placeholder="Digite seu CPF" required />
                 </div>
 
                 <!-- Sexo -->
                 <div class="col-md-3">
                   <label for="sexo" class="form-label">Sexo</label>
-                  <select
-                    v-model="form.sexo"
-                    id="sexo"
-                    class="form-select"
-                    required
-                  >
+                  <select v-model="form.sexo" id="sexo" class="form-select" required>
                     <option value="" disabled selected>Selecione o sexo</option>
                     <option value="M">Masculino</option>
                     <option value="F">Feminino</option>
@@ -65,16 +41,8 @@
 
                 <!-- Data de Nascimento -->
                 <div class="col-md-3">
-                  <label for="dataNascimento" class="form-label"
-                    >Data de Nascimento</label
-                  >
-                  <input
-                    v-model="form.dataNascimento"
-                    type="date"
-                    id="dataNascimento"
-                    class="form-control"
-                    required
-                  />
+                  <label for="dataNascimento" class="form-label">Data de Nascimento</label>
+                  <input v-model="form.dataNascimento" type="date" id="dataNascimento" class="form-control" required />
                 </div>
               </div>
 
@@ -82,15 +50,8 @@
                 <!-- CRM -->
                 <div class="col-md-3">
                   <label for="crm" class="form-label">CRM</label>
-                  <input
-                    v-model="form.crm"
-                    type="text"
-                    id="crm"
-                    class="form-control"
-                    placeholder="Digite o CRM"
-                    @input="formatCRM"
-                    required
-                  />
+                  <input v-model="form.crm" type="text" id="crm" class="form-control" placeholder="Digite o CRM"
+                    @input="formatCRM" required />
                   <small v-if="crmInvalido" class="text-danger">
                     CRM inválido. Verifique o formato ou a UF.
                   </small>
@@ -99,12 +60,7 @@
                 <!-- UF -->
                 <div class="col-md-3">
                   <label for="uf" class="form-label">UF</label>
-                  <select
-                    v-model="form.uf"
-                    id="uf"
-                    class="form-select"
-                    required
-                  >
+                  <select v-model="form.uf" id="uf" class="form-select" required>
                     <option value="" disabled selected>Selecione a UF</option>
                     <option v-for="estado in ufs" :key="estado" :value="estado">
                       {{ estado }}
@@ -115,68 +71,34 @@
                 <!-- E-mail -->
                 <div class="col-md-3">
                   <label for="email" class="form-label">E-mail</label>
-                  <input
-                    v-model="form.email"
-                    type="email"
-                    id="email"
-                    class="form-control"
-                    placeholder="seuemail@dominio.com"
-                    required
-                  />
+                  <input v-model="form.email" type="email" id="email" class="form-control"
+                    placeholder="seuemail@dominio.com" required />
                 </div>
 
                 <!-- Telefone -->
                 <div class="col-md-3">
-                  <label for="telefoneConsultorio" class="form-label"
-                    >Telefone</label
-                  >
-                  <input
-                    v-model="form.telefoneConsultorio"
-                    @input="handlePhoneInput"
-                    type="text"
-                    id="telefoneConsultorio"
-                    class="form-control"
-                    placeholder="(00) 00000-0000"
-                    required
-                  />
+                  <label for="telefoneConsultorio" class="form-label">Telefone</label>
+                  <input v-model="form.telefoneConsultorio" @input="handlePhoneInput" type="text"
+                    id="telefoneConsultorio" class="form-control" placeholder="(00) 00000-0000" required />
                 </div>
               </div>
 
               <div class="row g-4 mt-3">
                 <!-- Valor da Consulta -->
                 <div class="col-md-3">
-                  <label for="valorConsulta" class="form-label"
-                    >Valor da Consulta</label
-                  >
-                  <input
-                    v-model="form.valorConsulta"
-                    type="number"
-                    id="valorConsulta"
-                    class="form-control"
-                    placeholder="Digite o valor"
-                    required
-                  />
+                  <label for="valorConsulta" class="form-label">Valor da Consulta</label>
+                  <input v-model="form.valorConsulta" type="number" id="valorConsulta" class="form-control"
+                    placeholder="Digite o valor" required />
                 </div>
 
                 <!-- Especialidade -->
                 <div class="col-md-3">
-                  <label for="especialidade" class="form-label"
-                    >Especialidade</label
-                  >
-                  <select
-                    v-model="form.especialidade"
-                    id="especialidade"
-                    class="form-select"
-                    required
-                  >
+                  <label for="especialidade" class="form-label">Especialidade</label>
+                  <select v-model="form.especialidade" id="especialidade" class="form-select" required>
                     <option value="" disabled selected>
                       Selecione a especialidade
                     </option>
-                    <option
-                      v-for="especialidade in especialidades"
-                      :key="especialidade"
-                      :value="especialidade"
-                    >
+                    <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
                       {{ especialidade }}
                     </option>
                   </select>
@@ -184,15 +106,8 @@
 
                 <!-- Tempo Médio de Consulta -->
                 <div class="col-md-3">
-                  <label for="tempoConsulta" class="form-label"
-                    >Tempo Médio de Consulta</label
-                  >
-                  <select
-                    v-model="form.tempoConsulta"
-                    id="tempoConsulta"
-                    class="form-select"
-                    required
-                  >
+                  <label for="tempoConsulta" class="form-label">Tempo Médio de Consulta</label>
+                  <select v-model="form.tempoConsulta" id="tempoConsulta" class="form-select" required>
                     <option value="" disabled selected>Selecione</option>
                     <option value="15">15 minutos</option>
                     <option value="30">30 minutos</option>
@@ -205,19 +120,9 @@
                 <div class="col-md-3">
                   <label for="senha" class="form-label">Senha</label>
                   <div class="input-group">
-                    <input
-                      :type="showPassword ? 'text' : 'password'"
-                      v-model="form.senha"
-                      id="senha"
-                      class="form-control"
-                      placeholder="Digite sua senha"
-                      required
-                    />
-                    <button
-                      type="button"
-                      class="btn btn-outline-secondary"
-                      @click="togglePassword"
-                    >
+                    <input :type="showPassword ? 'text' : 'password'" v-model="form.senha" id="senha"
+                      class="form-control" placeholder="Digite sua senha" required />
+                    <button type="button" class="btn btn-outline-secondary" @click="togglePassword">
                       {{ showPassword ? "Ocultar" : "Mostrar" }}
                     </button>
                   </div>
@@ -228,38 +133,18 @@
               <div class="mt-4">
                 <label class="form-label">Horários de Atendimento</label>
                 <div class="row">
-                  <div
-                    class="col-md-4 mb-3"
-                    v-for="(dia, index) in Object.entries(diasAtendimento)"
-                    :key="index"
-                  >
+                  <div class="col-md-4 mb-3" v-for="(dia, index) in Object.entries(diasAtendimento)" :key="index">
                     <div class="d-flex align-items-center">
                       <label class="me-2">{{
                         dia[0].charAt(0).toUpperCase() + dia[0].slice(1)
                       }}</label>
-                      <select
-                        v-model="dia[1].inicio"
-                        class="form-select me-2"
-                        @change="validateHorario(dia)"
-                      >
-                        <option
-                          v-for="hora in horarios"
-                          :key="hora"
-                          :value="hora"
-                        >
+                      <select v-model="dia[1].inicio" class="form-select me-2" @change="validateHorario(dia)">
+                        <option v-for="hora in horarios" :key="hora" :value="hora">
                           {{ hora }}
                         </option>
                       </select>
-                      <select
-                        v-model="dia[1].fim"
-                        class="form-select"
-                        @change="validateHorario(dia)"
-                      >
-                        <option
-                          v-for="hora in horarios"
-                          :key="hora"
-                          :value="hora"
-                        >
+                      <select v-model="dia[1].fim" class="form-select" @change="validateHorario(dia)">
+                        <option v-for="hora in horarios" :key="hora" :value="hora">
                           {{ hora }}
                         </option>
                       </select>
@@ -270,10 +155,7 @@
 
               <!-- Botão Cadastrar -->
               <div class="text-center mt-4">
-                <button
-                  type="submit"
-                  class="btn btn-primary btn-lg w-50 shadow"
-                >
+                <button type="submit" class="btn btn-primary btn-lg w-50 shadow">
                   Cadastrar
                 </button>
               </div>
@@ -388,6 +270,9 @@ export default {
     };
   },
   methods: {
+    validarNome(event) {
+      this.form.nomeCompleto = event.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
+    },
     togglePassword() {
       this.showPassword = !this.showPassword;
     },
