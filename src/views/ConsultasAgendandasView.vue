@@ -110,6 +110,8 @@ export default {
         { label: "Confirmadas", valor: "Confirmada" },
         { label: "Canceladas pelo Paciente", valor: "Cancelada pelo paciente" },
         { label: "Canceladas pelo Médico", valor: "Cancelada pelo médico" },
+        { label: "Presente", valor: "Presente" },
+        { label: "Ausente", valor: "Ausente" },
       ],
     };
   },
@@ -230,22 +232,21 @@ export default {
         alert("Erro ao cancelar consulta. Tente novamente.");
       } finally {
         this.showModal = false;
-      }
-    },
-    async confirmarAcaoModal() {
-      if (this.acaoSelecionada === "cancelar") {
-        await this.cancelarConsulta();
+        this.carregarAgendamentos();
       }
     },
     voltarPagina() {
-      this.$router.push("/");
+      this.$router.push("/minhas-consultas");
     },
-  },
-  async mounted() {
-    await this.carregarAgendamentos();
+    confirmarAcaoModal() {
+      if (this.acaoSelecionada === "cancelar") {
+        this.cancelarConsulta();
+      }
+    },
   },
 };
 </script>
+
 
 <style scoped>
 .div-principal {

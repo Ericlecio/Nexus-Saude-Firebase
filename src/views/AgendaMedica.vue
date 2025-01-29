@@ -51,20 +51,16 @@
                                 <td>{{ consulta.situacao || 'Não informado' }}</td>
                                 <td class="text-center">
                                     <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
-                                        @click="confirmarCancelamento(consulta.id)">
-                                        <i class="fas fa-ban"></i>
+                                        @click="confirmarAcao(consulta.id, 'cancelar')">
+                                        <i class="fas fa-ban"></i> Cancelar
                                     </button>
-                                    <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
-                                        @click="confirmarPresença(consulta.id)">
-                                        <i class="fas fa-check-circle"></i>
+                                    <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-success"
+                                        @click="confirmarAcao(consulta.id, 'Presente')">
+                                        <i class="fas fa-check-circle"></i> Presente
                                     </button>
-                                    <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
-                                        @click="ausente(consulta.id)">
-                                        <i class="fas fa-times-circle"></i>
-                                    </button>
-                                    <button v-if="consulta.situacao.toLowerCase().includes('cancelada')"
-                                        class="btn btn-sm btn-danger" @click="confirmarExclusao(consulta.id)">
-                                        <i class="fas fa-trash"></i> Excluir
+                                    <button v-if="consulta.situacao === 'Confirmada'" class="btn btn-sm btn-danger"
+                                        @click="confirmarAcao(consulta.id, 'Ausente')">
+                                        <i class="fas fa-times-circle"></i> Ausente
                                     </button>
                                 </td>
                             </tr>
@@ -114,6 +110,15 @@ export default {
         Navbar,
         Footer,
     },
+    watch: {
+        filtroSituacao: {
+            handler() {
+                this.carregarConsultas();
+            },
+            immediate: true,
+        },
+    },
+
     data() {
         return {
             consultas: [],
@@ -122,30 +127,22 @@ export default {
             consultaSelecionada: null,
             acaoSelecionada: null,
             modalMensagem: { titulo: "", texto: "" },
-            filtroSituacao: "todas",
+            filtroSituacao: "Confirmada",
             opcoesFiltro: [
-                { label: "Todas", valor: "todas" },
                 { label: "Confirmadas", valor: "Confirmada" },
                 { label: "Canceladas pelo Paciente", valor: "Cancelada pelo paciente" },
                 { label: "Canceladas pelo Médico", valor: "Cancelada pelo médico" },
-                { label: "Finalizadas", valor: "Finalizada" },
+                { label: "Presente", valor: "Presente" },
+                { label: "Ausente", valor: "Ausente" },
             ],
         };
     },
     computed: {
         consultasFiltradas() {
-            let filtradas = [...this.consultas];
-
-            if (this.filtroSituacao !== "todas") {
-                filtradas = filtradas.filter(
-                    (consulta) => consulta.situacao === this.filtroSituacao
-                );
-            }
-
-            filtradas.sort((a, b) => new Date(a.data) - new Date(b.data));
-            return filtradas;
+            return this.consultas.filter((consulta) => consulta.situacao === this.filtroSituacao);
         },
     },
+
     methods: {
         async carregarConsultas() {
             try {
@@ -177,217 +174,81 @@ export default {
             }
         },
 
-        confirmarCancelamento(id) {
+        // Método unificado para confirmar a ação (cancelar, presente, ausente)
+        confirmarAcao(id, acao) {
             this.consultaSelecionada = id;
-            this.acaoSelecionada = "cancelar";
-            this.modalMensagem = {
-                titulo: "Confirmar Cancelamento",
-                texto: "Tem certeza de que deseja cancelar esta consulta?",
-            };
-            this.showModal = true;
-        },
+            this.acaoSelecionada = acao;
 
-        async cancelarConsulta() {
-            const db = getFirestore();
-            const consultaRef = doc(db, "agendamentos", this.consultaSelecionada);
+            let titulo = "";
+            let texto = "";
 
-            try {
-                const consultaSnap = await getDoc(consultaRef);
-
-                if (consultaSnap.exists()) {
-                    const consulta = consultaSnap.data();
-                    consulta.situacao = "Cancelada pelo médico";
-
-                    // Adicionar consulta à agenda do médico
-                    const medicoRef = doc(db, "medicos", consulta.medicoId);
-                    await updateDoc(medicoRef, {
-                        agenda: arrayUnion(consulta),
-                    });
-
-                    // Adicionar consulta à lista de consultas do paciente
-                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
-                    await updateDoc(pacienteRef, {
-                        consultas: arrayUnion(consulta),
-                    });
-
-                    // Remover a consulta da tabela agendamentos
-                    await deleteDoc(consultaRef);
-
-                    // Atualizar a lista de consultas na interface
-                    this.consultas = this.consultas.filter(
-                        (c) => c.id !== this.consultaSelecionada
-                    );
-
-                    alert(
-                        "Consulta cancelada, movida para a agenda do médico e registrada nas consultas do paciente."
-                    );
-                } else {
-                    alert("Consulta não encontrada.");
-                }
-            } catch (error) {
-                console.error("Erro ao cancelar a consulta:", error);
-                alert("Erro ao cancelar a consulta. Tente novamente.");
-            } finally {
-                this.showModal = false;
+            if (acao === "Presente") {
+                titulo = "Confirmar Presença";
+                texto = "Tem certeza de que deseja marcar esta consulta como Presente?";
+            } else if (acao === "Ausente") {
+                titulo = "Confirmar Ausência";
+                texto = "Tem certeza de que deseja marcar esta consulta como Ausente?";
+            } else if (acao === "cancelar") {
+                titulo = "Confirmar Cancelamento";
+                texto = "Tem certeza de que deseja cancelar esta consulta?";
             }
-        },
 
-        confirmarExclusao(id) {
-            this.consultaSelecionada = id;
-            this.acaoSelecionada = "excluir";
-            this.modalMensagem = {
-                titulo: "Confirmar Exclusão",
-                texto: "Tem certeza de que deseja excluir esta consulta permanentemente?",
-            };
+            this.modalMensagem = { titulo, texto };
             this.showModal = true;
         },
 
-        async excluirConsulta() {
-            const db = getFirestore();
-            try {
-                const consultaRef = doc(db, "agendamentos", this.consultaSelecionada);
-
-                // Verificar e excluir
-                const consultaSnap = await getDoc(consultaRef);
-                if (consultaSnap.exists()) {
-                    const consulta = consultaSnap.data();
-
-                    // Adicionar consulta à agenda do médico
-                    const medicoRef = doc(db, "medicos", consulta.medicoId);
-                    await updateDoc(medicoRef, {
-                        agenda: arrayUnion(consulta),
-                    });
-
-                    // Adicionar consulta à lista de consultas do paciente
-                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
-                    await updateDoc(pacienteRef, {
-                        consultas: arrayUnion(consulta),
-                    });
-
-                    // Remover consulta da tabela agendamentos
-                    await deleteDoc(consultaRef);
-
-                    this.consultas = this.consultas.filter(
-                        (c) => c.id !== this.consultaSelecionada
-                    );
-
-                    alert(
-                        "Consulta excluída e registrada na agenda do médico e na lista de consultas do paciente."
-                    );
-                } else {
-                    alert("Consulta não encontrada para exclusão.");
-                }
-            } catch (error) {
-                console.error("Erro ao excluir consulta:", error);
-                alert("Erro ao excluir consulta. Tente novamente.");
-            } finally {
-                this.showModal = false;
-            }
-        },
-
-        async confirmarAcaoModal() {
-            if (this.acaoSelecionada === "cancelar") await this.cancelarConsulta();
-            else if (this.acaoSelecionada === "excluir") await this.excluirConsulta();
-        },
-        confirmarCancelamento(id) {
-            this.consultaSelecionada = id;
-            this.acaoSelecionada = "cancelar";
-            this.modalMensagem = {
-                titulo: "Confirmar Cancelamento",
-                texto: "Tem certeza de que deseja cancelar esta consulta?",
-            };
-            this.showModal = true;
-        },
-
-        confirmarPresenca(id) {
-            this.consultaSelecionada = id;
-            this.acaoSelecionada = "presente";
-            this.modalMensagem = {
-                titulo: "Confirmar Presença",
-                texto: "Deseja confirmar que o paciente esteve presente na consulta?",
-            };
-            this.showModal = true;
-        },
-
-        confirmarAusente(id) {
-            this.consultaSelecionada = id;
-            this.acaoSelecionada = "ausente";
-            this.modalMensagem = {
-                titulo: "Confirmar Ausência",
-                texto: "Deseja confirmar que o paciente esteve ausente na consulta?",
-            };
-            this.showModal = true;
-        },
-
+        // Método para realizar a ação no modal
         async confirmarAcaoModal() {
             if (this.acaoSelecionada === "cancelar") {
-                await this.cancelarConsulta();
-            } else if (this.acaoSelecionada === "presente") {
-                await this.marcarPresente(this.consultaSelecionada);
-            } else if (this.acaoSelecionada === "ausente") {
-                await this.marcarAusente(this.consultaSelecionada);
+                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Cancelada pelo médico");
+            } else if (this.acaoSelecionada === "Presente") {
+                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Presente");
+            } else if (this.acaoSelecionada === "Ausente") {
+                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Ausente");
             }
-            this.showModal = false;
+            this.showModal = false; // Fecha o modal após a ação
         },
 
-        async marcarPresente(id) {
-            await this.atualizarSituacaoConsulta(id, "Presente");
-        },
-
-        async marcarAusente(id) {
-            await this.atualizarSituacaoConsulta(id, "Ausente");
-        },
-
+        // Método unificado para atualizar a situação da consulta
         async atualizarSituacaoConsulta(id, situacao) {
             const db = getFirestore();
             const consultaRef = doc(db, "agendamentos", id);
 
             try {
                 const consultaSnap = await getDoc(consultaRef);
-
                 if (consultaSnap.exists()) {
                     const consulta = consultaSnap.data();
                     consulta.situacao = situacao;
 
                     // Adicionar consulta à agenda do médico
                     const medicoRef = doc(db, "medicos", consulta.medicoId);
-                    await updateDoc(medicoRef, {
-                        agenda: arrayUnion(consulta),
-                    });
+                    await updateDoc(medicoRef, { agenda: arrayUnion(consulta) });
 
                     // Adicionar consulta à lista de consultas do paciente
                     const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
-                    await updateDoc(pacienteRef, {
-                        consultas: arrayUnion(consulta),
-                    });
+                    await updateDoc(pacienteRef, { consultas: arrayUnion(consulta) });
 
-                    // Remover a consulta da tabela agendamentos
+                    // Remover a consulta da tabela de agendamentos
                     await deleteDoc(consultaRef);
 
                     // Atualizar a lista de consultas na interface
                     this.consultas = this.consultas.filter((c) => c.id !== id);
 
-                    alert(
-                        `Consulta marcada como ${situacao}, movida para a agenda do médico e registrada nas consultas do paciente.`
-                    );
+                    alert(`Consulta marcada como ${situacao}`);
                 } else {
                     alert("Consulta não encontrada.");
                 }
             } catch (error) {
-                console.error(`Erro ao marcar consulta como ${situacao}:`, error);
-                alert(`Erro ao marcar consulta como ${situacao}. Tente novamente.`);
+                console.error("Erro ao atualizar a situação da consulta:", error);
+                alert("Erro ao atualizar a situação. Tente novamente.");
+            } finally {
+                this.showModal = false;
             }
         },
-
-        voltarPagina() {
-            this.$router.push("/");
-        },
-    },
-    async mounted() {
-        await this.carregarConsultas();
     },
 };
 </script>
+
 
 
 <style scoped>
