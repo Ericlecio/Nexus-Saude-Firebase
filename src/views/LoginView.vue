@@ -78,7 +78,7 @@ import {
   setDoc,
   getDoc,
 } from "firebase/firestore";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
 
 export default {
   name: "LoginScreen",
@@ -96,9 +96,9 @@ export default {
     };
   },
   created() {
-    const { userType, email, crm, senha } = this.$route.query;
+    this.verificarUsuarioLogado();
 
-    // Preenche os campos automaticamente com base nos parâmetros da URL
+    const { userType, email, crm, senha } = this.$route.query;
     if (userType) this.userType = userType;
     if (email) this.email = email;
     if (crm) this.crm = crm;
@@ -111,15 +111,35 @@ export default {
     goToCadastro() {
       this.$router.push("/cadastro");
     },
+
+    /**
+     * 🔹 Verifica se o usuário já está logado
+     */
+    async verificarUsuarioLogado() {
+      const auth = getAuth();
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+
+      if (storedUser) {
+        alert("Você já está logado!");
+        this.$router.push("/");
+        return;
+      }
+
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          alert("Você já está logado!");
+          this.$router.push("/");
+        }
+      });
+    },
+
+    /**
+     * 🔹 Login para Médicos
+     */
     async login() {
       if (this.userType === "medico") {
         try {
-          const storedUser = localStorage.getItem("user");
-          if (storedUser) {
-            alert("Você já está logado!");
-            this.$router.push("/");
-            return;
-          }
+          localStorage.removeItem("user");
 
           const db = getFirestore();
           const q = query(
@@ -127,6 +147,7 @@ export default {
             where("email", "==", this.email),
             where("crm", "==", this.crm)
           );
+
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
@@ -144,7 +165,8 @@ export default {
                   tipo: "medico",
                 })
               );
-              this.$router.push("/");
+
+              this.$router.push("/").then(() => window.location.reload());
             } else {
               alert("Senha incorreta!");
             }
@@ -156,16 +178,12 @@ export default {
           alert("Erro ao autenticar. Verifique suas credenciais.");
         }
       }
-    }
-    ,
-    async loginWithGoogle() {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        alert("Você já está logado!");
-        this.$router.push("/");
-        return;
-      }
+    },
 
+    /**
+     * 🔹 Login para Pacientes (Google)
+     */
+    async loginWithGoogle() {
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
       const db = getFirestore();
@@ -182,8 +200,6 @@ export default {
             nomeCompleto: user.displayName || "Nome não informado",
             email: user.email,
             telefone: user.phoneNumber || "Não informado",
-            planoSaude: "",
-            usuarioId: user.uid,
             tipo: "paciente",
             dataCadastro: new Date().toISOString(),
           });
@@ -199,15 +215,16 @@ export default {
           })
         );
 
-        this.$router.push("/");
+        this.$router.push("/").then(() => window.location.reload());
       } catch (error) {
-        console.error("Erro de autenticação com Google:", error.message);
+        console.error("Erro ao autenticar com Google:", error.message);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
     },
   },
 };
 </script>
+
 
 <style scoped>
 * {

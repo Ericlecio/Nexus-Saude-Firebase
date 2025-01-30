@@ -14,27 +14,30 @@ export default {
 <template>
     <footer>
         <div class="container">
-            <div class="footer-section logo">
-                <img src="/src/assets/img/NexusSaude_icon.png" alt="Nexus Saúde Logo">
-                <p><i class="bi bi-telephone"></i> 3661-0000</p>
-                <p><i class="bi bi-envelope"></i> contato@nexussaude.com.br</p>
-                <p><i class="bi bi-geo-alt"></i> Rua Exemplo, 123 - Cidade, Estado</p>
+            <!-- Seção à esquerda -->
+            <div class="footer-section left">
+                <img src="/src/assets/img/NexusSaude_icon.png" alt="Nexus Saúde Logo" class="footer-logo">
+                <p><i class="bi bi-telephone"></i> (81) 3661-0000</p>
+                <p><i class="bi bi-envelope"></i> nexussaude2024@gmail.com</p>
+                <p><i class="bi bi-geo-alt"></i> Rua das Palmeiras, 123 - Centro, Palmares - PE</p>
             </div>
 
-            <div class="footer-section">
+            <!-- Seção ao centro -->
+            <div class="footer-section center">
                 <h5>Links úteis</h5>
                 <ul class="nav-links">
-                    <li><a href="#">Home</a></li>
-                    <li><a href="#">Quem Somos</a></li>
-                    <li><a href="#">Fale Conosco</a></li>
-                    <li><a href="#">Política de Privacidade</a></li>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/sobre">Quem Somos</a></li>
+                    <li><a href="/contato">Fale Conosco</a></li>
+                    <!-- <li><a href="#">Política de Privacidade</a></li>
                     <li><a href="#">Termos de Uso</a></li>
                     <li><a href="#">Mapa do Site</a></li>
-                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">FAQ</a></li> -->
                 </ul>
             </div>
 
-            <div class="footer-section social-section">
+            <!-- Seção à direita -->
+            <div class="footer-section right">
                 <h5>Acompanhe nossas redes</h5>
                 <div class="social-media">
                     <a href="#"><i class="bi bi-instagram"></i></a>
@@ -42,14 +45,6 @@ export default {
                     <a href="#"><i class="bi bi-whatsapp"></i></a>
                     <a href="#"><i class="bi bi-x"></i></a>
                 </div>
-            </div>
-
-            <div class="footer-section newsletter">
-                <h5>Receba novidades</h5>
-                <form @submit.prevent="subscribe">
-                    <input type="email" placeholder="Seu e-mail" required>
-                    <button type="submit">Inscrever-se</button>
-                </form>
             </div>
         </div>
 
@@ -63,6 +58,8 @@ export default {
     </footer>
 </template>
 
+
+
 <style scoped>
 footer {
     background-color: #1a1a3c;
@@ -72,23 +69,48 @@ footer {
     text-align: center;
 }
 
+/* Distribui os itens em três colunas */
 .container {
     display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    text-align: left;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 40px;
+    max-width: 1200px;
+    margin: auto;
 }
 
+/* Define tamanhos fixos para melhor alinhamento */
 .footer-section {
-    max-width: 300px;
-    text-align: center;
+    flex: 1;
+    min-width: 250px;
+    max-width: 350px;
+    padding: 10px;
 }
 
-.logo img {
-    width: 80px;
+/* Mantém a logo no tamanho original */
+.footer-logo {
+    width: auto;
+    max-width: 80px;
+    /* Tamanho original corrigido */
+    height: auto;
     margin-bottom: 15px;
 }
 
+/* Centraliza a seção do meio */
+.center {
+    text-align: center;
+}
+
+.left {
+    text-align: left;
+}
+
+.right {
+    text-align: right;
+}
+
+/* Ajusta a lista de links */
 .nav-links {
     list-style: none;
     padding: 0;
@@ -109,10 +131,11 @@ footer {
     color: #00ff9d;
 }
 
+/* Ícones das redes sociais */
 .social-media {
     display: flex;
+    justify-content: flex-end;
     gap: 15px;
-    justify-content: center;
     margin-top: 10px;
 }
 
@@ -127,31 +150,7 @@ footer {
     color: #fff;
 }
 
-.newsletter input {
-    padding: 10px;
-    width: 100%;
-    max-width: 250px;
-    border: none;
-    border-radius: 5px;
-    margin-bottom: 10px;
-}
-
-.newsletter button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background-color: #00ff9d;
-    color: #1a1a3c;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.newsletter button:hover {
-    background-color: #fff;
-    color: #1a1a3c;
-}
-
+/* Voltar ao topo */
 .back-to-top {
     margin-top: 20px;
 }
@@ -173,10 +172,9 @@ footer {
 }
 
 /* Responsividade */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
     .container {
         flex-direction: column;
-        align-items: center;
         text-align: center;
     }
 
@@ -184,35 +182,8 @@ footer {
         max-width: 100%;
     }
 
-    .newsletter input,
-    .newsletter button {
-        width: 100%;
-    }
-
     .social-media {
-        gap: 10px;
-    }
-
-    .nav-links li {
-        margin-bottom: 5px;
-    }
-}
-
-@media (max-width: 480px) {
-    footer {
-        font-size: 0.8rem;
-    }
-
-    .logo img {
-        width: 60px;
-    }
-
-    .social-media a {
-        font-size: 1.5rem;
-    }
-
-    .back-to-top a {
-        font-size: 1rem;
+        justify-content: center;
     }
 }
 </style>

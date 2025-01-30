@@ -166,15 +166,18 @@
 </template>
 
 <script>
-import Navbar from '@/components/Navbar.vue';
-import Footer from '@/components/Footer.vue';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
+import Navbar from "@/components/Navbar.vue";
+import Footer from "@/components/Footer.vue";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 export default {
   data() {
     return {
       loading: true,
+      user: null,
       isPaciente: false,
     };
   },
@@ -184,17 +187,32 @@ export default {
       AOS.init();
     }, 1000);
 
-    this.verificarTipoUsuario();
+    this.verificarUsuario();
   },
   methods: {
-    verificarTipoUsuario() {
-      const user = JSON.parse(localStorage.getItem("user"));
-      if (user && user.tipo === "paciente") {
-        this.isPaciente = true;
-      } else {
-        this.isPaciente = false;
+    verificarUsuario() {
+      const db = getFirestore();
+      const auth = getAuth();
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+
+      if (storedUser) {
+        this.user = storedUser;
+        this.isPaciente = storedUser.tipo === "paciente";
+        return;
       }
-    }
+
+      onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          const userRef = doc(db, "pacientes", firebaseUser.uid);
+          onSnapshot(userRef, (docSnap) => {
+            if (docSnap.exists()) {
+              this.user = { id: firebaseUser.uid, ...docSnap.data() };
+              this.isPaciente = this.user.tipo === "paciente";
+            }
+          });
+        }
+      });
+    },
   },
   components: {
     Navbar,
@@ -202,6 +220,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 body,
@@ -236,6 +255,30 @@ html {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   padding: 20px;
   border-radius: 10px;
+  height: 100%;
+  /* Faz com que todas as cartas tenham o mesmo tamanho */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.service-card .card-body {
+  flex-grow: 1;
+  /* Faz com que o corpo da carta ocupe o máximo de espaço possível */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.service-card .card-title {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.service-card .card-text {
+  flex-grow: 1;
+  /* Garante que o texto se expanda para equilibrar o tamanho */
+  font-size: 1rem;
 }
 
 .service-card:hover {

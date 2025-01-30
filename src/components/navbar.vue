@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar navbar-expand-lg" :class="{ scrolled: isScrolled }">
     <div class="container">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="/">
         <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Nexus Saúde" class="logo" />
       </a>
       <button class="navbar-toggler" type="button" @click="toggleCollapse" aria-controls="navbarNav"
@@ -43,9 +43,6 @@
             <li v-if="user">
               <a class="dropdown-item" href="#" @click="logout">Sair</a>
             </li>
-            <li>
-              <a class="dropdown-item" href="/medicos">Lista de Médicos</a>
-            </li>
           </ul>
         </div>
       </div>
@@ -55,7 +52,7 @@
 
 <script>
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 export default {
   data() {
@@ -63,51 +60,80 @@ export default {
       isScrolled: false,
       isCollapsed: true,
       user: null,
-      userUnsubscribe: null, // Listener para o Firestore
+      userUnsubscribe: null, // 🔹 Listener para Firestore
     };
   },
   methods: {
+    handleScroll() {
+      this.isScrolled = window.scrollY > 50;
+    },
     toggleCollapse() {
       this.isCollapsed = !this.isCollapsed;
     },
-    logout() {
-      localStorage.removeItem("user");
-      this.user = null;
+    async logout() {
+      const auth = getAuth();
 
-      if (this.userUnsubscribe) {
-        this.userUnsubscribe();
+      if (auth.currentUser) {
+        await signOut(auth);
       }
 
-      this.$router.push("/login");
+      localStorage.removeItem("user");
+      localStorage.clear();
+      this.user = null;
+
+      // 🔹 Remove o listener de Firestore ao deslogar
+      if (this.userUnsubscribe) {
+        this.userUnsubscribe();
+        this.userUnsubscribe = null;
+      }
+
+      this.$router.push("/login").then(() => window.location.reload());
     },
     verificarUsuario() {
       const db = getFirestore();
       const auth = getAuth();
 
+      // 🔹 Remove qualquer listener antigo antes de criar um novo
+      if (this.userUnsubscribe) {
+        this.userUnsubscribe();
+        this.userUnsubscribe = null;
+      }
+
       onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          const storedUser = localStorage.getItem("user");
-          if (storedUser) {
-            this.user = JSON.parse(storedUser);
-          }
+          // 🔹 Se for paciente, busca no Firestore
+          const userRef = doc(db, "pacientes", firebaseUser.uid);
+          this.userUnsubscribe = onSnapshot(userRef, (docSnap) => {
+            if (docSnap.exists()) {
+              this.user = { id: firebaseUser.uid, ...docSnap.data(), tipo: "paciente" };
+            }
+          });
         } else {
-          this.user = null; // Garante que não mostre usuário falso
+          // 🔹 Se não for paciente, verifica se há um médico salvo no localStorage
+          const storedUser = JSON.parse(localStorage.getItem("user"));
+          if (storedUser && storedUser.tipo === "medico") {
+            const userRef = doc(db, "medicos", storedUser.id);
+            this.userUnsubscribe = onSnapshot(userRef, (docSnap) => {
+              if (docSnap.exists()) {
+                this.user = { id: storedUser.id, ...docSnap.data(), tipo: "medico" };
+              }
+            });
+          } else {
+            this.user = null;
+          }
         }
       });
     },
-    atualizarUsuario() {
-      const storedUser = localStorage.getItem("user");
-      this.user = storedUser ? JSON.parse(storedUser) : null;
-    }
   },
   mounted() {
-    this.atualizarUsuario(); // Atualiza usuário ao carregar a Navbar
-    window.addEventListener("storage", this.atualizarUsuario); // Ouve mudanças no localStorage
+    this.verificarUsuario();
     window.addEventListener("scroll", this.handleScroll);
   },
-  beforeDestroy() {
-    window.removeEventListener("storage", this.atualizarUsuario);
-    window.removeEventListener("scroll", this.handleScroll);
+  beforeUnmount() {
+    // 🔹 Remove o listener do Firestore ao desmontar o componente
+    if (this.userUnsubscribe) {
+      this.userUnsubscribe();
+    }
   },
 };
 </script>
@@ -123,14 +149,13 @@ export default {
   top: 0;
   width: 100%;
   z-index: 1000;
-  transition: background-color 0.4s ease, box-shadow 0.4s ease,
-    padding 0.3s ease;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease, padding 0.3s ease;
   padding: 20px 0;
 }
 
 /* Quando rolar a página */
 .navbar.scrolled {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 1);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
@@ -148,7 +173,7 @@ export default {
 }
 
 .navbar-nav .nav-link {
-  color: #2c3e50;
+  color: #000000;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -160,11 +185,13 @@ export default {
 .navbar-nav .nav-link:hover,
 .navbar-nav .nav-link.active {
   color: #53ba83;
+  font-weight: bold;
   text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   transform: translateY(-2px);
 }
 
 .bi-person-circle {
+  font-weight: bold;
   color: #53ba83;
   font-size: 1.8rem;
   transition: color 0.3s ease;
@@ -172,6 +199,7 @@ export default {
 
 .bi-person-circle:hover {
   color: #000524;
+  font-weight: bold;
 }
 
 /* Menu suspenso */

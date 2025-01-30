@@ -86,9 +86,12 @@
                 <!-- Valor da Consulta -->
                 <div class="col-md-3">
                   <label for="valorConsulta" class="form-label">Valor da Consulta</label>
-                  <input v-model="form.valorConsulta" type="number" id="valorConsulta" class="form-control"
-                    placeholder="Digite o valor" required />
+                  <input v-model="form.valorConsulta" type="text" id="valorConsulta" class="form-control"
+                    placeholder="R$ 0,00" required @input="formatarValorConsulta" />
+                  <small v-if="valorInvalido" class="text-danger">O valor da consulta deve ser maior que R$ 0,00</small>
                 </div>
+
+
 
                 <!-- Especialidade -->
                 <div class="col-md-3">
@@ -171,6 +174,7 @@
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import DAOService from "@/services/DAOService";
+import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 
 export default {
   name: "CadastroMedico",
@@ -261,9 +265,10 @@ export default {
         crm: "",
         uf: "",
         especialidade: "",
-        valorConsulta: 0,
+        valorConsulta: "R$ 0,00",
         tempoConsulta: "",
       },
+      valorInvalido: false, // Para exibir a mensagem de erro
       showPassword: false,
       crmInvalido: false,
     };
@@ -375,6 +380,23 @@ export default {
       }
       return horarios;
     },
+    formatarValorConsulta(event) {
+      let valor = event.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+      if (valor === "" || parseFloat(valor) === 0) {
+        this.form.valorConsulta = "R$ 0,00";
+        this.valorInvalido = true; // Exibe o erro caso o valor seja 0
+        return;
+      }
+
+      this.valorInvalido = false; // Se for válido, remove o erro
+
+      let valorFormatado = (parseFloat(valor) / 100).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+
+      this.form.valorConsulta = valorFormatado;
+    },
 
     async submitForm() {
       if (!this.validarCPF(this.form.cpf)) {
@@ -387,8 +409,7 @@ export default {
       const idade = hoje.getFullYear() - nascimento.getFullYear();
       if (
         idade < 18 ||
-        (idade === 18 &&
-          hoje < new Date(nascimento.setFullYear(hoje.getFullYear())))
+        (idade === 18 && hoje < new Date(nascimento.setFullYear(hoje.getFullYear())))
       ) {
         alert("Apenas médicos acima de 18 anos podem ser cadastrados.");
         return;
@@ -415,33 +436,69 @@ export default {
         }
       }
 
+      // Validação do Valor da Consulta
+      const valorNumerico = parseFloat(
+        this.form.valorConsulta.replace("R$", "").replace(/\./g, "").replace(",", ".")
+      );
+
+      if (isNaN(valorNumerico) || valorNumerico <= 0) {
+        alert("O valor da consulta deve ser maior que R$ 0,00.");
+        return;
+      }
+
       const algumHorarioPreenchido = Object.values(this.diasAtendimento).some(
         (dia) => dia.inicio && dia.fim
       );
       if (!algumHorarioPreenchido) {
-        alert(
-          "Você deve informar pelo menos um dia e horário de atendimento antes de cadastrar."
-        );
+        alert("Você deve informar pelo menos um dia e horário de atendimento antes de cadastrar.");
         return;
       }
 
       try {
-        const diasComHorarios = {};
-        Object.entries(this.diasAtendimento).forEach(
-          ([dia, { inicio, fim }]) => {
-            if (inicio && fim) {
-              diasComHorarios[dia] = this.gerarHorarios(
-                inicio,
-                fim,
-                parseInt(this.form.tempoConsulta)
-              );
-            }
-          }
-        );
+        const db = getFirestore();
+        const medicosRef = collection(db, "medicos");
 
+        // Verificação separada para CPF, CRM e Email
+        const consultaCPF = query(medicosRef, where("cpf", "==", this.form.cpf));
+        const consultaCRM = query(medicosRef, where("crm", "==", this.form.crm));
+        const consultaEmail = query(medicosRef, where("email", "==", this.form.email));
+
+        const [resultadoCPF, resultadoCRM, resultadoEmail] = await Promise.all([
+          getDocs(consultaCPF),
+          getDocs(consultaCRM),
+          getDocs(consultaEmail),
+        ]);
+
+        if (!resultadoCPF.empty) {
+          alert("Já existe um médico cadastrado com este CPF. Por favor, verifique os dados.");
+          return;
+        }
+        if (!resultadoCRM.empty) {
+          alert("Já existe um médico cadastrado com este CRM. Por favor, verifique os dados.");
+          return;
+        }
+        if (!resultadoEmail.empty) {
+          alert("Já existe um médico cadastrado com este E-mail. Por favor, verifique os dados.");
+          return;
+        }
+
+        // Criar os horários organizados
+        const diasComHorarios = {};
+        Object.entries(this.diasAtendimento).forEach(([dia, { inicio, fim }]) => {
+          if (inicio && fim) {
+            diasComHorarios[dia] = this.gerarHorarios(
+              inicio,
+              fim,
+              parseInt(this.form.tempoConsulta)
+            );
+          }
+        });
+
+        // Inserir no Firestore
         const medicoDao = new DAOService("medicos");
         await medicoDao.insert({
           ...this.form,
+          valorConsulta: valorNumerico, // Salvando apenas o número formatado
           diasAtendimento: diasComHorarios,
           dataCadastro: new Date().toISOString(),
         });
@@ -458,11 +515,14 @@ export default {
             senha: this.form.senha,
           },
         });
+
       } catch (error) {
         console.error("Erro ao cadastrar médico: ", error);
         alert("Erro ao cadastrar médico. Tente novamente.");
       }
     },
+
+
   },
 };
 </script>
