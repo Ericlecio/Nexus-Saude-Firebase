@@ -101,6 +101,7 @@ import {
     deleteDoc,
 } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 
@@ -110,15 +111,6 @@ export default {
         Navbar,
         Footer,
     },
-    watch: {
-        filtroSituacao: {
-            handler() {
-                this.carregarConsultas();
-            },
-            immediate: true,
-        },
-    },
-
     data() {
         return {
             consultas: [],
@@ -128,6 +120,7 @@ export default {
             acaoSelecionada: null,
             modalMensagem: { titulo: "", texto: "" },
             filtroSituacao: "Confirmada",
+            medicoId: null,
             opcoesFiltro: [
                 { label: "Confirmadas", valor: "Confirmada" },
                 { label: "Canceladas pelo Paciente", valor: "Cancelada pelo paciente" },
@@ -142,22 +135,35 @@ export default {
             return this.consultas.filter((consulta) => consulta.situacao === this.filtroSituacao);
         },
     },
-
     methods: {
-        async carregarConsultas() {
-            try {
-                const user = JSON.parse(localStorage.getItem("user"));
-                if (!user || user.tipo !== "medico" || !user.id) {
-                    alert("Apenas médicos podem acessar esta página. Faça login.");
-                    this.$router.push("/login");
-                    return;
-                }
+        async verificarAutenticacao() {
+            const auth = getAuth();
+            const db = getFirestore();
 
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const medicoRef = doc(db, "medicos", user.uid);
+                    const medicoSnap = await getDoc(medicoRef);
+
+                    if (medicoSnap.exists()) {
+                        this.medicoId = user.uid;
+                        this.carregarConsultas();
+                    } else {
+                        alert("Acesso negado! Apenas médicos podem acessar esta página.");
+                        this.$router.push("/login");
+                    }
+                } else {
+                    alert("Você precisa estar logado para acessar esta página.");
+                    this.$router.push("/login");
+                }
+            });
+        },
+
+        async carregarConsultas() {
+            if (!this.medicoId) return;
+            try {
                 const db = getFirestore();
-                const q = query(
-                    collection(db, "agendamentos"),
-                    where("medicoId", "==", user.id)
-                );
+                const q = query(collection(db, "agendamentos"), where("medicoId", "==", this.medicoId));
                 const snapshot = await getDocs(q);
 
                 this.consultas = snapshot.empty
@@ -173,81 +179,13 @@ export default {
                 this.carregando = false;
             }
         },
-
-        // Método unificado para confirmar a ação (cancelar, presente, ausente)
-        confirmarAcao(id, acao) {
-            this.consultaSelecionada = id;
-            this.acaoSelecionada = acao;
-
-            let titulo = "";
-            let texto = "";
-
-            if (acao === "Presente") {
-                titulo = "Confirmar Presença";
-                texto = "Tem certeza de que deseja marcar esta consulta como Presente?";
-            } else if (acao === "Ausente") {
-                titulo = "Confirmar Ausência";
-                texto = "Tem certeza de que deseja marcar esta consulta como Ausente?";
-            } else if (acao === "cancelar") {
-                titulo = "Confirmar Cancelamento";
-                texto = "Tem certeza de que deseja cancelar esta consulta?";
-            }
-
-            this.modalMensagem = { titulo, texto };
-            this.showModal = true;
-        },
-
-        // Método para realizar a ação no modal
-        async confirmarAcaoModal() {
-            if (this.acaoSelecionada === "cancelar") {
-                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Cancelada pelo médico");
-            } else if (this.acaoSelecionada === "Presente") {
-                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Presente");
-            } else if (this.acaoSelecionada === "Ausente") {
-                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Ausente");
-            }
-            this.showModal = false; // Fecha o modal após a ação
-        },
-
-        // Método unificado para atualizar a situação da consulta
-        async atualizarSituacaoConsulta(id, situacao) {
-            const db = getFirestore();
-            const consultaRef = doc(db, "agendamentos", id);
-
-            try {
-                const consultaSnap = await getDoc(consultaRef);
-                if (consultaSnap.exists()) {
-                    const consulta = consultaSnap.data();
-                    consulta.situacao = situacao;
-
-                    // Adicionar consulta à agenda do médico
-                    const medicoRef = doc(db, "medicos", consulta.medicoId);
-                    await updateDoc(medicoRef, { agenda: arrayUnion(consulta) });
-
-                    // Adicionar consulta à lista de consultas do paciente
-                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
-                    await updateDoc(pacienteRef, { consultas: arrayUnion(consulta) });
-
-                    // Remover a consulta da tabela de agendamentos
-                    await deleteDoc(consultaRef);
-
-                    // Atualizar a lista de consultas na interface
-                    this.consultas = this.consultas.filter((c) => c.id !== id);
-
-                    alert(`Consulta marcada como ${situacao}`);
-                } else {
-                    alert("Consulta não encontrada.");
-                }
-            } catch (error) {
-                console.error("Erro ao atualizar a situação da consulta:", error);
-                alert("Erro ao atualizar a situação. Tente novamente.");
-            } finally {
-                this.showModal = false;
-            }
-        },
+    },
+    mounted() {
+        this.verificarAutenticacao();
     },
 };
 </script>
+
 
 
 

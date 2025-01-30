@@ -91,8 +91,6 @@
                   <small v-if="valorInvalido" class="text-danger">O valor da consulta deve ser maior que R$ 0,00</small>
                 </div>
 
-
-
                 <!-- Especialidade -->
                 <div class="col-md-3">
                   <label for="especialidade" class="form-label">Especialidade</label>
@@ -174,7 +172,8 @@
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import DAOService from "@/services/DAOService";
-import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, collection, query, where, getDocs, doc, setDoc } from "firebase/firestore";
 
 export default {
   name: "CadastroMedico",
@@ -275,12 +274,14 @@ export default {
   },
   methods: {
     validarNome(event) {
-      this.form.nomeCompleto = event.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
+      this.form.nomeCompleto = event.target.value.replace(
+        /[^A-Za-zÀ-ÿ\s]/g,
+        ""
+      );
     },
     togglePassword() {
       this.showPassword = !this.showPassword;
     },
-
     handleCPFInput(event) {
       this.form.cpf = event.target.value
         .replace(/\D/g, "")
@@ -288,7 +289,6 @@ export default {
         .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
         .replace(/\.(\d{3})(\d)/, ".$1-$2")
         .slice(0, 14);
-
       if (this.form.cpf.length === 14) {
         if (!this.validarCPF(this.form.cpf)) {
           alert("CPF inválido. Por favor, verifique.");
@@ -296,16 +296,13 @@ export default {
         }
       }
     },
-
     validarCPF(cpf) {
       cpf = cpf.replace(/[^\d]+/g, "");
       if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
         return false;
       }
-
       let soma = 0;
       let resto;
-
       for (let i = 1; i <= 9; i++) {
         soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
       }
@@ -314,7 +311,6 @@ export default {
       if (resto !== parseInt(cpf.substring(9, 10))) {
         return false;
       }
-
       soma = 0;
       for (let i = 1; i <= 10; i++) {
         soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
@@ -324,10 +320,8 @@ export default {
       if (resto !== parseInt(cpf.substring(10, 11))) {
         return false;
       }
-
       return true;
     },
-
     formatCRM(event) {
       let input = event.target.value.toUpperCase().replace(/[^0-9A-Z/]/g, "");
       let parts = input.split("/");
@@ -344,24 +338,20 @@ export default {
           this.crmInvalido = false;
         }
       }
-
       this.form.crm = parts.join("/").toUpperCase();
     },
-
     handlePhoneInput(event) {
       let phone = event.target.value.replace(/\D/g, "");
       phone = phone.replace(/^(\d{2})(\d)/g, "($1) $2");
       phone = phone.replace(/(\d{5})(\d)/, "$1-$2");
       this.form.telefoneConsultorio = phone.slice(0, 15);
     },
-
     validateHorario(dia) {
       if (dia[1].fim <= dia[1].inicio) {
         alert("O horário final deve ser maior que o horário inicial.");
         dia[1].fim = "";
       }
     },
-
     gerarHorarios(horaInicio, horaFim, intervaloMinutos) {
       const horarios = [];
       let [hora, minuto] = horaInicio.split(":").map(Number);
@@ -397,7 +387,6 @@ export default {
 
       this.form.valorConsulta = valorFormatado;
     },
-
     async submitForm() {
       if (!this.validarCPF(this.form.cpf)) {
         alert("CPF inválido. Por favor, corrija antes de prosseguir.");
@@ -407,27 +396,15 @@ export default {
       const hoje = new Date();
       const nascimento = new Date(this.form.dataNascimento);
       const idade = hoje.getFullYear() - nascimento.getFullYear();
-      if (
-        idade < 18 ||
-        (idade === 18 && hoje < new Date(nascimento.setFullYear(hoje.getFullYear())))
-      ) {
+      if (idade < 18 || (idade === 18 && hoje < new Date(nascimento.setFullYear(hoje.getFullYear())))) {
         alert("Apenas médicos acima de 18 anos podem ser cadastrados.");
         return;
       }
 
       const camposObrigatorios = [
-        "nomeCompleto",
-        "cpf",
-        "sexo",
-        "dataNascimento",
-        "email",
-        "telefoneConsultorio",
-        "crm",
-        "uf",
-        "especialidade",
-        "valorConsulta",
-        "tempoConsulta",
-        "senha",
+        "nomeCompleto", "cpf", "sexo", "dataNascimento", "email",
+        "telefoneConsultorio", "crm", "uf", "especialidade",
+        "valorConsulta", "tempoConsulta", "senha"
       ];
       for (const campo of camposObrigatorios) {
         if (!this.form[campo]) {
@@ -436,7 +413,6 @@ export default {
         }
       }
 
-      // Validação do Valor da Consulta
       const valorNumerico = parseFloat(
         this.form.valorConsulta.replace("R$", "").replace(/\./g, "").replace(",", ".")
       );
@@ -456,63 +432,69 @@ export default {
 
       try {
         const db = getFirestore();
+        const auth = getAuth();
         const medicosRef = collection(db, "medicos");
 
-        // Verificação separada para CPF, CRM e Email
         const consultaCPF = query(medicosRef, where("cpf", "==", this.form.cpf));
         const consultaCRM = query(medicosRef, where("crm", "==", this.form.crm));
         const consultaEmail = query(medicosRef, where("email", "==", this.form.email));
 
         const [resultadoCPF, resultadoCRM, resultadoEmail] = await Promise.all([
-          getDocs(consultaCPF),
-          getDocs(consultaCRM),
-          getDocs(consultaEmail),
+          getDocs(consultaCPF), getDocs(consultaCRM), getDocs(consultaEmail),
         ]);
 
         if (!resultadoCPF.empty) {
-          alert("Já existe um médico cadastrado com este CPF. Por favor, verifique os dados.");
+          alert("Já existe um médico cadastrado com este CPF.");
           return;
         }
         if (!resultadoCRM.empty) {
-          alert("Já existe um médico cadastrado com este CRM. Por favor, verifique os dados.");
+          alert("Já existe um médico cadastrado com este CRM.");
           return;
         }
         if (!resultadoEmail.empty) {
-          alert("Já existe um médico cadastrado com este E-mail. Por favor, verifique os dados.");
+          alert("Já existe um médico cadastrado com este E-mail.");
           return;
         }
 
-        // Criar os horários organizados
+        // 🔹 Criar usuário no Firebase Authentication
+        const userCredential = await createUserWithEmailAndPassword(auth, this.form.email, this.form.senha);
+        const userId = userCredential.user.uid;
+
         const diasComHorarios = {};
         Object.entries(this.diasAtendimento).forEach(([dia, { inicio, fim }]) => {
           if (inicio && fim) {
-            diasComHorarios[dia] = this.gerarHorarios(
-              inicio,
-              fim,
-              parseInt(this.form.tempoConsulta)
-            );
+            diasComHorarios[dia] = this.gerarHorarios(inicio, fim, parseInt(this.form.tempoConsulta));
           }
         });
 
-        // Inserir no Firestore
-        const medicoDao = new DAOService("medicos");
-        await medicoDao.insert({
-          ...this.form,
-          valorConsulta: valorNumerico, // Salvando apenas o número formatado
+        // 🔹 Inserir no Firestore com UID do Authentication
+        const medicoRef = doc(db, "medicos", userId);
+        await setDoc(medicoRef, {
+          id: userId,
+          nomeCompleto: this.form.nomeCompleto,
+          cpf: this.form.cpf,
+          sexo: this.form.sexo,
+          dataNascimento: this.form.dataNascimento,
+          email: this.form.email,
+          telefoneConsultorio: this.form.telefoneConsultorio,
+          crm: this.form.crm,
+          uf: this.form.uf,
+          especialidade: this.form.especialidade,
+          valorConsulta: valorNumerico,
+          tempoConsulta: this.form.tempoConsulta,
           diasAtendimento: diasComHorarios,
           dataCadastro: new Date().toISOString(),
         });
 
         alert("Médico cadastrado com sucesso!");
 
-        // Redirecionar para a página de login com os dados do médico
+        // 🔹 Redireciona para a página de login com os campos preenchidos
         this.$router.push({
           path: "/login",
           query: {
-            userType: "medico", // Definindo a aba correta
+            userType: "medico",
             email: this.form.email,
-            crm: this.form.crm,
-            senha: this.form.senha,
+            senha: this.form.senha, // 🔹 Senha preenchida automaticamente na tela de login
           },
         });
 
@@ -521,8 +503,6 @@ export default {
         alert("Erro ao cadastrar médico. Tente novamente.");
       }
     },
-
-
   },
 };
 </script>

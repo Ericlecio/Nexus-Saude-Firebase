@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 
 export default {
@@ -60,7 +60,6 @@ export default {
       isScrolled: false,
       isCollapsed: true,
       user: null,
-      userUnsubscribe: null, // 🔹 Listener para Firestore
     };
   },
   methods: {
@@ -72,55 +71,38 @@ export default {
     },
     async logout() {
       const auth = getAuth();
-
-      if (auth.currentUser) {
-        await signOut(auth);
-      }
-
-      localStorage.removeItem("user");
-      localStorage.clear();
+      await signOut(auth);
       this.user = null;
-
-      // 🔹 Remove o listener de Firestore ao deslogar
-      if (this.userUnsubscribe) {
-        this.userUnsubscribe();
-        this.userUnsubscribe = null;
-      }
-
       this.$router.push("/login").then(() => window.location.reload());
     },
-    verificarUsuario() {
-      const db = getFirestore();
+    async verificarUsuario() {
       const auth = getAuth();
+      const db = getFirestore();
 
-      // 🔹 Remove qualquer listener antigo antes de criar um novo
-      if (this.userUnsubscribe) {
-        this.userUnsubscribe();
-        this.userUnsubscribe = null;
-      }
-
-      onAuthStateChanged(auth, (firebaseUser) => {
+      onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
-          // 🔹 Se for paciente, busca no Firestore
-          const userRef = doc(db, "pacientes", firebaseUser.uid);
-          this.userUnsubscribe = onSnapshot(userRef, (docSnap) => {
-            if (docSnap.exists()) {
-              this.user = { id: firebaseUser.uid, ...docSnap.data(), tipo: "paciente" };
+          try {
+            const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
+            const medicoRef = doc(db, "medicos", firebaseUser.uid);
+
+            const [pacienteSnap, medicoSnap] = await Promise.all([
+              getDoc(pacienteRef),
+              getDoc(medicoRef),
+            ]);
+
+            if (pacienteSnap.exists()) {
+              this.user = { id: firebaseUser.uid, ...pacienteSnap.data(), tipo: "paciente" };
+            } else if (medicoSnap.exists()) {
+              this.user = { id: firebaseUser.uid, ...medicoSnap.data(), tipo: "medico" };
+            } else {
+              this.user = null;
             }
-          });
-        } else {
-          // 🔹 Se não for paciente, verifica se há um médico salvo no localStorage
-          const storedUser = JSON.parse(localStorage.getItem("user"));
-          if (storedUser && storedUser.tipo === "medico") {
-            const userRef = doc(db, "medicos", storedUser.id);
-            this.userUnsubscribe = onSnapshot(userRef, (docSnap) => {
-              if (docSnap.exists()) {
-                this.user = { id: storedUser.id, ...docSnap.data(), tipo: "medico" };
-              }
-            });
-          } else {
+          } catch (error) {
+            console.error("Erro ao verificar usuário na Navbar:", error);
             this.user = null;
           }
+        } else {
+          this.user = null;
         }
       });
     },
@@ -129,15 +111,8 @@ export default {
     this.verificarUsuario();
     window.addEventListener("scroll", this.handleScroll);
   },
-  beforeUnmount() {
-    // 🔹 Remove o listener do Firestore ao desmontar o componente
-    if (this.userUnsubscribe) {
-      this.userUnsubscribe();
-    }
-  },
 };
 </script>
-
 
 
 <style scoped>

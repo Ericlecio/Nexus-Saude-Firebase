@@ -4,58 +4,81 @@
     <div class="login-container">
       <div class="login-form">
         <div class="header">
-          <h2>Bem-Vindo</h2>
+          <h2 v-if="!isResettingPassword">Bem-Vindo</h2>
           <h1>Nexus Saúde</h1>
         </div>
-        <div class="user-type-selector">
-          <label>
-            <input type="radio" name="userType" value="paciente" v-model="userType" />
-            Paciente
-          </label>
-          <label>
-            <input type="radio" name="userType" value="medico" v-model="userType" />
-            Médico
-          </label>
-        </div>
-        <form @submit.prevent="login">
-          <div v-if="userType === 'paciente'">
-            <div class="btn-container">
-              <button type="button" @click="loginWithGoogle" class="btn-google">
-                <i class="fab fa-google"></i> Login com Google
-              </button>
-            </div>
+
+        <!-- 🔹 Alterna entre Login e Redefinição de Senha -->
+        <div v-if="!isResettingPassword">
+          <div class="user-type-selector">
+            <label>
+              <input type="radio" name="userType" value="paciente" v-model="userType" />
+              Paciente
+            </label>
+            <label>
+              <input type="radio" name="userType" value="medico" v-model="userType" />
+              Médico
+            </label>
           </div>
-          <div v-if="userType === 'medico'">
-            <div class="input-group">
-              <i class="fas fa-user"></i>
-              <input type="email" v-model="email" placeholder="E-mail" required class="input-field" />
-            </div>
-            <div class="input-group">
-              <i class="fas fa-id-card"></i>
-              <input type="text" v-model="crm" placeholder="CRM" required class="input-field" pattern="\d{6}"
-                maxlength="6" @input="validarCRM" />
+
+          <form @submit.prevent="login">
+            <div v-if="userType === 'paciente'">
+              <div class="btn-container">
+                <button type="button" @click="loginWithGoogle" class="btn-google">
+                  <i class="fab fa-google"></i> Login com Google
+                </button>
+              </div>
             </div>
 
+            <div v-if="userType === 'medico'">
+              <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="email" v-model="email" placeholder="E-mail" required class="input-field" />
+              </div>
+
+              <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required
+                  class="input-field" />
+              </div>
+
+              <div class="show-password" @click="togglePassword">
+                <span>{{ showPassword ? "Ocultar Senha" : "Mostrar Senha" }}</span>
+              </div>
+
+              <div class="options">
+                <a href="#" @click.prevent="isResettingPassword = true">Esqueceu a Senha?</a>
+              </div>
+
+              <div class="btn-container">
+                <button type="submit" class="btn">Entrar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- 🔹 Tela de Redefinição de Senha -->
+        <div v-else>
+          <h2>Redefinir Senha</h2>
+          <p>Digite seu e-mail cadastrado e enviaremos um link para redefinir sua senha.</p>
+
+          <form @submit.prevent="resetPassword">
             <div class="input-group">
-              <i class="fas fa-lock"></i>
-              <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="Senha" required
-                class="input-field" />
+              <i class="fas fa-envelope"></i>
+              <input type="email" v-model="email" placeholder="Digite seu e-mail" required class="input-field" />
             </div>
-            <div class="show-password" @click="togglePassword">
-              <span>{{
-                showPassword ? "Ocultar Senha" : "Mostrar Senha"
-              }}</span>
-            </div>
-            <div class="options">
-              <label><input type="checkbox" /> Lembrar Sempre</label>
-              <a href="#">Esqueceu a Senha?</a>
-            </div>
+
             <div class="btn-container">
-              <button type="submit" class="btn">Entrar</button>
+              <button type="submit" class="btn">Enviar Link</button>
             </div>
-          </div>
-        </form>
+
+            <p class="back-login">
+              <a href="#" @click.prevent="isResettingPassword = false">Voltar para o Login</a>
+            </p>
+          </form>
+        </div>
       </div>
+
       <div class="logo-container">
         <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" class="logo" />
         <a href="#" class="create-account" @click.prevent="goToCadastro">Criar Conta Médica</a>
@@ -70,15 +93,19 @@ import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import {
   getFirestore,
-  collection,
-  query,
-  where,
-  getDocs,
   doc,
-  setDoc,
   getDoc,
+  setDoc
 } from "firebase/firestore";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "firebase/auth";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signOut
+} from "firebase/auth";
 
 export default {
   name: "LoginScreen",
@@ -88,20 +115,19 @@ export default {
   },
   data() {
     return {
-      userType: "paciente", // Aba padrão
+      userType: "paciente",
       email: "",
-      crm: "",
       password: "",
       showPassword: false,
+      isResettingPassword: false,
     };
   },
   created() {
     this.verificarUsuarioLogado();
 
-    const { userType, email, crm, senha } = this.$route.query;
+    const { userType, email, senha } = this.$route.query;
     if (userType) this.userType = userType;
     if (email) this.email = email;
-    if (crm) this.crm = crm;
     if (senha) this.password = senha;
   },
   methods: {
@@ -111,67 +137,49 @@ export default {
     goToCadastro() {
       this.$router.push("/cadastro");
     },
-
-    /**
-     * 🔹 Verifica se o usuário já está logado
-     */
     async verificarUsuarioLogado() {
       const auth = getAuth();
-      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const db = getFirestore();
 
-      if (storedUser) {
-        alert("Você já está logado!");
-        this.$router.push("/");
-        return;
-      }
+      onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          try {
+            const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
+            const medicoRef = doc(db, "medicos", firebaseUser.uid);
 
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          alert("Você já está logado!");
-          this.$router.push("/");
+            const [pacienteSnap, medicoSnap] = await Promise.all([
+              getDoc(pacienteRef),
+              getDoc(medicoRef),
+            ]);
+
+            if (pacienteSnap.exists() || medicoSnap.exists()) {
+              this.$router.push("/"); // 🔹 Se já estiver logado, vai para Home
+            } else {
+              await signOut(auth);
+            }
+          } catch (error) {
+            console.error("Erro ao verificar usuário:", error);
+          }
         }
       });
     },
-
-    /**
-     * 🔹 Login para Médicos
-     */
     async login() {
       if (this.userType === "medico") {
         try {
-          localStorage.removeItem("user");
-
+          const auth = getAuth();
           const db = getFirestore();
-          const q = query(
-            collection(db, "medicos"),
-            where("email", "==", this.email),
-            where("crm", "==", this.crm)
-          );
 
-          const querySnapshot = await getDocs(q);
+          const userCredential = await signInWithEmailAndPassword(auth, this.email, this.password);
+          const userId = userCredential.user.uid;
 
-          if (!querySnapshot.empty) {
-            const medicoDoc = querySnapshot.docs[0];
-            const medico = medicoDoc.data();
+          const medicoRef = doc(db, "medicos", userId);
+          const medicoSnap = await getDoc(medicoRef);
 
-            if (medico.senha === this.password) {
-              localStorage.setItem(
-                "user",
-                JSON.stringify({
-                  id: medicoDoc.id,
-                  nomeCompleto: medico.nomeCompleto,
-                  email: medico.email,
-                  crm: medico.crm,
-                  tipo: "medico",
-                })
-              );
-
-              this.$router.push("/").then(() => window.location.reload());
-            } else {
-              alert("Senha incorreta!");
-            }
+          if (medicoSnap.exists()) {
+            this.$router.push("/").then(() => window.location.reload());
           } else {
-            alert("Usuário não encontrado!");
+            alert("Dados do médico não encontrados no sistema. Faça o cadastro.");
+            await signOut(auth);
           }
         } catch (error) {
           console.error("Erro ao autenticar médico: ", error);
@@ -179,10 +187,6 @@ export default {
         }
       }
     },
-
-    /**
-     * 🔹 Login para Pacientes (Google)
-     */
     async loginWithGoogle() {
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
@@ -205,25 +209,32 @@ export default {
           });
         }
 
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            nomeCompleto: user.displayName,
-            email: user.email,
-            usuarioId: user.uid,
-            tipo: "paciente",
-          })
-        );
-
         this.$router.push("/").then(() => window.location.reload());
       } catch (error) {
         console.error("Erro ao autenticar com Google:", error.message);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
     },
+    async resetPassword() {
+      if (!this.email) {
+        alert("Por favor, insira um e-mail válido.");
+        return;
+      }
+
+      const auth = getAuth();
+      try {
+        await sendPasswordResetEmail(auth, this.email);
+        alert("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
+        this.isResettingPassword = false;
+      } catch (error) {
+        console.error("Erro ao enviar redefinição de senha:", error);
+        alert("Erro ao enviar o e-mail. Verifique se o e-mail está correto.");
+      }
+    },
   },
 };
 </script>
+
 
 
 <style scoped>
@@ -571,5 +582,35 @@ h2 {
   .create-account {
     font-size: 1rem;
   }
+}
+
+.options {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.options a {
+  color: #53ba83;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.options a:hover {
+  text-decoration: underline;
+}
+
+.back-login {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.back-login a {
+  color: #53ba83;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.back-login a:hover {
+  text-decoration: underline;
 }
 </style>

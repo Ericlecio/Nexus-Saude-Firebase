@@ -168,7 +168,7 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -179,6 +179,7 @@ export default {
       loading: true,
       user: null,
       isPaciente: false,
+      isMedico: false,
     };
   },
   mounted() {
@@ -190,26 +191,38 @@ export default {
     this.verificarUsuario();
   },
   methods: {
-    verificarUsuario() {
-      const db = getFirestore();
+    async verificarUsuario() {
       const auth = getAuth();
-      const storedUser = JSON.parse(localStorage.getItem("user"));
+      const db = getFirestore();
 
-      if (storedUser) {
-        this.user = storedUser;
-        this.isPaciente = storedUser.tipo === "paciente";
-        return;
-      }
-
-      onAuthStateChanged(auth, (firebaseUser) => {
+      onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
-          const userRef = doc(db, "pacientes", firebaseUser.uid);
-          onSnapshot(userRef, (docSnap) => {
-            if (docSnap.exists()) {
-              this.user = { id: firebaseUser.uid, ...docSnap.data() };
-              this.isPaciente = this.user.tipo === "paciente";
+          try {
+            const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
+            const medicoRef = doc(db, "medicos", firebaseUser.uid);
+
+            const [pacienteSnap, medicoSnap] = await Promise.all([
+              getDoc(pacienteRef),
+              getDoc(medicoRef),
+            ]);
+
+            if (pacienteSnap.exists()) {
+              this.user = { id: firebaseUser.uid, ...pacienteSnap.data(), tipo: "paciente" };
+              this.isPaciente = true;
+              this.isMedico = false;
+            } else if (medicoSnap.exists()) {
+              this.user = { id: firebaseUser.uid, ...medicoSnap.data(), tipo: "medico" };
+              this.isMedico = true;
+              this.isPaciente = false;
+            } else {
+              this.user = null;
             }
-          });
+          } catch (error) {
+            console.error("Erro ao verificar usuário:", error);
+            this.user = null;
+          }
+        } else {
+          this.user = null;
         }
       });
     },
@@ -220,7 +233,6 @@ export default {
   },
 };
 </script>
-
 
 <style scoped>
 body,

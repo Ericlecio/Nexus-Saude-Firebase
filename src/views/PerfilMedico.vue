@@ -180,12 +180,14 @@ import Footer from "@/components/Footer.vue";
 import {
   getFirestore,
   doc,
+  getDoc,
+  deleteDoc,
   collection,
   query,
   where,
   getDocs,
-  deleteDoc,
 } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export default {
   name: "PerfilMedico",
@@ -198,39 +200,35 @@ export default {
       medico: null,
       medicoId: null,
       showModalEdit: false,
-      showModalDelete: false, // Novo modal para confirmação da exclusão
+      showModalDelete: false,
       campoSelecionado: "",
       formEdit: null,
       hoje: new Date().toISOString().split("T")[0],
     };
   },
   methods: {
-    async carregarPerfil() {
-      try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (user && user.tipo === "medico") {
-          const db = getFirestore();
-          const q = query(
-            collection(db, "medicos"),
-            where("email", "==", user.email)
-          );
-          const querySnapshot = await getDocs(q);
+    async verificarAutenticacao() {
+      const auth = getAuth();
+      const db = getFirestore();
 
-          if (!querySnapshot.empty) {
-            this.medicoId = querySnapshot.docs[0].id;
-            this.medico = querySnapshot.docs[0].data();
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          const medicoRef = doc(db, "medicos", user.uid);
+          const medicoSnap = await getDoc(medicoRef);
+
+          if (medicoSnap.exists()) {
+            this.medicoId = user.uid;
+            this.medico = medicoSnap.data();
             this.formEdit = JSON.parse(JSON.stringify(this.medico));
           } else {
-            alert("Médico não encontrado.");
-            this.$router.push("/");
+            alert("Acesso negado! Apenas médicos podem acessar esta página.");
+            this.$router.push("/login");
           }
         } else {
-          alert("Acesso negado!");
-          this.$router.push("/");
+          alert("Você precisa estar logado para acessar esta página.");
+          this.$router.push("/login");
         }
-      } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
-      }
+      });
     },
 
     abrirModal(campo) {
@@ -244,10 +242,8 @@ export default {
       this.campoSelecionado = "";
     },
 
-
     confirmarExclusao() {
-      console.log("Abrindo modal de exclusão...");
-      this.showModalDelete = true; // Exibe o modal de exclusão antes de deletar
+      this.showModalDelete = true;
     },
 
     async deletarConta() {
@@ -257,14 +253,12 @@ export default {
 
         console.log("Tentando excluir médico:", this.medicoId);
 
-        // Buscar todos os agendamentos onde o médico está registrado
         const agendamentosQuery = query(
           collection(db, "agendamentos"),
           where("medicoId", "==", this.medicoId)
         );
         const agendamentosSnapshot = await getDocs(agendamentosQuery);
 
-        // Excluir agendamentos um por um
         if (!agendamentosSnapshot.empty) {
           for (const agendamento of agendamentosSnapshot.docs) {
             await deleteDoc(agendamento.ref);
@@ -272,20 +266,16 @@ export default {
           }
         }
 
-        // Excluir apenas o registro do médico
         await deleteDoc(medicoRef);
         console.log(`Médico ${this.medicoId} excluído.`);
 
-        // Remover informações do usuário do localStorage e redirecionar
-        localStorage.removeItem("user");
         alert("Conta excluída com sucesso.");
-        this.$router.push("/");
+        this.$router.push("/login");
       } catch (error) {
         console.error("Erro ao excluir conta:", error);
         alert(`Erro ao excluir conta: ${error.message}`);
       }
     },
-
 
     formatDia(dia) {
       const dias = {
@@ -301,10 +291,11 @@ export default {
     },
   },
   mounted() {
-    this.carregarPerfil();
+    this.verificarAutenticacao();
   },
 };
 </script>
+
 
 <style scoped>
 .container {
