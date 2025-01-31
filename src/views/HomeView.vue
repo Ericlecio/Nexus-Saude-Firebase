@@ -7,12 +7,13 @@
     <div v-show="!loading">
       <Navbar />
 
-      <section class="banner" style="background-image: url('/img/Fundo.png')">
+      <section class="banner" :style="{ backgroundImage: `url(${imagensBanner[imagemAtual]})` }">
         <div class="text-center">
           <h1>Cuide da sua Saúde com Profissionais de Confiança</h1>
           <p>Consultas rápidas e seguras ao alcance de um clique</p>
-          <!-- Exibe o botão apenas se o usuário for paciente -->
-          <a v-if="isPaciente" href="/Agendamento" class="btn btn-success btn-lg">MARQUE SUA CONSULTA</a>
+          <a v-if="user && user.tipo === 'paciente'" href="/Agendamento" class="btn btn-success btn-lg">
+            MARQUE SUA CONSULTA
+          </a>
         </div>
       </section>
       <br>
@@ -180,6 +181,12 @@ export default {
       user: null,
       isPaciente: false,
       isMedico: false,
+      imagemAtual: 0, // Controla qual imagem está sendo exibida
+      imagensBanner: [
+        "/img/Fundo1.png",
+        "/img/Fundo2.jpg ",
+        "/img/Fundo3.jpg",
+      ],
     };
   },
   mounted() {
@@ -189,6 +196,9 @@ export default {
     }, 1000);
 
     this.verificarUsuario();
+    setInterval(() => {
+      this.imagemAtual = (this.imagemAtual + 1) % this.imagensBanner.length;
+    }, 5000);
   },
   methods: {
     async verificarUsuario() {
@@ -253,7 +263,10 @@ html {
   align-items: center;
   justify-content: center;
   position: relative;
+  transition: background-image 1s ease-in-out;
+  /* Transição suave para a troca das imagens */
 }
+
 
 .section-title {
   margin-top: 30px;
@@ -285,6 +298,16 @@ html {
 .service-card .card-title {
   font-size: 1.3rem;
   font-weight: bold;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .service-card .card-text {

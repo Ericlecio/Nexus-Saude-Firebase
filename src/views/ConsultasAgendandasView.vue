@@ -1,12 +1,8 @@
 <template>
   <Navbar />
-  <br />
   <div class="div-principal">
     <div class="container my-5">
-      <button class="btn btn-primary btn-back" @click="voltarPagina">
-        <i class="fas fa-arrow-left me-2"></i> Voltar
-      </button>
-
+      <BotaoVoltar />
       <h2 class="text-center text-primary fw-bold mb-4">Meus Agendamentos</h2>
 
       <div v-if="carregando" class="text-center">
@@ -35,7 +31,8 @@
                 <th>Profissional</th>
                 <th>Local</th>
                 <th>Data e Hora</th>
-                <th>Telefone</th>
+                <th>Telefone do Consultório</th> <!-- 🔹 Novo -->
+                <th>Valor da Consulta</th> <!-- 🔹 Novo -->
                 <th>Situação</th>
                 <th class="text-center">Ações</th>
               </tr>
@@ -44,12 +41,13 @@
               <tr v-for="agendamento in agendamentosFiltrados" :key="agendamento.id" :class="{
                 'consulta-cancelada': agendamento.situacao.toLowerCase().includes('cancelada'),
               }">
-                <td>{{ agendamento.especialidade || 'Não informado' }}</td>
-                <td>{{ agendamento.medicoNome || 'Nome não disponível' }}</td>
-                <td>{{ agendamento.local || 'Não informado' }}</td>
-                <td>{{ agendamento.data || 'Não informado' }}</td>
-                <td>{{ agendamento.pacienteTelefone || 'Não informado' }}</td>
-                <td>{{ agendamento.situacao || 'Não informado' }}</td>
+                <td>{{ agendamento.especialidade }}</td>
+                <td>{{ agendamento.medicoNome }}</td>
+                <td>{{ agendamento.local }}</td>
+                <td>{{ agendamento.data }}</td>
+                <td>{{ agendamento.telefoneConsultorio }}</td> <!-- 🔹 Novo -->
+                <td>{{ agendamento.valorConsulta }}</td> <!-- 🔹 Novo -->
+                <td>{{ agendamento.situacao }}</td>
                 <td class="text-center">
                   <button v-if="agendamento.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
                     @click="confirmarCancelamento(agendamento.id)">
@@ -58,6 +56,7 @@
                 </td>
               </tr>
             </tbody>
+
           </table>
         </div>
 
@@ -90,12 +89,15 @@ import { collection, getDocs, query, where, doc, updateDoc, arrayUnion, getDoc, 
 import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
+import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
+
 
 export default {
   name: "MinhasConsultas",
   components: {
     Navbar,
     Footer,
+    BotaoVoltar,
   },
   data() {
     return {
@@ -127,45 +129,40 @@ export default {
       handler() {
         this.carregarAgendamentos();
       },
-      immediate: true, // Para carregar corretamente na inicialização
+      immediate: true,
     },
   },
   methods: {
     async carregarAgendamentos() {
       try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || user.tipo !== "paciente" || !user.usuarioId) {
+        const user = JSON.parse(sessionStorage.getItem("user"));
+        if (!user || user.tipo !== "paciente" || !user.id) {
           alert("Apenas pacientes podem acessar esta página. Faça login.");
           this.$router.push("/login");
           return;
         }
 
         const db = getFirestore();
+        const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.id));
+        const snapshot = await getDocs(q);
 
-        // Se o filtro for "Confirmadas", buscar na tabela agendamentos
-        if (this.filtroSituacao === "Confirmada") {
-          const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.usuarioId));
-          const snapshot = await getDocs(q);
-          this.agendamentos = snapshot.empty
-            ? []
-            : snapshot.docs.map((docSnap) => ({
+        this.agendamentos = snapshot.empty
+          ? []
+          : snapshot.docs.map((docSnap) => {
+            const dados = docSnap.data();
+            return {
               id: docSnap.id,
-              ...docSnap.data(),
-            }));
-        } else {
-          // Se for "Canceladas pelo Paciente" ou "Canceladas pelo Médico", buscar na tabela pacientes > consultas
-          const pacienteRef = doc(db, "pacientes", user.usuarioId);
-          const pacienteSnap = await getDoc(pacienteRef);
-
-          if (pacienteSnap.exists()) {
-            const pacienteData = pacienteSnap.data();
-            this.agendamentos = (pacienteData.consultas || []).filter(
-              (consulta) => consulta.situacao === this.filtroSituacao
-            );
-          } else {
-            this.agendamentos = [];
-          }
-        }
+              especialidade: dados.especialidade || "Não informado",
+              medicoNome: dados.medicoNome || "Nome não disponível",
+              local: dados.local || "Não informado",
+              data: dados.data || "Não informado",
+              situacao: dados.situacao || "Não informado",
+              telefoneConsultorio: dados.telefoneConsultorio || "Não informado", // 🔹 Novo campo
+              valorConsulta: dados.valorConsulta
+                ? `R$ ${dados.valorConsulta}`
+                : "Não informado", // 🔹 Novo campo formatado
+            };
+          });
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos.");
@@ -173,6 +170,7 @@ export default {
         this.carregando = false;
       }
     },
+
     confirmarCancelamento(id) {
       this.agendamentoSelecionado = id;
       this.acaoSelecionada = "cancelar";
@@ -182,6 +180,7 @@ export default {
       };
       this.showModal = true;
     },
+
     async cancelarConsulta() {
       const db = getFirestore();
       const consultaRef = doc(db, "agendamentos", this.agendamentoSelecionado);
@@ -235,27 +234,22 @@ export default {
         this.carregarAgendamentos();
       }
     },
-    voltarPagina() {
-      this.$router.push("/minhas-consultas");
-    },
+
     confirmarAcaoModal() {
       if (this.acaoSelecionada === "cancelar") {
         this.cancelarConsulta();
       }
     },
   },
+  mounted() {
+    this.carregarAgendamentos();
+  },
 };
 </script>
-
 
 <style scoped>
 .div-principal {
   margin-top: 5%;
-}
-
-.btn-back {
-  border-radius: 10px;
-  padding: 10px 20px;
 }
 
 .nav-pills .nav-link {

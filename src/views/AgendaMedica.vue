@@ -3,10 +3,7 @@
     <br />
     <div class="div-principal">
         <div class="container my-5">
-            <button class="btn btn-primary btn-back" @click="voltarPagina">
-                <i class="fas fa-arrow-left me-2"></i> Voltar
-            </button>
-
+            <BotaoVoltar />
             <h2 class="text-center text-primary fw-bold mb-4">Minhas Consultas</h2>
 
             <div v-if="carregando" class="text-center">
@@ -104,12 +101,15 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
+import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
+
 
 export default {
     name: "AgendaMedico",
     components: {
         Navbar,
         Footer,
+        BotaoVoltar,
     },
     data() {
         return {
@@ -185,8 +185,6 @@ export default {
     },
 };
 </script>
-
-
 
 
 <style scoped>

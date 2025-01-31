@@ -3,9 +3,7 @@
     <Navbar />
     <br /><br />
     <div class="container py-5">
-      <button class="btn-voltar" @click="voltarPagina">
-        <i class="fas fa-arrow-left me-2"></i> Voltar
-      </button>
+      <BotaoVoltar />
 
       <h1 class="text-center mb-4 text-primary">
         {{ paciente ? paciente.nomeCompleto : "Carregando..." }}
@@ -68,7 +66,6 @@
           </div>
         </div>
 
-        <!-- Botão de Exclusão -->
         <!-- Botão de Exclusão -->
         <button class="btn btn-danger" @click="confirmarExclusao">
           Excluir Conta
@@ -160,20 +157,26 @@ import Footer from "@/components/Footer.vue";
 import {
   getFirestore,
   doc,
-  collection,
-  query,
-  where,
-  getDocs,
+  getDoc,
   updateDoc,
   deleteDoc,
-  writeBatch,
+  query,
+  collection,
+  where,
+  getDocs
 } from "firebase/firestore";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
+
+
 
 export default {
   name: "PerfilPaciente",
   components: {
     Navbar,
     Footer,
+    BotaoVoltar,
+
   },
   data() {
     return {
@@ -189,49 +192,53 @@ export default {
   methods: {
     async carregarPerfil() {
       try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (user && user.tipo === "paciente") {
-          const db = getFirestore();
-          const q = query(
-            collection(db, "pacientes"),
-            where("email", "==", user.email)
-          );
-          const querySnapshot = await getDocs(q);
+        const auth = getAuth();
+        const db = getFirestore();
 
-          if (!querySnapshot.empty) {
-            this.pacienteId = querySnapshot.docs[0].id;
-            this.paciente = querySnapshot.docs[0].data();
-            this.formEdit = { ...this.paciente };
+        onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
+            const pacienteSnap = await getDoc(pacienteRef);
+
+            if (pacienteSnap.exists()) {
+              this.pacienteId = firebaseUser.uid;
+              this.paciente = pacienteSnap.data();
+              this.formEdit = { ...this.paciente };
+            } else {
+              alert("Paciente não encontrado no sistema.");
+              await signOut(auth);
+              this.$router.push("/login");
+            }
           } else {
-            alert("Paciente não encontrado.");
-            this.$router.push("/");
+            alert("Apenas pacientes podem acessar esta página. Faça login.");
+            this.$router.push("/login");
           }
-        } else {
-          alert("Acesso negado!");
-          this.$router.push("/");
-        }
+        });
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
+        alert("Erro ao carregar perfil do paciente.");
       }
     },
+
     abrirModal() {
       this.showModalEdit = true;
     },
+
     fecharModal() {
       this.showModalEdit = false;
       this.showModalDelete = false;
     },
+
     validarNome(event) {
-      this.formEdit.nomeCompleto = event.target.value.replace(
-        /[^a-zA-Z\s]/g,
-        ""
-      );
+      this.formEdit.nomeCompleto = event.target.value.replace(/[^a-zA-Z\s]/g, "");
     },
+
     formatarTelefone(event) {
       let telefone = event.target.value.replace(/\D/g, "");
       telefone = telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
       this.formEdit.telefone = telefone.slice(0, 15);
     },
+
     formatarCPF(event) {
       let cpf = event.target.value.replace(/\D/g, "");
       cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2");
@@ -239,6 +246,7 @@ export default {
       cpf = cpf.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, "$1.$2.$3-$4");
       this.formEdit.cpf = cpf.slice(0, 14);
     },
+
     validarCPF() {
       const cpf = this.formEdit.cpf.replace(/\D/g, "");
       if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
@@ -259,45 +267,42 @@ export default {
         digito1 === parseInt(cpf[9]) && digito2 === parseInt(cpf[10])
       );
     },
+
     confirmarExclusao() {
-      console.log("Abrindo modal de exclusão...");
-      this.showModalDelete = true; // Exibe o modal
+      this.showModalDelete = true;
     },
+
     async deletarConta() {
       try {
+        const auth = getAuth();
         const db = getFirestore();
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
 
-        console.log("Tentando excluir paciente:", this.pacienteId);
-
-        // Buscar todos os agendamentos do paciente
+        // Excluir todos os agendamentos relacionados ao paciente
         const agendamentosQuery = query(
           collection(db, "agendamentos"),
           where("pacienteId", "==", this.pacienteId)
         );
         const agendamentosSnapshot = await getDocs(agendamentosQuery);
 
-        // Excluir agendamentos um por um (sem batch para evitar remoção da coleção)
         if (!agendamentosSnapshot.empty) {
           for (const agendamento of agendamentosSnapshot.docs) {
             await deleteDoc(agendamento.ref);
-            console.log(`Agendamento ${agendamento.id} excluído.`);
           }
         }
 
-        // Excluir apenas o registro do paciente
+        // Excluir conta do paciente
         await deleteDoc(pacienteRef);
-        console.log(`Paciente ${this.pacienteId} excluído.`);
+        await auth.currentUser.delete();
 
-        // Remover informações do usuário do localStorage e redirecionar
-        localStorage.removeItem("user");
         alert("Conta excluída com sucesso.");
-        this.$router.push("/");
+        this.$router.push("/login");
       } catch (error) {
         console.error("Erro ao excluir conta:", error);
-        alert(`Erro ao excluir conta: ${error.message}`);
+        alert("Erro ao excluir conta. Tente novamente.");
       }
     },
+
     async salvarEdicao() {
       try {
         if (!this.pacienteId) {
@@ -308,8 +313,6 @@ export default {
 
         const db = getFirestore();
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
-
-        console.log("Atualizando dados do paciente:", this.formEdit);
 
         await updateDoc(pacienteRef, this.formEdit);
 
@@ -330,6 +333,8 @@ export default {
 };
 </script>
 
+
+
 <style scoped>
 .container {
   max-width: 90%;
@@ -337,21 +342,6 @@ export default {
 
 .cursor-pointer {
   cursor: pointer;
-}
-
-.btn-voltar {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-bottom: 20px;
-}
-
-.btn-voltar:hover {
-  background-color: #0056b3;
 }
 
 /* Modal */

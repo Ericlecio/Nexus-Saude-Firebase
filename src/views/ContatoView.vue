@@ -1,42 +1,3 @@
-<script>
-import Navbar from '@/components/Navbar.vue'
-import Footer from '@/components/Footer.vue'
-import axios from "axios";
-
-export default {
-  data() {
-    return {
-      name: '',
-      email: '',
-      message: ''
-    };
-  },
-  methods: {
-    async handleSubmit() {
-    try {
-      await axios.post("http://localhost:5173/contato", {
-        name: this.name,
-        email: this.email,
-        message: this.message,
-      });
-
-      alert("E-mail enviado com sucesso!");
-      this.name = "";
-      this.email = "";
-      this.message = "";
-    } catch (error) {
-      console.error("Erro ao enviar o e-mail:", error);
-      alert("Houve um erro ao enviar o e-mail. Tente novamente mais tarde.");
-    }
-  },
-  },
-  components: {
-    Navbar,
-    Footer
-  }
-};
-</script>
-
 <template>
   <div>
     <Navbar />
@@ -59,36 +20,18 @@ export default {
               <form @submit.prevent="handleSubmit">
                 <div class="mb-4">
                   <label for="name" class="form-label fw-bold">Seu Nome</label>
-                  <input
-                    v-model="name"
-                    type="text"
-                    class="form-control form-control-lg"
-                    id="name"
-                    placeholder="Digite seu nome"
-                    required
-                  />
+                  <input v-model="name" type="text" class="form-control form-control-lg" id="name"
+                    placeholder="Digite seu nome" required />
                 </div>
                 <div class="mb-4">
                   <label for="email" class="form-label fw-bold">Seu E-mail</label>
-                  <input
-                    v-model="email"
-                    type="email"
-                    class="form-control form-control-lg"
-                    id="email"
-                    placeholder="Digite seu e-mail"
-                    required
-                  />
+                  <input v-model="email" type="email" class="form-control form-control-lg" id="email"
+                    placeholder="Digite seu e-mail" required />
                 </div>
                 <div class="mb-4">
                   <label for="message" class="form-label fw-bold">Sua Mensagem</label>
-                  <textarea
-                    v-model="message"
-                    class="form-control form-control-lg"
-                    id="message"
-                    rows="5"
-                    placeholder="Digite sua mensagem"
-                    required
-                  ></textarea>
+                  <textarea v-model="message" class="form-control form-control-lg" id="message" rows="5"
+                    placeholder="Digite sua mensagem" required></textarea>
                 </div>
                 <div class="text-center">
                   <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
@@ -106,13 +49,61 @@ export default {
   </div>
 </template>
 
+<script>
+import Navbar from '@/components/Navbar.vue'
+import Footer from '@/components/Footer.vue'
+import emailjs from 'emailjs-com';
+
+export default {
+  data() {
+    return {
+      name: '',
+      email: '',
+      message: ''
+    };
+  },
+  methods: {
+    // Função chamada quando o formulário for enviado
+    async handleSubmit() {
+      try {
+        const serviceID = 'service_147efri'; // ID do seu Serviço no EmailJS
+        const templateID = 'template_brj1e0g'; // ID do seu Template no EmailJS
+
+        const templateParams = {
+          from_name: this.name,
+          from_email: this.email,
+          message: this.message,
+        };
+
+        // Envia o e-mail através do EmailJS
+        await emailjs.send(serviceID, templateID, templateParams);
+
+        // Se o envio for bem-sucedido, exibe a mensagem
+        alert("E-mail enviado com sucesso!");
+
+        // Limpa os campos do formulário após o envio
+        this.name = "";
+        this.email = "";
+        this.message = "";
+      } catch (error) {
+        // Exibe um erro se houver algum problema
+        console.error("Erro ao enviar o e-mail:", error);
+        alert("Houve um erro ao enviar o e-mail. Tente novamente mais tarde.");
+      }
+    },
+  },
+  components: {
+    Navbar,
+    Footer,
+  },
+};
+</script>
+
 <style scoped>
 /* Banner com Gradiente e Sombra */
 .banner {
-  background: linear-gradient(
-    rgb(26, 26, 60),
-    rgb(26, 26, 60)
-    ),
+  background: linear-gradient(rgb(26, 26, 60),
+      rgb(26, 26, 60)),
     url("/src/assets/img/fale_conosco_fundo.jpg") no-repeat center center;
   background-size: cover;
   height: 50vh;

@@ -3,9 +3,7 @@
     <Navbar />
     <br /><br />
     <div class="container py-5">
-      <button class="btn-voltar" @click="voltarPagina">
-        <i class="fas fa-arrow-left me-2"></i> Voltar
-      </button>
+      <BotaoVoltar />
 
       <h1 class="text-center mb-4 text-primary">
         {{ medico ? medico.nomeCompleto : "Carregando..." }}
@@ -188,12 +186,17 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
+
+
 
 export default {
   name: "PerfilMedico",
   components: {
     Navbar,
     Footer,
+    BotaoVoltar,
+
   },
   data() {
     return {
@@ -304,17 +307,6 @@ export default {
 
 .cursor-pointer {
   cursor: pointer;
-}
-
-.btn-voltar {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-bottom: 20px;
 }
 
 .btn-voltar:hover {

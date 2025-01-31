@@ -1,14 +1,16 @@
 <template>
   <Navbar />
   <div class="container-fluid py-5 mt-5">
+
     <div class="row justify-content-center align-items-center">
-      <div class="col-lg-8 col-md-10 col-sm-12">
+      <div class="col-lg-10 col-md-12">
         <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
           <div class="row g-0">
-            <div class="col-md-5 d-none d-md-flex align-items-center justify-content-center bg-light">
+            <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center bg-light">
+              <BotaoVoltar />
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem Nexus Saúde" class="img-fluid logo" />
             </div>
-            <div class="col-md-7 p-5 bg-white">
+            <div class="col-md-8 p-5 bg-white">
               <h1 class="text-center text-primary mb-3 font-weight-bold">
                 Nexus Saúde
               </h1>
@@ -16,8 +18,10 @@
                 Agende sua consulta com facilidade
               </p>
               <form @submit.prevent="submitForm">
+
+                <!-- Linha 1 -->
                 <div class="row g-4">
-                  <div class="col-md-6">
+                  <div class="col-md-4 col-sm-12">
                     <label for="especialidade" class="form-label text-dark fw-bold">Especialidade</label>
                     <select v-model="form.especialidade" id="especialidade" class="form-select"
                       @change="filterMedicosByEspecialidade" required>
@@ -27,7 +31,7 @@
                       </option>
                     </select>
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4 col-sm-12">
                     <label for="medicoNome" class="form-label text-dark fw-bold">Médico</label>
                     <select v-model="form.medicoId" id="medico" class="form-select" required @change="medicoChanged">
                       <option value="" disabled selected>Selecione</option>
@@ -36,49 +40,56 @@
                       </option>
                     </select>
                   </div>
-                </div>
-
-                <div class="row g-4 mt-3">
-                  <div class="col-md-6">
+                  <div class="col-md-4 col-sm-12">
                     <label for="data" class="form-label text-dark fw-bold">Horários Disponíveis</label>
                     <select v-model="form.data" id="data" class="form-select" required>
                       <option value="" disabled selected>Selecione</option>
-                      <option v-for="horario in horariosDisponiveis" :key="horario.horario" :value="horario.horario"
-                        :class="{ 'text-success': horario.disponivel, 'text-danger': !horario.disponivel }"
-                        :disabled="!horario.disponivel">
+                      <option v-for="horario in horariosDisponiveis" :key="horario.horario" :value="horario.horario">
                         {{ horario.horario }}
                       </option>
                     </select>
-
-
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="pacienteNome" class="form-label text-dark fw-bold">Paciente</label>
-                    <input type="text" id="pacienteNome" v-model="form.pacienteNome" class="form-control" readonly />
                   </div>
                 </div>
 
+                <!-- Linha 2 -->
                 <div class="row g-4 mt-3">
-                  <div class="col-md-6">
+                  <div class="col-md-4 col-sm-12">
+                    <label for="pacienteNome" class="form-label text-dark fw-bold">Paciente</label>
+                    <input type="text" id="pacienteNome" v-model="form.pacienteNome" class="form-control" readonly />
+                  </div>
+                  <div class="col-md-4 col-sm-12">
+                    <label for="telefoneConsultorio" class="form-label text-dark fw-bold">Telefone do
+                      Consultório</label>
+                    <input type="text" id="telefoneConsultorio" v-model="form.telefoneConsultorio" class="form-control"
+                      readonly />
+                  </div>
+                  <div class="col-md-4 col-sm-12">
+                    <label for="valorConsulta" class="form-label text-dark fw-bold">Valor da Consulta</label>
+                    <input type="text" id="valorConsulta" v-model="form.valorConsulta" class="form-control" readonly />
+                  </div>
+                </div>
+
+                <!-- Linha 3 -->
+                <div class="row g-4 mt-3">
+                  <div class="col-md-4 col-sm-12">
                     <label for="pacienteTelefone" class="form-label text-dark fw-bold">Telefone</label>
                     <input type="text" id="pacienteTelefone" v-model="form.pacienteTelefone" class="form-control"
                       readonly />
                   </div>
-                  <div class="col-md-6">
+                  <div class="col-md-4 col-sm-12">
                     <label for="local" class="form-label text-dark fw-bold">Local</label>
                     <input type="text" id="local" v-model="form.local" class="form-control" readonly />
                   </div>
                 </div>
 
+                <!-- Botões -->
+
                 <div class="text-center mt-4">
-                  <button class="btn btn-outline-secondary btn-lg me-3" @click="voltarPagina">
-                    Voltar
-                  </button>
                   <button type="submit" class="btn btn-primary btn-lg">
                     Agendar Consulta
                   </button>
                 </div>
+
               </form>
             </div>
           </div>
@@ -90,6 +101,7 @@
   <Footer />
 </template>
 
+
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
@@ -99,14 +111,20 @@ import {
   query,
   where,
   getDocs,
+  doc,
+  getDoc,
   addDoc,
 } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
+
 
 export default {
   name: "AgendamentoConsulta",
   components: {
     Navbar,
     Footer,
+    BotaoVoltar,
   },
 
   data() {
@@ -119,6 +137,8 @@ export default {
         especialidade: "",
         medicoId: "",
         medicoNome: "",
+        telefoneConsultorio: "",
+        valorConsulta: "",
         local: "Clínica Nexus Saúde - Palmares, PE",
         data: "",
         pacienteNome: "",
@@ -130,33 +150,44 @@ export default {
 
   methods: {
     async verificarPacienteLogado() {
-      try {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || user.tipo !== "paciente") {
+      const auth = getAuth();
+      const db = getFirestore();
+
+      onAuthStateChanged(auth, async (firebaseUser) => {
+        if (!firebaseUser) {
           alert("Apenas pacientes podem agendar consultas. Faça login.");
           this.$router.push("/login");
-        } else {
-          const db = getFirestore();
-          const q = query(
-            collection(db, "pacientes"),
-            where("email", "==", user.email)
-          );
-          const querySnapshot = await getDocs(q);
+          return;
+        }
 
-          if (!querySnapshot.empty) {
-            const pacienteData = querySnapshot.docs[0].data();
-            this.pacienteLogado = pacienteData;
-            this.form.pacienteNome = pacienteData.nomeCompleto;
+        try {
+          console.log("✅ Usuário autenticado:", firebaseUser.uid);
+
+          // 🔹 Busca o paciente pelo UID no Firestore
+          const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
+          const pacienteSnap = await getDoc(pacienteRef);
+
+          if (pacienteSnap.exists()) {
+            const pacienteData = pacienteSnap.data();
+            console.log("🔹 Dados do paciente carregados:", pacienteData);
+
+            this.pacienteLogado = {
+              id: firebaseUser.uid,
+              ...pacienteData
+            };
+
+            this.form.pacienteNome = pacienteData.nomeCompleto || "Nome não informado";
             this.form.pacienteTelefone = pacienteData.telefone || "Não informado";
           } else {
-            alert("Informações do paciente não encontradas.");
+            console.error("❌ Paciente não encontrado no Firestore.");
+            alert("Paciente não cadastrado no sistema.");
+            this.$router.push("/login");
           }
+        } catch (error) {
+          console.error("🚨 Erro ao carregar dados do paciente:", error);
+          alert("Erro ao carregar dados do paciente.");
         }
-      } catch (error) {
-        console.error("Erro ao carregar dados do paciente:", error);
-        alert("Erro ao carregar dados do paciente.");
-        this.$router.push("/login");
-      }
+      });
     },
 
     async fetchMedicos() {
@@ -165,19 +196,25 @@ export default {
         const q = query(collection(db, "medicos"));
         const querySnapshot = await getDocs(q);
 
-        this.medicos = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        this.medicos = querySnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            telefoneConsultorio: data.telefoneConsultorio || "Não informado",
+            valorConsulta: data.valorConsulta ? `R$ ${data.valorConsulta}` : "Não informado"
+          };
+        });
 
-        this.especialidades = [
-          ...new Set(this.medicos.map((medico) => medico.especialidade)),
-        ];
+        this.especialidades = [...new Set(this.medicos.map((medico) => medico.especialidade))];
+
+        console.log("✅ Médicos carregados:", this.medicos); // Para verificar se os dados estão sendo carregados corretamente
       } catch (error) {
-        console.error("Erro ao carregar médicos:", error);
+        console.error("❌ Erro ao carregar médicos:", error);
         alert("Erro ao carregar médicos. Tente novamente.");
       }
     },
+
 
     filterMedicosByEspecialidade() {
       this.medicosFiltrados = this.medicos.filter(
@@ -188,22 +225,28 @@ export default {
       this.horariosDisponiveis = [];
     },
 
-    medicoChanged() {
-      const medicoSelecionado = this.medicos.find(
-        (m) => m.id === this.form.medicoId
-      );
+    async medicoChanged() {
+      const medicoSelecionado = this.medicos.find((m) => m.id === this.form.medicoId);
+
       if (medicoSelecionado) {
-        this.form.medicoNome = medicoSelecionado.nomeCompleto;
+        this.form.medicoNome = medicoSelecionado.nomeCompleto || "Nome não informado";
+        this.form.telefoneConsultorio = medicoSelecionado.telefoneConsultorio || "Não informado";
+        this.form.valorConsulta = medicoSelecionado.valorConsulta ? `R$ ${medicoSelecionado.valorConsulta},00` : "Não informado";
+
+        console.log("✅ Dados do médico selecionado:", medicoSelecionado); // Para verificar se os dados estão sendo carregados corretamente
+
         this.carregarHorarios(medicoSelecionado);
       } else {
         this.horariosDisponiveis = [];
+        this.form.telefoneConsultorio = "Não informado";
+        this.form.valorConsulta = "Não informado";
       }
     },
 
 
     async carregarHorarios(medico) {
       if (medico.diasAtendimento) {
-        const hoje = new Date(); // Data e hora atual
+        const hoje = new Date();
         const diasSemana = {
           segunda: 1,
           terca: 2,
@@ -214,38 +257,44 @@ export default {
         };
 
         const horarios = [];
+        const umMesDepois = new Date();
+        umMesDepois.setDate(hoje.getDate() + 30); // Exibir horários até 1 mês
 
         for (const [dia, horariosDia] of Object.entries(medico.diasAtendimento)) {
           if (horariosDia && horariosDia.length > 0) {
-            // Calcular a próxima data correspondente ao dia da semana
-            const diff = (diasSemana[dia] - hoje.getDay() + 7) % 7;
-            const proximaData = new Date(hoje);
-            proximaData.setDate(hoje.getDate() + diff);
-            proximaData.setHours(0, 0, 0, 0); // Resetar para início do dia
+            let dataConsulta = new Date(hoje);
 
-            // Verificar a disponibilidade de cada horário e se o horário já passou
-            const horariosDiaDisponiveis = await Promise.all(
-              horariosDia.map(async (horario) => {
-                const [hora, minuto] = horario.split(":").map(Number);
-                const horarioCompleto = new Date(proximaData);
-                horarioCompleto.setHours(hora, minuto, 0, 0);
+            while (dataConsulta <= umMesDepois) {
+              const diff = (diasSemana[dia] - dataConsulta.getDay() + 7) % 7;
+              dataConsulta.setDate(dataConsulta.getDate() + diff);
+              dataConsulta.setHours(0, 0, 0, 0); // Início do dia
 
-                const disponivel =
-                  horarioCompleto > hoje && // Apenas horários futuros
-                  (await this.verificarDisponibilidade(medico.id, horarioCompleto.toISOString()));
+              if (dataConsulta > umMesDepois) break;
 
-                return {
-                  horario: `${proximaData.toLocaleDateString()} ${horario}`,
-                  disponivel,
-                };
-              })
-            );
+              // 🔹 Verifica a disponibilidade de cada horário antes de exibir
+              const horariosDiaDisponiveis = await Promise.all(
+                horariosDia.map(async (horario) => {
+                  const [hora, minuto] = horario.split(":").map(Number);
+                  const horarioCompleto = new Date(dataConsulta);
+                  horarioCompleto.setHours(hora, minuto, 0, 0);
 
-            horarios.push(...horariosDiaDisponiveis);
+                  const disponivel = await this.verificarDisponibilidade(
+                    medico.id,
+                    horarioCompleto.toISOString()
+                  );
+
+                  return disponivel ? { horario: `${dataConsulta.toLocaleDateString()} ${horario}` } : null;
+                })
+              );
+
+              // 🔹 Adiciona apenas os horários disponíveis
+              horarios.push(...horariosDiaDisponiveis.filter(Boolean));
+              dataConsulta.setDate(dataConsulta.getDate() + 7);
+            }
           }
         }
 
-        this.horariosDisponiveis = horarios.filter((h) => h.disponivel).length
+        this.horariosDisponiveis = horarios.length
           ? horarios
           : [{ horario: "Nenhum horário disponível", disponivel: false }];
       } else {
@@ -262,18 +311,7 @@ export default {
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.empty; // Retorna true se estiver disponível
-    },
-
-
-    calcularProximaData(diaSemana, dataAtual) {
-      const diasSemana = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-      const diaIndex = diasSemana.indexOf(diaSemana.toLowerCase());
-      const hojeIndex = dataAtual.getDay();
-      const diferenca = (diaIndex - hojeIndex + 7) % 7 || 7;
-      const proximaData = new Date(dataAtual);
-      proximaData.setDate(dataAtual.getDate() + diferenca);
-      return proximaData;
+      return querySnapshot.empty; // Retorna false se o horário já estiver ocupado
     },
 
     async submitForm() {
@@ -292,35 +330,37 @@ export default {
           return;
         }
 
-        // Salvar o agendamento no banco de dados
         await addDoc(collection(db, "agendamentos"), {
           especialidade: this.form.especialidade,
           medicoId: this.form.medicoId,
           medicoNome: this.form.medicoNome,
+          telefoneConsultorio: this.form.telefoneConsultorio, // ✅ Adicionando telefone do consultório
+          valorConsulta: this.form.valorConsulta, // ✅ Adicionando valor da consulta
           local: this.form.local,
           data: this.form.data,
-          pacienteId: this.pacienteLogado.usuarioId, // Adicionando o ID do paciente
-          pacienteNome: this.pacienteLogado.nomeCompleto,
-          pacienteTelefone: this.pacienteLogado.telefone,
-          situacao: "Confirmada", // Adicionando o campo de situação com valor padrão
+          pacienteId: this.pacienteLogado.id,
+          pacienteNome: this.form.pacienteNome,
+          pacienteTelefone: this.form.pacienteTelefone,
+          situacao: "Confirmada",
         });
 
         alert("Consulta agendada com sucesso!");
         this.$router.push("/");
       } catch (error) {
-        console.error("Erro ao agendar consulta:", error);
+        console.error("❌ Erro ao agendar consulta:", error);
         alert("Não foi possível agendar a consulta. Tente novamente.");
       }
     },
+
   },
 
   async mounted() {
+    console.log("📌 Página de Agendamento carregada...");
     await this.verificarPacienteLogado();
     await this.fetchMedicos();
-  },
+  }
 };
 </script>
-
 
 <style scoped>
 .card {
@@ -352,18 +392,11 @@ export default {
   background-color: #fff;
 }
 
-.text-muted.text-decoration-line-through {
-  color: #6c757d;
-  text-decoration: line-through;
-}
-
-.text-success {
-  color: #28a745 !important;
-  /* Verde */
-}
-
-.text-danger {
-  color: #dc3545 !important;
-  /* Vermelho */
+/* 🔹 Tornando os campos responsivos */
+@media (max-width: 768px) {
+  .col-md-4 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 }
 </style>

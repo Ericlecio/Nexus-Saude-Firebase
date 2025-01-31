@@ -1,15 +1,16 @@
 <template>
-  <nav class="navbar navbar-expand-lg" :class="{ scrolled: isScrolled }">
+  <nav class="navbar navbar-expand-lg fixed-top" :class="{ scrolled: isScrolled }">
     <div class="container">
       <a class="navbar-brand" href="/">
         <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Nexus Saúde" class="logo" />
       </a>
-      <button class="navbar-toggler" type="button" @click="toggleCollapse" aria-controls="navbarNav"
-        aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" @click="toggleCollapse">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }" id="navbarNav">
-        <ul class="navbar-nav ms-auto">
+
+      <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }">
+        <!-- 🔹 Menu centralizado -->
+        <ul class="navbar-nav mx-auto">
           <li class="nav-item">
             <a class="nav-link" href="/">Home</a>
           </li>
@@ -20,12 +21,14 @@
             <a class="nav-link" href="/contato">Fale Conosco</a>
           </li>
         </ul>
+
+        <!-- 🔹 Perfil do usuário alinhado à direita -->
         <div class="dropdown ms-3">
-          <a href="#" class="d-flex align-items-center text-dark text-decoration-none" data-bs-toggle="dropdown">
-            <i class="bi bi-person-circle me-2"></i>
+          <a href="#" class="d-flex align-items-center perfil-link" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle"></i>
             <span v-if="user">{{ user.nomeCompleto }}</span>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end">
+          <ul class="dropdown-menu dropdown-menu-end animate-dropdown">
             <li v-if="!user">
               <a class="dropdown-item" href="/login">Login</a>
             </li>
@@ -41,7 +44,7 @@
             </li>
 
             <li v-if="user">
-              <a class="dropdown-item" href="#" @click="logout">Sair</a>
+              <a class="dropdown-item logout-btn" href="#" @click="logout">Sair</a>
             </li>
           </ul>
         </div>
@@ -72,19 +75,25 @@ export default {
     async logout() {
       const auth = getAuth();
       await signOut(auth);
+      sessionStorage.removeItem("user");
       this.user = null;
       this.$router.push("/login").then(() => window.location.reload());
     },
     async verificarUsuario() {
       const auth = getAuth();
       const db = getFirestore();
+      const storedUser = sessionStorage.getItem("user");
+
+      if (storedUser) {
+        this.user = JSON.parse(storedUser);
+        return;
+      }
 
       onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
           try {
             const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
             const medicoRef = doc(db, "medicos", firebaseUser.uid);
-
             const [pacienteSnap, medicoSnap] = await Promise.all([
               getDoc(pacienteRef),
               getDoc(medicoRef),
@@ -92,10 +101,13 @@ export default {
 
             if (pacienteSnap.exists()) {
               this.user = { id: firebaseUser.uid, ...pacienteSnap.data(), tipo: "paciente" };
+              sessionStorage.setItem("user", JSON.stringify(this.user));
             } else if (medicoSnap.exists()) {
               this.user = { id: firebaseUser.uid, ...medicoSnap.data(), tipo: "medico" };
+              sessionStorage.setItem("user", JSON.stringify(this.user));
             } else {
               this.user = null;
+              await signOut(auth);
             }
           } catch (error) {
             console.error("Erro ao verificar usuário na Navbar:", error);
@@ -114,77 +126,81 @@ export default {
 };
 </script>
 
-
 <style scoped>
 /* Navbar geral */
 .navbar {
   background: transparent;
-  color: white;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 1000;
-  transition: background-color 0.4s ease, box-shadow 0.4s ease, padding 0.3s ease;
-  padding: 20px 0;
+  transition: all 0.4s ease-in-out;
+  padding: 15px 0;
 }
 
-/* Quando rolar a página */
+/* Navbar ao rolar a página */
 .navbar.scrolled {
-  background: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  padding: 10px 0;
 }
 
-/* Navbar em telas menores */
+/* Responsividade */
 @media (max-width: 991px) {
   .navbar {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   }
 }
 
+/* Logo */
 .navbar-brand .logo {
   height: 50px;
   transition: all 0.3s ease-in-out;
 }
 
+/* Links da navbar */
 .navbar-nav .nav-link {
-  color: #000000;
+  color: #000;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 12px 18px;
+  padding: 10px 15px;
   border-radius: 30px;
   transition: all 0.3s ease-in-out;
 }
 
-.navbar-nav .nav-link:hover,
-.navbar-nav .nav-link.active {
+.navbar-nav .nav-link:hover {
   color: #53ba83;
   font-weight: bold;
   text-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
   transform: translateY(-2px);
 }
 
+/* Ícone de usuário */
 .bi-person-circle {
-  font-weight: bold;
-  color: #53ba83;
   font-size: 1.8rem;
-  transition: color 0.3s ease;
+  color: #53ba83;
+  transition: all 0.3s ease-in-out;
 }
 
-.bi-person-circle:hover {
-  color: #000524;
-  font-weight: bold;
+.perfil-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: black;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease-in-out;
+}
+
+.perfil-link:hover .bi-person-circle {
+  color: #1565C0;
 }
 
 /* Menu suspenso */
 .dropdown-menu {
-  background-color: rgba(255, 255, 255, 0.95);
-  border-radius: 10px;
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 8px;
   border: none;
-  padding: 12px 16px;
-  animation: fadeIn 0.4s ease-in-out;
+  padding: 10px 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 @keyframes fadeIn {
@@ -200,21 +216,26 @@ export default {
 }
 
 .dropdown-menu .dropdown-item {
-  padding: 10px 15px;
-  border-radius: 8px;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease-in-out;
 }
 
 .dropdown-menu .dropdown-item:hover {
-  background-color: #f1f1f1;
+  background: #f1f1f1;
   transform: scale(1.05);
+}
+
+/* Botão de logout */
+.logout-btn {
+  color: red !important;
+  font-weight: bold;
 }
 
 /* Botão de toggle */
 .navbar-toggler {
   border: none;
-  outline: none;
-  transition: transform 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
 }
 
 .navbar-toggler:focus {
@@ -222,10 +243,10 @@ export default {
 }
 
 .navbar-toggler-icon {
-  transition: 0.3s ease;
+  transition: 0.3s ease-in-out;
 }
 
-.navbar-toggler.collapsed .navbar-toggler-icon {
-  transform: rotate(45deg);
+.navbar-toggler:hover .navbar-toggler-icon {
+  transform: rotate(90deg);
 }
 </style>

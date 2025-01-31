@@ -137,6 +137,7 @@ export default {
     goToCadastro() {
       this.$router.push("/cadastro");
     },
+
     async verificarUsuarioLogado() {
       const auth = getAuth();
       const db = getFirestore();
@@ -152,9 +153,22 @@ export default {
               getDoc(medicoRef),
             ]);
 
-            if (pacienteSnap.exists() || medicoSnap.exists()) {
-              this.$router.push("/"); // 🔹 Se já estiver logado, vai para Home
+            if (pacienteSnap.exists()) {
+              sessionStorage.setItem("user", JSON.stringify({
+                id: firebaseUser.uid,
+                ...pacienteSnap.data(),
+                tipo: "paciente"
+              }));
+              this.$router.push("/");
+            } else if (medicoSnap.exists()) {
+              sessionStorage.setItem("user", JSON.stringify({
+                id: firebaseUser.uid,
+                ...medicoSnap.data(),
+                tipo: "medico"
+              }));
+              this.$router.push("/");
             } else {
+              alert("Usuário não encontrado no banco de dados.");
               await signOut(auth);
             }
           } catch (error) {
@@ -163,30 +177,52 @@ export default {
         }
       });
     },
+
     async login() {
-      if (this.userType === "medico") {
-        try {
-          const auth = getAuth();
-          const db = getFirestore();
+      try {
+        const auth = getAuth();
+        const db = getFirestore();
 
-          const userCredential = await signInWithEmailAndPassword(auth, this.email, this.password);
-          const userId = userCredential.user.uid;
+        const userCredential = await signInWithEmailAndPassword(auth, this.email, this.password);
+        const userId = userCredential.user.uid;
 
+        if (this.userType === "medico") {
           const medicoRef = doc(db, "medicos", userId);
           const medicoSnap = await getDoc(medicoRef);
 
           if (medicoSnap.exists()) {
+            sessionStorage.setItem("user", JSON.stringify({
+              id: userId,
+              ...medicoSnap.data(),
+              tipo: "medico"
+            }));
             this.$router.push("/").then(() => window.location.reload());
           } else {
-            alert("Dados do médico não encontrados no sistema. Faça o cadastro.");
+            alert("Dados do médico não encontrados no sistema.");
             await signOut(auth);
           }
-        } catch (error) {
-          console.error("Erro ao autenticar médico: ", error);
-          alert("Erro ao autenticar. Verifique suas credenciais.");
+        } else if (this.userType === "paciente") {
+          const pacienteRef = doc(db, "pacientes", userId);
+          const pacienteSnap = await getDoc(pacienteRef);
+
+          if (pacienteSnap.exists()) {
+            sessionStorage.setItem("user", JSON.stringify({
+              id: userId,
+              ...pacienteSnap.data(),
+              tipo: "paciente"
+            }));
+            this.$router.push("/").then(() => window.location.reload());
+          } else {
+            alert("Dados do paciente não encontrados no sistema.");
+            await signOut(auth);
+          }
         }
+      } catch (error) {
+        console.error("Erro ao autenticar usuário: ", error);
+        alert("Erro ao autenticar. Verifique suas credenciais.");
       }
     },
+
     async loginWithGoogle() {
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
@@ -209,12 +245,20 @@ export default {
           });
         }
 
+        const pacienteData = await getDoc(userRef);
+        sessionStorage.setItem("user", JSON.stringify({
+          id: user.uid,
+          ...pacienteData.data(),
+          tipo: "paciente"
+        }));
+
         this.$router.push("/").then(() => window.location.reload());
       } catch (error) {
         console.error("Erro ao autenticar com Google:", error.message);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
     },
+
     async resetPassword() {
       if (!this.email) {
         alert("Por favor, insira um e-mail válido.");
