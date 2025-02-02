@@ -88,9 +88,6 @@
           <label>Nome Completo</label>
           <input v-model="formEdit.nomeCompleto" type="text" class="form-control" required @input="validarNome" />
 
-          <label>E-mail</label>
-          <input v-model="formEdit.email" type="email" class="form-control" required />
-
           <label>Telefone</label>
           <input v-model="formEdit.telefone" @input="formatarTelefone" type="text" class="form-control" required />
 
@@ -314,10 +311,14 @@ export default {
         const db = getFirestore();
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
 
-        await updateDoc(pacienteRef, this.formEdit);
+        // Criação de uma cópia dos dados, removendo o e-mail
+        const dadosAtualizados = { ...this.formEdit };
+        delete dadosAtualizados.email;  // 🚫 Remove o campo de e-mail para que não seja atualizado
 
-        // Atualizar localmente os dados do paciente
-        this.paciente = { ...this.formEdit };
+        await updateDoc(pacienteRef, dadosAtualizados);
+
+        // Atualizar localmente os dados do paciente, mantendo o e-mail original
+        this.paciente = { ...this.paciente, ...dadosAtualizados };
 
         alert("Informações atualizadas com sucesso!");
         this.fecharModal();
