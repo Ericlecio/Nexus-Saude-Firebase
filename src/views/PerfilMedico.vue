@@ -159,9 +159,6 @@
                 </div>
               </div>
             </template>
-
-
-
             <div class="mt-3 text-center">
               <button type="submit" class="btn btn-success">Salvar</button>
               <button type="button" class="btn btn-secondary ms-2" @click="fecharModal">Cancelar</button>
@@ -171,6 +168,7 @@
       </div>
     </div>
   </div>
+  <Footer />
 </template>
 
 <script>

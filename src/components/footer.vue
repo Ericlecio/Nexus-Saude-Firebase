@@ -92,7 +92,6 @@ footer {
 .footer-logo {
     width: auto;
     max-width: 80px;
-    /* Tamanho original corrigido */
     height: auto;
     margin-bottom: 15px;
 }
@@ -114,6 +113,7 @@ footer {
 .nav-links {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
 .nav-links li {
@@ -171,7 +171,7 @@ footer {
     margin-top: 20px;
 }
 
-/* Responsividade */
+/* Responsividade para telas médias */
 @media (max-width: 992px) {
     .container {
         flex-direction: column;
@@ -180,10 +180,61 @@ footer {
 
     .footer-section {
         max-width: 100%;
+        padding: 15px 0;
     }
 
     .social-media {
         justify-content: center;
+    }
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+    footer {
+        padding: 20px 10px;
+    }
+
+    .footer-logo {
+        max-width: 60px;
+        /* Reduz a logo */
+        margin: 10px auto;
+    }
+
+    .left,
+    .center,
+    .right {
+        text-align: center;
+        /* Centraliza todas as seções */
+    }
+
+    .nav-links li {
+        margin: 5px 0;
+        /* Reduz o espaço entre links */
+    }
+
+    .social-media {
+        justify-content: center;
+        gap: 10px;
+        margin: 15px 0;
+    }
+
+    .social-media a {
+        font-size: 1.5rem;
+        /* Ícones menores */
+    }
+
+    .back-to-top {
+        margin: 15px 0;
+    }
+
+    .back-to-top a {
+        font-size: 1rem;
+        /* Texto do link menor */
+    }
+
+    .copyright {
+        font-size: 0.75rem;
+        padding: 10px;
     }
 }
 </style>
