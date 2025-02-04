@@ -124,7 +124,6 @@
     </div>
 
     <!-- Modal de Exclusão -->
-    <!-- Modal de Exclusão -->
     <div v-if="showModalDelete" class="modal-overlay">
       <div class="modal-content">
         <h4 class="text-danger">Confirmação de Exclusão</h4>

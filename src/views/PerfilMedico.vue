@@ -11,7 +11,7 @@
 
       <div v-if="medico">
         <!-- Informações Pessoais -->
-        <div class="card shadow-sm mb-4">
+        <div class="card shadow-sm mb-4" id="informacoespessois">
           <div class="card-body">
             <h5 class="card-title mb-3">
               <i class="fas fa-info-circle me-2 text-primary"></i>
@@ -25,6 +25,8 @@
             <p><strong>Especialidade:</strong> {{ medico.especialidade || "Não informado" }}</p>
             <p><strong>UF:</strong> {{ medico.uf }}</p>
             <p><strong>Sexo:</strong> {{ medico.sexo }}</p>
+            <p><strong>CPF:</strong> {{ medico.cpf || "Não informado" }}</p>
+            <p><strong>Valor da Consulta:</strong> {{ medico.valorConsulta || "Não informado" }}</p>
             <p>
               <strong>Data de Nascimento:</strong>
               {{ medico.dataNascimento || "Não informado" }}
@@ -52,13 +54,53 @@
           </div>
         </div>
 
+        <!-- Histórico de Consultas -->
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title mb-3">
+              <i class="fas fa-calendar-alt me-2 text-primary"></i>
+              <strong>Histórico de Consultas</strong>
+            </h5>
+            <div v-if="agenda.length">
+              <table class="table table-striped table-hover">
+                <thead class="table-primary">
+                  <tr>
+                    <th>Paciente</th>
+                    <th>Telefone</th>
+                    <th>Data e Hora</th>
+                    <th>Local</th>
+                    <th>Especialidade</th>
+                    <th>Valor</th>
+                    <th>Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="consulta in agenda" :key="consulta.id">
+                    <td>{{ consulta.pacienteNome || "Não informado" }}</td>
+                    <td>{{ consulta.pacienteTelefone || "Não informado" }}</td>
+                    <td>{{ consulta.data || "Sem data" }}</td>
+                    <td>{{ consulta.local || "Não informado" }}</td>
+                    <td>{{ consulta.especialidade || "Não informado" }}</td>
+                    <td>{{ consulta.valorConsulta || "Não informado" }}</td>
+                    <td>{{ consulta.situacao || "Sem status" }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p v-else class="text-muted text-center">Nenhuma consulta encontrada.</p>
+          </div>
+        </div>
 
-        <button class="btn btn-warning mt-2" @click="abrirModal('senha')">
-          Alterar Senha
-        </button>
+        <div class="botoes-acao">
+          <button class="btn btn-warning" @click="abrirModal('senha')">
+            Alterar Senha
+          </button>
 
+          <button class="btn btn-danger" @click="abrirModal('exclusao')">
+            Excluir Conta
+          </button>
+        </div>
 
-        <button class="btn btn-danger" @click="confirmarExclusao">Excluir Conta</button>
       </div>
 
       <div v-else class="text-center mt-5">
@@ -99,8 +141,8 @@
               <label>Nome Completo</label>
               <input v-model="formEdit.nomeCompleto" type="text" class="form-control" required @input="validarNome" />
 
-              <label>E-mail</label>
-              <input v-model="formEdit.email" type="email" class="form-control" readonly />
+              <!-- <label>E-mail</label>
+              <input v-model="formEdit.email" type="email" class="form-control" readonly /> -->
 
               <label>Telefone</label>
               <input v-model="formEdit.telefoneConsultorio" type="text" class="form-control" @input="formatarTelefone"
@@ -108,6 +150,14 @@
 
               <label>CRM</label>
               <input v-model="formEdit.crm" type="text" class="form-control" maxlength="6" @input="validarCRM"
+                required />
+
+              <label>CPF</label> <!-- CPF agora validado -->
+              <input v-model="formEdit.cpf" type="text" class="form-control" required maxlength="14"
+                @input="formatarCPF" />
+
+              <label>Valor da Consulta (R$)</label>
+              <input v-model="formEdit.valorConsulta" type="text" class="form-control" @input="formatarValorConsulta"
                 required />
 
               <label>Especialidade</label>
@@ -120,7 +170,9 @@
               </select>
 
               <label>UF</label>
-              <input v-model="formEdit.uf" type="text" class="form-control" maxlength="2" required />
+              <select v-model="formEdit.uf" class="form-control" required>
+                <option v-for="uf in ufOptions" :key="uf" :value="uf">{{ uf }}</option>
+              </select>
 
               <label>Data de Nascimento</label>
               <input v-model="formEdit.dataNascimento" type="date" class="form-control" :max="hoje" required />
@@ -166,6 +218,26 @@
           </form>
         </div>
       </div>
+
+
+      <!-- Modal de Confirmação de Exclusão -->
+      <div v-if="showModalExclusao" class="modal-overlay d-flex justify-content-center align-items-center"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
+        <div class="modal-content p-4 bg-white rounded shadow" style="width: 300px;">
+          <h4 class="text-center text-danger">Confirmar Exclusão</h4>
+          <p class="text-center">Insira sua senha para confirmar a exclusão da conta.</p>
+
+          <input v-model="senhaExclusao" type="password" class="form-control mb-3" placeholder="Digite sua senha"
+            required />
+
+          <div class="text-center">
+            <button @click="excluirConta" class="btn btn-danger">Confirmar Exclusão</button>
+            <button @click="fecharModal" class="btn btn-secondary ms-2">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+
     </div>
   </div>
   <Footer />
@@ -175,8 +247,27 @@
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import BotaoVoltar from "@/components/BotaoVoltar.vue";
-import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, updatePassword } from "firebase/auth";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  collection,
+  query,
+  where,
+  getDocs
+} from "firebase/firestore";
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  updatePassword,
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential
+} from "firebase/auth";
+
 
 export default {
   name: "PerfilMedico",
@@ -186,6 +277,8 @@ export default {
       showModalSenha: false,
       novaSenha: "",
       confirmarSenha: "",
+      showModalExclusao: false,
+      senhaExclusao: "", // Armazena a senha para exclusão
       medico: null,
       medicoId: null,
       showModalEdit: false,
@@ -194,10 +287,38 @@ export default {
       hoje: new Date().toISOString().split("T")[0],
       horariosDisponiveis: this.gerarHorarios("07:00", "20:00", 15),
       diasSemana: ["segunda", "terca", "quarta", "quinta", "sexta", "sabado"],
-      duracaoConsulta: 30, // Valor padrão, será atualizado com o valor do banco
+      duracaoConsulta: 30,
+      agenda: [],
+      ufOptions: [
+        "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+      ],
     };
   },
   methods: {
+    async carregarAgenda() {
+      if (!this.medico?.agenda || !Array.isArray(this.medico.agenda)) {
+        this.agenda = [];
+        return;
+      }
+
+      this.agenda = this.medico.agenda.map((consulta) => ({
+        id: consulta.id,
+        pacienteNome: consulta.pacienteNome || "Não informado",
+        pacienteTelefone: consulta.pacienteTelefone || "Não informado",
+        data: consulta.data || "Sem data",
+        local: consulta.local || "Não informado",
+        especialidade: consulta.especialidade || "Não informado",
+        valorConsulta: consulta.valorConsulta || "Não informado",
+        situacao: consulta.situacao || "Sem status",
+      }));
+    },
+    formatarCPF(event) {
+      let cpf = event.target.value.replace(/\D/g, "");
+      cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2");
+      cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2");
+      cpf = cpf.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+      this.formEdit.cpf = cpf;
+    },
     async verificarAutenticacao() {
       const auth = getAuth();
       const db = getFirestore();
@@ -211,13 +332,14 @@ export default {
             this.medicoId = user.uid;
             const medicoData = medicoSnap.data();
 
+            this.medico = medicoData; // 🚀 Definir o médico primeiro
+
             // Garantir que diasAtendimento sempre esteja inicializado
             this.formEdit = {
               ...medicoData,
+              valorConsulta: medicoData.valorConsulta || "R$ 0,00",
               diasAtendimento: medicoData.diasAtendimento || {},
             };
-
-            this.medico = medicoData;
 
             if (this.medico.duracaoConsulta) {
               this.duracaoConsulta = this.medico.duracaoConsulta;
@@ -236,6 +358,22 @@ export default {
                 };
               }
             });
+
+            // ✅ Carregar o histórico de consultas (agenda) após definir o médico
+            if (Array.isArray(medicoData.agenda)) {
+              this.agenda = medicoData.agenda.map((consulta) => ({
+                id: consulta.id,
+                pacienteNome: consulta.pacienteNome || "Não informado",
+                pacienteTelefone: consulta.pacienteTelefone || "Não informado",
+                data: consulta.data || "Sem data",
+                local: consulta.local || "Não informado",
+                especialidade: consulta.especialidade || "Não informado",
+                valorConsulta: consulta.valorConsulta || "Não informado",
+                situacao: consulta.situacao || "Sem status",
+              }));
+            } else {
+              this.agenda = []; // Caso não haja agenda, garantir que seja um array vazio
+            }
           }
         }
       });
@@ -244,6 +382,8 @@ export default {
       this.campoSelecionado = campo;
       if (campo === "senha") {
         this.showModalSenha = true;
+      } else if (campo === "exclusao") {
+        this.showModalExclusao = true; // Garante que o modal de exclusão seja exibido
       } else {
         this.showModalEdit = true;
       }
@@ -261,23 +401,43 @@ export default {
         if (user) {
           await updatePassword(user, this.novaSenha);
           alert("Senha atualizada com sucesso!");
+          this.novaSenha = "";
+          this.confirmarSenha = "";
           this.fecharModal();
         } else {
-          alert("Usuário não autenticado.");
+          alert("Usuário não autenticado. Faça login novamente.");
         }
       } catch (error) {
         console.error("Erro ao alterar a senha:", error);
-        alert("Erro ao alterar a senha. Tente novamente.");
+
+        if (error.code === "auth/requires-recent-login") {
+          alert("Por segurança, você precisa fazer login novamente para alterar a senha.");
+          await auth.signOut();
+          window.location.reload();
+        } else {
+          alert("Erro ao alterar a senha. Tente novamente.");
+        }
       }
+    },
+    validarCPF(cpf) {
+      cpf = cpf.replace(/\D/g, '');
+      if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+      const calc = (n) => [...cpf].slice(0, n).reduce((s, d, i) => s + d * (n + 1 - i), 0) * 10 % 11 % 10;
+      return calc(9) === +cpf[9] && calc(10) === +cpf[10];
     },
     fecharModal() {
       this.showModalEdit = false;
       this.showModalSenha = false;
+      this.showModalExclusao = false;
       this.campoSelecionado = "";
       this.novaSenha = "";
       this.confirmarSenha = "";
     },
     async salvarEdicao() {
+      if (this.campoSelecionado === 'info' && !this.validarCPF(this.formEdit.cpf)) {
+        return alert("CPF inválido. Verifique e tente novamente.");
+      }
+
       try {
         const db = getFirestore();
         const medicoRef = doc(db, "medicos", this.medicoId);
@@ -290,7 +450,10 @@ export default {
             crm: this.formEdit.crm,
             especialidade: this.formEdit.especialidade,
             uf: this.formEdit.uf,
-            dataNascimento: this.formEdit.dataNascimento
+            dataNascimento: this.formEdit.dataNascimento,
+            cpf: this.formEdit.cpf,
+            valorConsulta: this.formEdit.valorConsulta
+
           });
           alert("Informações pessoais atualizadas com sucesso!");
 
@@ -343,6 +506,12 @@ export default {
       telefone = telefone.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
       this.formEdit.telefoneConsultorio = telefone.slice(0, 15);
     },
+    formatarValorConsulta(event) {
+      let valor = event.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+      valor = (parseInt(valor, 10) / 100).toFixed(2);    // Converte para formato de moeda
+      this.formEdit.valorConsulta = `R$ ${valor.replace('.', ',')}`; // Formatação final
+    }
+    ,
     validarCRM(event) {
       this.formEdit.crm = event.target.value.replace(/\D/g, "").slice(0, 6);
     },
@@ -379,14 +548,56 @@ export default {
         horarios.fim = "";
       }
     },
+    async excluirConta() {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
+        const db = getFirestore();
+
+        if (!user) {
+          alert("Usuário não autenticado.");
+          return;
+        }
+
+        if (!this.senhaExclusao) {
+          alert("Por favor, insira sua senha.");
+          return;
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, this.senhaExclusao);
+        await reauthenticateWithCredential(user, credential);
+
+        // Excluir o registro do médico no Firestore
+        await deleteDoc(doc(db, "medicos", this.medicoId));
+
+        // Excluir a conta do Firebase Authentication
+        await deleteUser(user);
+
+        alert("Conta excluída com sucesso!");
+        window.location.href = "/"; // Redirecionamento após exclusão
+      } catch (error) {
+        console.error("Erro ao excluir conta:", error);
+
+        if (error.code === "auth/wrong-password") {
+          alert("Senha incorreta. Tente novamente.");
+        } else if (error.code === "auth/too-many-requests") {
+          alert("Muitas tentativas. Tente novamente mais tarde.");
+        } else if (error.code === "auth/requires-recent-login") {
+          alert("Você precisa fazer login novamente por segurança.");
+        } else {
+          alert(`Erro ao excluir conta: ${error.message}`);
+        }
+      } finally {
+        this.senhaExclusao = ""; // Limpar o campo de senha após a tentativa
+        this.fecharModal();
+      }
+    },
   },
   mounted() {
     this.verificarAutenticacao();
   },
 };
 </script>
-
-
 
 <style scoped>
 .container {
@@ -396,6 +607,29 @@ export default {
 .cursor-pointer {
   cursor: pointer;
 }
+
+#informacoespessois .card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Duas colunas */
+  gap: 15px;
+  /* Espaçamento entre as colunas */
+}
+
+#informacoespessois p {
+  margin-bottom: 10px;
+  word-break: break-word;
+  /* Evita quebra de layout com textos longos */
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+  #informacoespessois .card-body {
+    grid-template-columns: 1fr;
+    /* Em telas menores, uma coluna */
+  }
+}
+
 
 .modal-overlay {
   position: fixed;
@@ -426,5 +660,12 @@ export default {
 label {
   font-weight: bold;
   min-width: 80px;
+}
+
+.botoes-acao {
+  display: flex;
+  justify-content: space-between;
+  /* Um botão à esquerda e outro à direita */
+  margin-top: 20px;
 }
 </style>

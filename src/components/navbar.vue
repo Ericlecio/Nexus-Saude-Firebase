@@ -82,12 +82,6 @@ export default {
     async verificarUsuario() {
       const auth = getAuth();
       const db = getFirestore();
-      const storedUser = sessionStorage.getItem("user");
-
-      if (storedUser) {
-        this.user = JSON.parse(storedUser);
-        return;
-      }
 
       onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
@@ -101,10 +95,8 @@ export default {
 
             if (pacienteSnap.exists()) {
               this.user = { id: firebaseUser.uid, ...pacienteSnap.data(), tipo: "paciente" };
-              sessionStorage.setItem("user", JSON.stringify(this.user));
             } else if (medicoSnap.exists()) {
               this.user = { id: firebaseUser.uid, ...medicoSnap.data(), tipo: "medico" };
-              sessionStorage.setItem("user", JSON.stringify(this.user));
             } else {
               this.user = null;
               await signOut(auth);
@@ -118,6 +110,7 @@ export default {
         }
       });
     },
+
   },
   mounted() {
     this.verificarUsuario();

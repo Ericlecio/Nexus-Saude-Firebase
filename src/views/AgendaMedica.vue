@@ -158,25 +158,102 @@ export default {
                 }
             });
         },
-
         async carregarConsultas() {
             if (!this.medicoId) return;
             try {
                 const db = getFirestore();
+
+                // Buscar as consultas da tabela 'agendamentos'
                 const q = query(collection(db, "agendamentos"), where("medicoId", "==", this.medicoId));
                 const snapshot = await getDocs(q);
+                let consultasAgendadas = snapshot.empty ? [] : snapshot.docs.map((docSnap) => ({
+                    id: docSnap.id,
+                    ...docSnap.data(),
+                }));
 
-                this.consultas = snapshot.empty
-                    ? []
-                    : snapshot.docs.map((docSnap) => ({
-                        id: docSnap.id,
-                        ...docSnap.data(),
-                    }));
+                // Buscar a agenda do médico na tabela 'medicos'
+                const medicoRef = doc(db, "medicos", this.medicoId);
+                const medicoSnap = await getDoc(medicoRef);
+
+                let agendaConsultas = [];
+                if (medicoSnap.exists() && medicoSnap.data().agenda) {
+                    agendaConsultas = medicoSnap.data().agenda;
+                }
+
+                // Combinar ambas as listas
+                this.consultas = [...consultasAgendadas, ...agendaConsultas];
+
             } catch (error) {
                 console.error("Erro ao carregar consultas:", error);
                 alert("Erro ao carregar consultas.");
             } finally {
                 this.carregando = false;
+            }
+        },
+        confirmarAcao(id, acao) {
+            this.consultaSelecionada = id;
+            this.acaoSelecionada = acao;
+
+            let titulo = "";
+            let texto = "";
+
+            if (acao === "Presente") {
+                titulo = "Confirmar Presença";
+                texto = "Tem certeza de que deseja marcar esta consulta como Presente?";
+            } else if (acao === "Ausente") {
+                titulo = "Confirmar Ausência";
+                texto = "Tem certeza de que deseja marcar esta consulta como Ausente?";
+            } else if (acao === "cancelar") {
+                titulo = "Confirmar Cancelamento";
+                texto = "Tem certeza de que deseja cancelar esta consulta?";
+            }
+
+            this.modalMensagem = { titulo, texto };
+            this.showModal = true;
+        },
+        async confirmarAcaoModal() {
+            if (this.acaoSelecionada === "cancelar") {
+                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Cancelada pelo médico");
+            } else if (this.acaoSelecionada === "Presente") {
+                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Presente");
+            } else if (this.acaoSelecionada === "Ausente") {
+                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Ausente");
+            }
+            this.showModal = false; // Fecha o modal após a ação
+        },
+        async atualizarSituacaoConsulta(id, situacao) {
+            const db = getFirestore();
+            const consultaRef = doc(db, "agendamentos", id);
+
+            try {
+                const consultaSnap = await getDoc(consultaRef);
+                if (consultaSnap.exists()) {
+                    const consulta = consultaSnap.data();
+                    consulta.situacao = situacao;
+
+                    // Adicionar consulta à agenda do médico
+                    const medicoRef = doc(db, "medicos", consulta.medicoId);
+                    await updateDoc(medicoRef, { agenda: arrayUnion(consulta) });
+
+                    // Adicionar consulta à lista de consultas do paciente
+                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
+                    await updateDoc(pacienteRef, { consultas: arrayUnion(consulta) });
+
+                    // Remover a consulta da tabela de agendamentos
+                    await deleteDoc(consultaRef);
+
+                    // Atualizar a lista de consultas na interface
+                    this.consultas = this.consultas.filter((c) => c.id !== id);
+
+                    alert(`Consulta marcada como ${situacao}`);
+                } else {
+                    alert("Consulta não encontrada.");
+                }
+            } catch (error) {
+                console.error("Erro ao atualizar a situação da consulta:", error);
+                alert("Erro ao atualizar a situação. Tente novamente.");
+            } finally {
+                this.showModal = false;
             }
         },
     },

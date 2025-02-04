@@ -1,13 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
-import CadastroView from "@/views/CadastroView.vue";
+import CadastroMedicoView from "@/views/CadastroMedicoView.vue";
 import ContatoView from "@/views/ContatoView.vue";
 import SobreView from "@/views/SobreView.vue";
-import MedicosView from "@/views/MedicosView.vue";
-import DetalhesmedicosView from "@/views/DetalhesmedicosView.vue";
 import AgendamentoConsultasView from "@/views/AgendamentoConsultasView.vue";
-import ConsultasAgendandasView from "@/views/ConsultasAgendandasView.vue";
+import ConsultasPacienteView from "@/views/ConsultasPacienteView.vue";
 import PerfilMedico from "@/views/PerfilMedico.vue";
 import PerfilPaciente from "@/views/PerfilPaciente.vue";
 import AgendaMedica from "@/views/AgendaMedica.vue";
@@ -27,8 +25,8 @@ const router = createRouter({
     },
     {
       path: "/cadastro",
-      name: "Cadastro",
-      component: CadastroView,
+      name: "CadastroMedicoView",
+      component: CadastroMedicoView,
     },
     {
       path: "/contato",
@@ -42,19 +40,8 @@ const router = createRouter({
     },
     {
       path: "/consultasAgendadas",
-      name: "Consultas",
-      component: ConsultasAgendandasView,
-    },
-    {
-      path: "/medicos",
-      name: "Medicos",
-      component: MedicosView,
-    },
-    {
-      path: "/medicos/:id",
-      name: "DetalhesMedicos",
-      props: true,
-      component: DetalhesmedicosView,
+      name: "ConsultasPacienteView",
+      component: ConsultasPacienteView,
     },
     {
       path: "/Agendamento",

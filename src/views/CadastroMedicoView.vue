@@ -500,7 +500,11 @@ export default {
 
       } catch (error) {
         console.error("Erro ao cadastrar médico: ", error);
-        alert("Erro ao cadastrar médico. Tente novamente.");
+        if (error.code === "auth/weak-password") {
+          alert("A senha deve ter no mínimo 6 dígitos.");
+        } else {
+          alert("Erro ao cadastrar médico. Tente novamente.");
+        }
       }
     },
   },

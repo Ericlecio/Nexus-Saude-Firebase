@@ -143,26 +143,27 @@ export default {
         }
 
         const db = getFirestore();
+
+        // 🔹 Buscar as consultas na coleção 'agendamentos'
         const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.id));
         const snapshot = await getDocs(q);
+        let agendamentosAtuais = snapshot.empty ? [] : snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
 
-        this.agendamentos = snapshot.empty
-          ? []
-          : snapshot.docs.map((docSnap) => {
-            const dados = docSnap.data();
-            return {
-              id: docSnap.id,
-              especialidade: dados.especialidade || "Não informado",
-              medicoNome: dados.medicoNome || "Nome não disponível",
-              local: dados.local || "Não informado",
-              data: dados.data || "Não informado",
-              situacao: dados.situacao || "Não informado",
-              telefoneConsultorio: dados.telefoneConsultorio || "Não informado", // 🔹 Novo campo
-              valorConsulta: dados.valorConsulta
-                ? `R$ ${dados.valorConsulta}`
-                : "Não informado", // 🔹 Novo campo formatado
-            };
-          });
+        // 🔹 Buscar as consultas dentro do documento do paciente
+        const pacienteRef = doc(db, "pacientes", user.id);
+        const pacienteSnap = await getDoc(pacienteRef);
+        let consultasPassadas = [];
+
+        if (pacienteSnap.exists() && pacienteSnap.data().consultas) {
+          consultasPassadas = pacienteSnap.data().consultas;
+        }
+
+        // 🔹 Combinar ambas as listas (agendamentos + consultas passadas)
+        this.agendamentos = [...agendamentosAtuais, ...consultasPassadas];
+
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos.");
