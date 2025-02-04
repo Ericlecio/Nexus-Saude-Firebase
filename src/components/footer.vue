@@ -29,10 +29,6 @@ export default {
                     <li><a href="/">Home</a></li>
                     <li><a href="/sobre">Quem Somos</a></li>
                     <li><a href="/contato">Fale Conosco</a></li>
-                    <!-- <li><a href="#">Política de Privacidade</a></li>
-                    <li><a href="#">Termos de Uso</a></li>
-                    <li><a href="#">Mapa do Site</a></li>
-                    <li><a href="#">FAQ</a></li> -->
                 </ul>
             </div>
 
@@ -58,8 +54,6 @@ export default {
     </footer>
 </template>
 
-
-
 <style scoped>
 footer {
     background-color: #1a1a3c;
@@ -69,7 +63,6 @@ footer {
     text-align: center;
 }
 
-/* Distribui os itens em três colunas */
 .container {
     display: flex;
     justify-content: space-between;
@@ -80,7 +73,6 @@ footer {
     margin: auto;
 }
 
-/* Define tamanhos fixos para melhor alinhamento */
 .footer-section {
     flex: 1;
     min-width: 250px;
@@ -88,7 +80,6 @@ footer {
     padding: 10px;
 }
 
-/* Mantém a logo no tamanho original */
 .footer-logo {
     width: auto;
     max-width: 80px;
@@ -96,7 +87,6 @@ footer {
     margin-bottom: 15px;
 }
 
-/* Centraliza a seção do meio */
 .center {
     text-align: center;
 }
@@ -109,7 +99,6 @@ footer {
     text-align: right;
 }
 
-/* Ajusta a lista de links */
 .nav-links {
     list-style: none;
     padding: 0;
@@ -131,7 +120,6 @@ footer {
     color: #00ff9d;
 }
 
-/* Ícones das redes sociais */
 .social-media {
     display: flex;
     justify-content: flex-end;
@@ -150,7 +138,6 @@ footer {
     color: #fff;
 }
 
-/* Voltar ao topo */
 .back-to-top {
     margin-top: 20px;
 }
@@ -171,7 +158,6 @@ footer {
     margin-top: 20px;
 }
 
-/* Responsividade para telas médias */
 @media (max-width: 992px) {
     .container {
         flex-direction: column;
@@ -188,7 +174,6 @@ footer {
     }
 }
 
-/* Responsividade para telas menores */
 @media (max-width: 768px) {
     footer {
         padding: 20px 10px;
@@ -196,7 +181,6 @@ footer {
 
     .footer-logo {
         max-width: 60px;
-        /* Reduz a logo */
         margin: 10px auto;
     }
 
@@ -204,12 +188,10 @@ footer {
     .center,
     .right {
         text-align: center;
-        /* Centraliza todas as seções */
     }
 
     .nav-links li {
         margin: 5px 0;
-        /* Reduz o espaço entre links */
     }
 
     .social-media {
@@ -220,7 +202,6 @@ footer {
 
     .social-media a {
         font-size: 1.5rem;
-        /* Ícones menores */
     }
 
     .back-to-top {
@@ -229,7 +210,6 @@ footer {
 
     .back-to-top a {
         font-size: 1rem;
-        /* Texto do link menor */
     }
 
     .copyright {
