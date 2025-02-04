@@ -85,12 +85,11 @@
 </template>
 
 <script>
-import { collection, getDocs, query, where, doc, updateDoc, arrayUnion, getDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, updateDoc, getDoc, addDoc, deleteDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
-
+import BotaoVoltar from "@/components/BotaoVoltar.vue";
 
 export default {
   name: "MinhasConsultas",
@@ -144,26 +143,24 @@ export default {
 
         const db = getFirestore();
 
-        // 🔹 Buscar as consultas na coleção 'agendamentos'
-        const q = query(collection(db, "agendamentos"), where("pacienteId", "==", user.id));
-        const snapshot = await getDocs(q);
-        let agendamentosAtuais = snapshot.empty ? [] : snapshot.docs.map((docSnap) => ({
+        // Buscar consultas confirmadas na tabela 'agendamentos'
+        const qAgendamentos = query(collection(db, "agendamentos"), where("pacienteId", "==", user.id));
+        const snapshotAgendamentos = await getDocs(qAgendamentos);
+        let agendamentosAtuais = snapshotAgendamentos.empty ? [] : snapshotAgendamentos.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data(),
         }));
 
-        // 🔹 Buscar as consultas dentro do documento do paciente
-        const pacienteRef = doc(db, "pacientes", user.id);
-        const pacienteSnap = await getDoc(pacienteRef);
-        let consultasPassadas = [];
+        // Buscar consultas canceladas e finalizadas na tabela 'historicoConsultas'
+        const qHistorico = query(collection(db, "historicoConsultas"), where("pacienteId", "==", user.id));
+        const snapshotHistorico = await getDocs(qHistorico);
+        let historicoConsultas = snapshotHistorico.empty ? [] : snapshotHistorico.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
 
-        if (pacienteSnap.exists() && pacienteSnap.data().consultas) {
-          consultasPassadas = pacienteSnap.data().consultas;
-        }
-
-        // 🔹 Combinar ambas as listas (agendamentos + consultas passadas)
-        this.agendamentos = [...agendamentosAtuais, ...consultasPassadas];
-
+        // Combinar ambas as listas
+        this.agendamentos = [...agendamentosAtuais, ...historicoConsultas];
       } catch (error) {
         console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos.");
@@ -188,42 +185,20 @@ export default {
 
       try {
         const consultaSnap = await getDoc(consultaRef);
-
         if (consultaSnap.exists()) {
           const consulta = consultaSnap.data();
 
-          // Atualizar a situação antes de remover
-          await updateDoc(consultaRef, { situacao: "Cancelada pelo paciente" });
-
-          // Copiar o registro para a tabela do paciente
-          const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
-          await updateDoc(pacienteRef, {
-            consultas: arrayUnion({
-              id: consultaRef.id,
-              ...consulta,
-              situacao: "Cancelada pelo paciente",
-            }),
+          // Criar um histórico da consulta cancelada
+          await addDoc(collection(db, "historicoConsultas"), {
+            ...consulta,
+            situacao: "Cancelada pelo paciente",
+            dataCancelamento: new Date().toISOString()
           });
 
-          // Copiar o registro para a agenda do médico
-          const medicoRef = doc(db, "medicos", consulta.medicoId);
-          await updateDoc(medicoRef, {
-            agenda: arrayUnion({
-              id: consultaRef.id,
-              ...consulta,
-              situacao: "Cancelada pelo paciente",
-            }),
-          });
-
-          // Remover o registro da tabela agendamentos
+          // Remover a consulta da tabela agendamentos
           await deleteDoc(consultaRef);
 
-          // Atualizar a lista de agendamentos na interface
-          this.agendamentos = this.agendamentos.filter(
-            (a) => a.id !== this.agendamentoSelecionado
-          );
-
-          alert("Consulta cancelada com sucesso e movida para o histórico do paciente e do médico.");
+          alert("Consulta cancelada com sucesso e movida para o histórico.");
         } else {
           alert("Consulta não encontrada.");
         }
@@ -232,7 +207,7 @@ export default {
         alert("Erro ao cancelar consulta. Tente novamente.");
       } finally {
         this.showModal = false;
-        this.carregarAgendamentos();
+        this.carregarAgendamentos(); // Recarregar a lista para refletir a alteração
       }
     },
 
@@ -247,6 +222,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .div-principal {

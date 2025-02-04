@@ -159,7 +159,8 @@ import {
   query,
   collection,
   where,
-  getDocs
+  getDocs,
+  writeBatch
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
@@ -199,7 +200,9 @@ export default {
             if (pacienteSnap.exists()) {
               this.pacienteId = firebaseUser.uid;
               this.paciente = pacienteSnap.data();
-              this.formEdit = { ...this.paciente };
+
+              // Após carregar os dados do paciente, carregar o histórico de consultas
+              await this.carregarHistoricoConsultas();
             } else {
               alert("Paciente não encontrado no sistema.");
               await signOut(auth);
@@ -217,8 +220,15 @@ export default {
     },
 
     abrirModal() {
+      if (!this.paciente) return;
+
+      // Criar uma cópia dos dados do paciente para edição, garantindo que os valores apareçam no modal
+      this.formEdit = { ...this.paciente };
+
+      // Exibir o modal
       this.showModalEdit = true;
-    },
+    }
+    ,
 
     fecharModal() {
       this.showModalEdit = false;
@@ -271,10 +281,18 @@ export default {
     async deletarConta() {
       try {
         const auth = getAuth();
+        const user = auth.currentUser;
         const db = getFirestore();
-        const pacienteRef = doc(db, "pacientes", this.pacienteId);
 
-        // Excluir todos os agendamentos relacionados ao paciente
+        if (!user) {
+          alert("Usuário não autenticado.");
+          return;
+        }
+
+        // Criar um batch para operações em lote
+        const batch = writeBatch(db);
+
+        // Buscar todos os agendamentos do paciente
         const agendamentosQuery = query(
           collection(db, "agendamentos"),
           where("pacienteId", "==", this.pacienteId)
@@ -282,20 +300,89 @@ export default {
         const agendamentosSnapshot = await getDocs(agendamentosQuery);
 
         if (!agendamentosSnapshot.empty) {
-          for (const agendamento of agendamentosSnapshot.docs) {
-            await deleteDoc(agendamento.ref);
+          for (const agendamentoDoc of agendamentosSnapshot.docs) {
+            const agendamento = agendamentoDoc.data();
+
+            // Criar um novo documento no histórico de consultas
+            const historicoRef = doc(collection(db, "historicoConsultas"));
+            batch.set(historicoRef, {
+              pacienteId: agendamento.pacienteId,
+              pacienteNome: agendamento.pacienteNome,
+              pacienteTelefone: agendamento.pacienteTelefone,
+              medicoId: agendamento.medicoId,
+              medicoNome: agendamento.medicoNome,
+              data: agendamento.data,
+              local: agendamento.local,
+              especialidade: agendamento.especialidade,
+              valorConsulta: agendamento.valorConsulta,
+              situacao: "Paciente removido do sistema",
+            });
+
+            // Excluir o agendamento original
+            batch.delete(agendamentoDoc.ref);
           }
         }
 
-        // Excluir conta do paciente
-        await deleteDoc(pacienteRef);
-        await auth.currentUser.delete();
+        // Excluir a conta do paciente no Firestore
+        const pacienteRef = doc(db, "pacientes", this.pacienteId);
+        batch.delete(pacienteRef);
 
-        alert("Conta excluída com sucesso.");
-        this.$router.push("/login");
+        // Executar todas as operações em lote
+        await batch.commit();
+        console.log("✅ Histórico atualizado e paciente removido com sucesso.");
+
+        // Excluir a conta do Firebase Authentication
+        await deleteUser(user);
+
+        alert("Conta excluída com sucesso!");
+        this.$router.push("/login"); // Redirecionamento após exclusão
       } catch (error) {
         console.error("Erro ao excluir conta:", error);
-        alert("Erro ao excluir conta. Tente novamente.");
+
+        if (error.code === "auth/wrong-password") {
+          alert("Senha incorreta. Tente novamente.");
+        } else if (error.code === "auth/too-many-requests") {
+          alert("Muitas tentativas. Tente novamente mais tarde.");
+        } else if (error.code === "auth/requires-recent-login") {
+          alert("Você precisa fazer login novamente por segurança.");
+        } else {
+          alert(`Erro ao excluir conta: ${error.message}`);
+        }
+      } finally {
+        this.senhaExclusao = ""; // Limpar o campo de senha após a tentativa
+        this.fecharModal();
+      }
+    },
+
+    async carregarHistoricoConsultas() {
+      if (!this.pacienteId) return;
+
+      try {
+        const db = getFirestore();
+
+        // Buscar histórico de consultas da tabela "historicoConsultas"
+        const qHistorico = query(collection(db, "historicoConsultas"), where("pacienteId", "==", this.pacienteId));
+        const snapshotHistorico = await getDocs(qHistorico);
+
+        const consultas = snapshotHistorico.empty ? [] : snapshotHistorico.docs.map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            data: data.data || "Sem data",
+            medicoNome: data.medicoNome || "Não informado",
+            especialidade: data.especialidade || "Não informado",
+            local: data.local || "Não informado",
+            situacao: data.situacao || "Sem status",
+          };
+        });
+
+        // Atualiza o histórico de consultas dentro do objeto paciente
+        this.paciente.consultas = consultas;
+
+        console.log("📌 Histórico de consultas carregado:", this.paciente.consultas);
+      } catch (error) {
+        console.error("Erro ao carregar histórico de consultas:", error);
+        alert("Erro ao carregar o histórico de consultas.");
       }
     },
 
@@ -332,8 +419,6 @@ export default {
   },
 };
 </script>
-
-
 
 <style scoped>
 .container {

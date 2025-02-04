@@ -1,13 +1,12 @@
 <template>
   <Navbar />
   <div class="container-fluid py-5 mt-5">
-
     <div class="row justify-content-center align-items-center">
       <div class="col-lg-10 col-md-12">
+        <BotaoVoltar />
         <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
           <div class="row g-0">
             <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center bg-light">
-              <BotaoVoltar />
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem Nexus Saúde" class="img-fluid logo" />
             </div>
             <div class="col-md-8 p-5 bg-white">
@@ -100,7 +99,6 @@
 
   <Footer />
 </template>
-
 
 <script>
 import Navbar from "@/components/Navbar.vue";
@@ -202,7 +200,7 @@ export default {
             id: doc.id,
             ...data,
             telefoneConsultorio: data.telefoneConsultorio || "Não informado",
-            valorConsulta: data.valorConsulta ? `R$ ${data.valorConsulta}` : "Não informado"
+            valorConsulta: data.valorConsulta ? `${data.valorConsulta}` : "Não informado"
           };
         });
 
@@ -214,7 +212,6 @@ export default {
         alert("Erro ao carregar médicos. Tente novamente.");
       }
     },
-
 
     filterMedicosByEspecialidade() {
       this.medicosFiltrados = this.medicos.filter(
@@ -231,7 +228,7 @@ export default {
       if (medicoSelecionado) {
         this.form.medicoNome = medicoSelecionado.nomeCompleto || "Nome não informado";
         this.form.telefoneConsultorio = medicoSelecionado.telefoneConsultorio || "Não informado";
-        this.form.valorConsulta = medicoSelecionado.valorConsulta ? `R$ ${medicoSelecionado.valorConsulta},00` : "Não informado";
+        this.form.valorConsulta = medicoSelecionado.valorConsulta ? `${medicoSelecionado.valorConsulta},00` : "Não informado";
 
         console.log("✅ Dados do médico selecionado:", medicoSelecionado); // Para verificar se os dados estão sendo carregados corretamente
 
@@ -243,75 +240,64 @@ export default {
       }
     },
 
-
     async carregarHorarios(medico) {
-      if (medico.diasAtendimento) {
-        const hoje = new Date();
-        const diasSemana = {
-          segunda: 1,
-          terca: 2,
-          quarta: 3,
-          quinta: 4,
-          sexta: 5,
-          sabado: 6,
-        };
+      if (!medico.diasAtendimento) {
+        this.horariosDisponiveis = [{ horario: "Nenhum horário disponível", disponivel: false }];
+        return;
+      }
 
-        const horarios = [];
-        const umMesDepois = new Date();
-        umMesDepois.setDate(hoje.getDate() + 30); // Exibir horários até 1 mês
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0); // Remove horas para comparação correta
 
-        for (const [dia, horariosDia] of Object.entries(medico.diasAtendimento)) {
-          if (horariosDia && horariosDia.length > 0) {
-            let dataConsulta = new Date(hoje);
+      const duasSemanasDepois = new Date();
+      duasSemanasDepois.setDate(hoje.getDate() + 14); // Definir limite de 2 semanas
 
-            while (dataConsulta <= umMesDepois) {
-              const diff = (diasSemana[dia] - dataConsulta.getDay() + 7) % 7;
-              dataConsulta.setDate(dataConsulta.getDate() + diff);
-              dataConsulta.setHours(0, 0, 0, 0); // Início do dia
+      const diasSemana = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
+      const horarios = [];
 
-              if (dataConsulta > umMesDepois) break;
+      for (let i = 0; i < 14; i++) { // Iterar pelos próximos 14 dias
+        const dataConsulta = new Date(hoje);
+        dataConsulta.setDate(hoje.getDate() + i);
+        dataConsulta.setHours(0, 0, 0, 0); // Resetando horário
 
-              // 🔹 Verifica a disponibilidade de cada horário antes de exibir
-              const horariosDiaDisponiveis = await Promise.all(
-                horariosDia.map(async (horario) => {
-                  const [hora, minuto] = horario.split(":").map(Number);
-                  const horarioCompleto = new Date(dataConsulta);
-                  horarioCompleto.setHours(hora, minuto, 0, 0);
+        const nomeDiaSemana = diasSemana[dataConsulta.getDay()];
 
-                  const disponivel = await this.verificarDisponibilidade(
-                    medico.id,
-                    horarioCompleto.toISOString()
-                  );
+        if (!medico.diasAtendimento[nomeDiaSemana]) continue; // Se o médico não atende nesse dia, pula para o próximo
 
-                  return disponivel ? { horario: `${dataConsulta.toLocaleDateString()} ${horario}` } : null;
-                })
-              );
+        for (const horario of medico.diasAtendimento[nomeDiaSemana]) {
+          const [hora, minuto] = horario.split(":").map(Number);
+          const horarioCompleto = new Date(dataConsulta);
+          horarioCompleto.setHours(hora, minuto, 0, 0);
 
-              // 🔹 Adiciona apenas os horários disponíveis
-              horarios.push(...horariosDiaDisponiveis.filter(Boolean));
-              dataConsulta.setDate(dataConsulta.getDate() + 7);
-            }
+          // Remover horários passados
+          if (horarioCompleto < new Date()) continue;
+
+          const horarioFormatado = `${horarioCompleto.toLocaleDateString("pt-BR")} ${horario}`;
+
+          const disponivel = await this.verificarDisponibilidade(medico.id, horarioFormatado);
+          if (disponivel) {
+            horarios.push({ horario: horarioFormatado });
           }
         }
-
-        this.horariosDisponiveis = horarios.length
-          ? horarios
-          : [{ horario: "Nenhum horário disponível", disponivel: false }];
-      } else {
-        this.horariosDisponiveis = [{ horario: "Nenhum horário disponível", disponivel: false }];
       }
+
+      this.horariosDisponiveis = horarios.length
+        ? horarios
+        : [{ horario: "Nenhum horário disponível", disponivel: false }];
     },
 
-    async verificarDisponibilidade(medicoId, horario) {
+    async verificarDisponibilidade(medicoId, horarioCompleto) {
       const db = getFirestore();
+
+      // Verifica se já existe um agendamento para esse horário
       const q = query(
         collection(db, "agendamentos"),
         where("medicoId", "==", medicoId),
-        where("data", "==", horario)
+        where("data", "==", horarioCompleto)
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.empty; // Retorna false se o horário já estiver ocupado
+      return querySnapshot.empty; // Retorna `true` se o horário está disponível, `false` se já estiver ocupado
     },
 
     async submitForm() {
@@ -351,7 +337,6 @@ export default {
         alert("Não foi possível agendar a consulta. Tente novamente.");
       }
     },
-
   },
 
   async mounted() {

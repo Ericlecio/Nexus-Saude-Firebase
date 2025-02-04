@@ -161,12 +161,13 @@
                 required />
 
               <label>Especialidade</label>
-              <select v-model="formEdit.especialidade" class="form-control">
-                <option>Cardiologia</option>
-                <option>Dermatologia</option>
-                <option>Ortopedia</option>
-                <option>Pediatria</option>
-                <option>Ginecologia</option>
+              <select v-model="formEdit.especialidade" id="especialidade" class="form-select" required>
+                <option value="" disabled selected>
+                  Selecione a especialidade
+                </option>
+                <option v-for="especialidade in especialidades" :key="especialidade" :value="especialidade">
+                  {{ especialidade }}
+                </option>
               </select>
 
               <label>UF</label>
@@ -256,7 +257,8 @@ import {
   collection,
   query,
   where,
-  getDocs
+  getDocs,
+  writeBatch
 } from "firebase/firestore";
 
 import {
@@ -292,25 +294,70 @@ export default {
       ufOptions: [
         "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
       ],
+      especialidades: [
+        "Pediatria",
+        "Cardiologia",
+        "Dermatologia",
+        "Ortopedia",
+        "Neurologia",
+        "Ginecologia",
+        "Urologia",
+        "Oftalmologia",
+        "Endocrinologia",
+        "Gastroenterologia",
+        "Psiquiatria",
+        "Otorrinolaringologia",
+        "Reumatologia",
+        "Nefrologia",
+        "Oncologia",
+        "Hematologia",
+        "Pneumologia",
+        "Infectologia",
+        "Cirurgia Geral",
+        "Anestesiologia",
+        "Clínica Médica",
+        "Medicina do Trabalho",
+        "Medicina Esportiva",
+        "Medicina Intensiva",
+        "Radiologia",
+        "Hepatologia",
+        "Angiologia",
+        "Nutrologia",
+        "Geriatria",
+        "Imunologia",
+      ],
     };
   },
   methods: {
     async carregarAgenda() {
-      if (!this.medico?.agenda || !Array.isArray(this.medico.agenda)) {
-        this.agenda = [];
-        return;
-      }
+      if (!this.medicoId) return;
 
-      this.agenda = this.medico.agenda.map((consulta) => ({
-        id: consulta.id,
-        pacienteNome: consulta.pacienteNome || "Não informado",
-        pacienteTelefone: consulta.pacienteTelefone || "Não informado",
-        data: consulta.data || "Sem data",
-        local: consulta.local || "Não informado",
-        especialidade: consulta.especialidade || "Não informado",
-        valorConsulta: consulta.valorConsulta || "Não informado",
-        situacao: consulta.situacao || "Sem status",
-      }));
+      try {
+        const db = getFirestore();
+
+        // Buscar histórico de consultas da tabela "historicoConsultas"
+        const qHistorico = query(collection(db, "historicoConsultas"), where("medicoId", "==", this.medicoId));
+        const snapshotHistorico = await getDocs(qHistorico);
+
+        this.agenda = snapshotHistorico.empty ? [] : snapshotHistorico.docs.map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            pacienteNome: data.pacienteNome || "Não informado",
+            pacienteTelefone: data.pacienteTelefone || "Não informado",
+            data: data.data || "Sem data",
+            local: data.local || "Não informado",
+            especialidade: data.especialidade || "Não informado",
+            valorConsulta: data.valorConsulta || "Não informado",
+            situacao: data.situacao || "Sem status",
+          };
+        });
+
+        console.log("📌 Histórico de consultas carregado:", this.agenda);
+      } catch (error) {
+        console.error("Erro ao carregar histórico de consultas:", error);
+        alert("Erro ao carregar o histórico de consultas.");
+      }
     },
     formatarCPF(event) {
       let cpf = event.target.value.replace(/\D/g, "");
@@ -330,60 +377,32 @@ export default {
 
           if (medicoSnap.exists()) {
             this.medicoId = user.uid;
-            const medicoData = medicoSnap.data();
+            this.medico = medicoSnap.data();
 
-            this.medico = medicoData; // 🚀 Definir o médico primeiro
-
-            // Garantir que diasAtendimento sempre esteja inicializado
-            this.formEdit = {
-              ...medicoData,
-              valorConsulta: medicoData.valorConsulta || "R$ 0,00",
-              diasAtendimento: medicoData.diasAtendimento || {},
-            };
-
-            if (this.medico.duracaoConsulta) {
-              this.duracaoConsulta = this.medico.duracaoConsulta;
-            }
-
-            // Inicializar dias da semana, se não existirem
-            this.diasSemana.forEach((dia) => {
-              if (!this.formEdit.diasAtendimento[dia]) {
-                this.formEdit.diasAtendimento[dia] = { inicio: "", fim: "" };
-              } else if (Array.isArray(this.formEdit.diasAtendimento[dia])) {
-                this.formEdit.diasAtendimento[dia] = {
-                  inicio: this.formEdit.diasAtendimento[dia][0],
-                  fim: this.formEdit.diasAtendimento[dia][
-                    this.formEdit.diasAtendimento[dia].length - 1
-                  ],
-                };
-              }
-            });
-
-            // ✅ Carregar o histórico de consultas (agenda) após definir o médico
-            if (Array.isArray(medicoData.agenda)) {
-              this.agenda = medicoData.agenda.map((consulta) => ({
-                id: consulta.id,
-                pacienteNome: consulta.pacienteNome || "Não informado",
-                pacienteTelefone: consulta.pacienteTelefone || "Não informado",
-                data: consulta.data || "Sem data",
-                local: consulta.local || "Não informado",
-                especialidade: consulta.especialidade || "Não informado",
-                valorConsulta: consulta.valorConsulta || "Não informado",
-                situacao: consulta.situacao || "Sem status",
-              }));
-            } else {
-              this.agenda = []; // Caso não haja agenda, garantir que seja um array vazio
-            }
+            // Após carregar os dados do médico, carregar o histórico de consultas
+            await this.carregarAgenda();
+          } else {
+            alert("Acesso negado! Apenas médicos podem acessar esta página.");
+            this.$router.push("/login");
           }
+        } else {
+          alert("Você precisa estar logado para acessar esta página.");
+          this.$router.push("/login");
         }
       });
     },
     abrirModal(campo) {
+      if (!this.medico) return;
+
+      // Criar uma cópia dos dados do médico para edição, garantindo que os valores apareçam no modal
+      this.formEdit = { ...this.medico };
+
       this.campoSelecionado = campo;
+
       if (campo === "senha") {
         this.showModalSenha = true;
       } else if (campo === "exclusao") {
-        this.showModalExclusao = true; // Garante que o modal de exclusão seja exibido
+        this.showModalExclusao = true;
       } else {
         this.showModalEdit = true;
       }
@@ -510,8 +529,7 @@ export default {
       let valor = event.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
       valor = (parseInt(valor, 10) / 100).toFixed(2);    // Converte para formato de moeda
       this.formEdit.valorConsulta = `R$ ${valor.replace('.', ',')}`; // Formatação final
-    }
-    ,
+    },
     validarCRM(event) {
       this.formEdit.crm = event.target.value.replace(/\D/g, "").slice(0, 6);
     },
@@ -564,11 +582,48 @@ export default {
           return;
         }
 
+        // Reautenticação do usuário
         const credential = EmailAuthProvider.credential(user.email, this.senhaExclusao);
         await reauthenticateWithCredential(user, credential);
 
-        // Excluir o registro do médico no Firestore
-        await deleteDoc(doc(db, "medicos", this.medicoId));
+        // Criar um batch para operações em lote
+        const batch = writeBatch(db);
+
+        // Buscar todos os agendamentos do médico
+        const agendamentosQuery = query(collection(db, "agendamentos"), where("medicoId", "==", this.medicoId));
+        const agendamentosSnapshot = await getDocs(agendamentosQuery);
+
+        if (!agendamentosSnapshot.empty) {
+          for (const agendamentoDoc of agendamentosSnapshot.docs) {
+            const agendamento = agendamentoDoc.data();
+
+            // Criar um novo documento no histórico de consultas
+            const historicoRef = doc(collection(db, "historicoConsultas"));
+            batch.set(historicoRef, {
+              medicoId: agendamento.medicoId,
+              medicoNome: agendamento.medicoNome,
+              pacienteId: agendamento.pacienteId,
+              pacienteNome: agendamento.pacienteNome,
+              pacienteTelefone: agendamento.pacienteTelefone,
+              data: agendamento.data,
+              local: agendamento.local,
+              especialidade: agendamento.especialidade,
+              valorConsulta: agendamento.valorConsulta,
+              situacao: "Médico removido do sistema",
+            });
+
+            // Excluir o agendamento original
+            batch.delete(agendamentoDoc.ref);
+          }
+        }
+
+        // Excluir o médico do Firestore
+        const medicoRef = doc(db, "medicos", this.medicoId);
+        batch.delete(medicoRef);
+
+        // Commit das operações em lote
+        await batch.commit();
+        console.log("✅ Histórico atualizado e médico removido com sucesso.");
 
         // Excluir a conta do Firebase Authentication
         await deleteUser(user);

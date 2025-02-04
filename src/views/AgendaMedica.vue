@@ -86,23 +86,11 @@
 </template>
 
 <script>
-import {
-    collection,
-    getDocs,
-    query,
-    where,
-    doc,
-    updateDoc,
-    arrayUnion,
-    getDoc,
-    deleteDoc,
-} from "firebase/firestore";
+import { collection, getDocs, query, where, doc, updateDoc, getDoc, addDoc, deleteDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
-
+import BotaoVoltar from "@/components/BotaoVoltar.vue";
 
 export default {
     name: "AgendaMedico",
@@ -132,57 +120,49 @@ export default {
     },
     computed: {
         consultasFiltradas() {
-            return this.consultas.filter((consulta) => consulta.situacao === this.filtroSituacao);
+            return this.consultas.filter(
+                (consulta) => consulta.situacao === this.filtroSituacao
+            );
+        },
+    },
+    watch: {
+        filtroSituacao: {
+            handler() {
+                this.carregarConsultas();
+            },
+            immediate: true,
         },
     },
     methods: {
-        async verificarAutenticacao() {
-            const auth = getAuth();
-            const db = getFirestore();
-
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    const medicoRef = doc(db, "medicos", user.uid);
-                    const medicoSnap = await getDoc(medicoRef);
-
-                    if (medicoSnap.exists()) {
-                        this.medicoId = user.uid;
-                        this.carregarConsultas();
-                    } else {
-                        alert("Acesso negado! Apenas médicos podem acessar esta página.");
-                        this.$router.push("/login");
-                    }
-                } else {
-                    alert("Você precisa estar logado para acessar esta página.");
-                    this.$router.push("/login");
-                }
-            });
-        },
         async carregarConsultas() {
-            if (!this.medicoId) return;
             try {
+                const user = JSON.parse(sessionStorage.getItem("user"));
+                if (!user || user.tipo !== "medico" || !user.id) {
+                    alert("Apenas médicos podem acessar esta página. Faça login.");
+                    this.$router.push("/login");
+                    return;
+                }
+
                 const db = getFirestore();
 
-                // Buscar as consultas da tabela 'agendamentos'
-                const q = query(collection(db, "agendamentos"), where("medicoId", "==", this.medicoId));
-                const snapshot = await getDocs(q);
-                let consultasAgendadas = snapshot.empty ? [] : snapshot.docs.map((docSnap) => ({
+                // Buscar consultas confirmadas na tabela 'agendamentos'
+                const qAgendamentos = query(collection(db, "agendamentos"), where("medicoId", "==", user.id));
+                const snapshotAgendamentos = await getDocs(qAgendamentos);
+                let consultasAtuais = snapshotAgendamentos.empty ? [] : snapshotAgendamentos.docs.map((docSnap) => ({
                     id: docSnap.id,
                     ...docSnap.data(),
                 }));
 
-                // Buscar a agenda do médico na tabela 'medicos'
-                const medicoRef = doc(db, "medicos", this.medicoId);
-                const medicoSnap = await getDoc(medicoRef);
-
-                let agendaConsultas = [];
-                if (medicoSnap.exists() && medicoSnap.data().agenda) {
-                    agendaConsultas = medicoSnap.data().agenda;
-                }
+                // Buscar consultas canceladas e finalizadas na tabela 'historicoConsultas'
+                const qHistorico = query(collection(db, "historicoConsultas"), where("medicoId", "==", user.id));
+                const snapshotHistorico = await getDocs(qHistorico);
+                let historicoConsultas = snapshotHistorico.empty ? [] : snapshotHistorico.docs.map((docSnap) => ({
+                    id: docSnap.id,
+                    ...docSnap.data(),
+                }));
 
                 // Combinar ambas as listas
-                this.consultas = [...consultasAgendadas, ...agendaConsultas];
-
+                this.consultas = [...consultasAtuais, ...historicoConsultas];
             } catch (error) {
                 console.error("Erro ao carregar consultas:", error);
                 alert("Erro ao carregar consultas.");
@@ -190,9 +170,10 @@ export default {
                 this.carregando = false;
             }
         },
+
         confirmarAcao(id, acao) {
             this.consultaSelecionada = id;
-            this.acaoSelecionada = acao;
+            this.acaoSelecionada = acao === "cancelar" ? "Cancelada pelo médico" : acao;
 
             let titulo = "";
             let texto = "";
@@ -211,16 +192,14 @@ export default {
             this.modalMensagem = { titulo, texto };
             this.showModal = true;
         },
+
         async confirmarAcaoModal() {
-            if (this.acaoSelecionada === "cancelar") {
-                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Cancelada pelo médico");
-            } else if (this.acaoSelecionada === "Presente") {
-                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Presente");
-            } else if (this.acaoSelecionada === "Ausente") {
-                await this.atualizarSituacaoConsulta(this.consultaSelecionada, "Ausente");
+            if (this.acaoSelecionada) {
+                await this.atualizarSituacaoConsulta(this.consultaSelecionada, this.acaoSelecionada);
             }
-            this.showModal = false; // Fecha o modal após a ação
+            this.showModal = false;
         },
+
         async atualizarSituacaoConsulta(id, situacao) {
             const db = getFirestore();
             const consultaRef = doc(db, "agendamentos", id);
@@ -231,38 +210,30 @@ export default {
                     const consulta = consultaSnap.data();
                     consulta.situacao = situacao;
 
-                    // Adicionar consulta à agenda do médico
-                    const medicoRef = doc(db, "medicos", consulta.medicoId);
-                    await updateDoc(medicoRef, { agenda: arrayUnion(consulta) });
+                    await addDoc(collection(db, "historicoConsultas"), {
+                        ...consulta,
+                        situacao: situacao,
+                        dataAtualizacao: new Date().toISOString()
+                    });
 
-                    // Adicionar consulta à lista de consultas do paciente
-                    const pacienteRef = doc(db, "pacientes", consulta.pacienteId);
-                    await updateDoc(pacienteRef, { consultas: arrayUnion(consulta) });
-
-                    // Remover a consulta da tabela de agendamentos
                     await deleteDoc(consultaRef);
 
-                    // Atualizar a lista de consultas na interface
-                    this.consultas = this.consultas.filter((c) => c.id !== id);
-
                     alert(`Consulta marcada como ${situacao}`);
+                    this.carregarConsultas();
                 } else {
                     alert("Consulta não encontrada.");
                 }
             } catch (error) {
                 console.error("Erro ao atualizar a situação da consulta:", error);
                 alert("Erro ao atualizar a situação. Tente novamente.");
-            } finally {
-                this.showModal = false;
             }
         },
     },
     mounted() {
-        this.verificarAutenticacao();
+        this.carregarConsultas();
     },
 };
 </script>
-
 
 <style scoped>
 .div-principal {
