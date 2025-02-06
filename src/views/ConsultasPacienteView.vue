@@ -79,7 +79,7 @@
         </div>
       </div>
     </div>
-
+    <BotaoMarque />
     <Footer />
   </div>
 </template>
@@ -90,6 +90,7 @@ import { getFirestore } from "firebase/firestore";
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
 import BotaoVoltar from "@/components/BotaoVoltar.vue";
+import BotaoMarque from "@/components/botaoMarque.vue";
 
 export default {
   name: "MinhasConsultas",
@@ -97,6 +98,7 @@ export default {
     Navbar,
     Footer,
     BotaoVoltar,
+    BotaoMarque,
   },
   data() {
     return {

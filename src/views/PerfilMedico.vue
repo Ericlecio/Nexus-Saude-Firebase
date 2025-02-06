@@ -22,11 +22,17 @@
             <p><strong>E-mail:</strong> {{ medico.email }}</p>
             <p><strong>Telefone:</strong> {{ medico.telefoneConsultorio }}</p>
             <p><strong>CRM:</strong> {{ medico.crm || "Não informado" }}</p>
-            <p><strong>Especialidade:</strong> {{ medico.especialidade || "Não informado" }}</p>
+            <p>
+              <strong>Especialidade:</strong>
+              {{ medico.especialidade || "Não informado" }}
+            </p>
             <p><strong>UF:</strong> {{ medico.uf }}</p>
             <p><strong>Sexo:</strong> {{ medico.sexo }}</p>
             <p><strong>CPF:</strong> {{ medico.cpf || "Não informado" }}</p>
-            <p><strong>Valor da Consulta:</strong> {{ medico.valorConsulta || "Não informado" }}</p>
+            <p>
+              <strong>Valor da Consulta:</strong>
+              {{ medico.valorConsulta || "Não informado" }}
+            </p>
             <p>
               <strong>Data de Nascimento:</strong>
               {{ medico.dataNascimento || "Não informado" }}
@@ -39,14 +45,14 @@
           <div class="card-body">
             <h5 class="card-title mb-3">
               <i class="fas fa-clock me-2 text-primary"></i>
-              <strong>Horários de Atendimento</strong>
+              <strong>Horários de Atend imento</strong>
               <i class="fas fa-edit ms-2 text-primary cursor-pointer" @click="abrirModal('horarios')"></i>
             </h5>
             <ul class="list-unstyled">
               <li v-for="(horarios, dia) in medico.diasAtendimento" :key="dia">
-                <strong> {{ formatDia(dia) }}:</strong>
-                <span v-if="horarios.inicio && horarios.fim">
-                  {{ horarios.inicio }} - {{ horarios.fim }}
+                <strong>{{ formatDia(dia) }}:</strong>
+                <span v-if="horarios.length > 0">
+                  {{ horarios[0] }} - {{ horarios[horarios.length - 1] }}
                 </span>
                 <span v-else class="text-muted">Sem horário definido</span>
               </li>
@@ -87,7 +93,9 @@
                 </tbody>
               </table>
             </div>
-            <p v-else class="text-muted text-center">Nenhuma consulta encontrada.</p>
+            <p v-else class="text-muted text-center">
+              Nenhuma consulta encontrada.
+            </p>
           </div>
         </div>
 
@@ -100,7 +108,6 @@
             Excluir Conta
           </button>
         </div>
-
       </div>
 
       <div v-else class="text-center mt-5">
@@ -108,7 +115,6 @@
           <span class="visually-hidden">Carregando...</span>
         </div>
       </div>
-
 
       <!-- Modal de Alteração de Senha -->
       <div v-if="showModalSenha" class="modal-overlay">
@@ -131,11 +137,16 @@
         </div>
       </div>
 
-
       <!-- Modal de Edição -->
       <div v-if="showModalEdit" class="modal-overlay">
         <div class="modal-content">
-          <h4>{{ campoSelecionado === 'info' ? 'Editar Informações Pessoais' : 'Editar Horários de Atendimento' }}</h4>
+          <h4>
+            {{
+              campoSelecionado === "info"
+                ? "Editar Informações Pessoais"
+                : "Editar Horários de Atendimento"
+            }}
+          </h4>
           <form @submit.prevent="salvarEdicao">
             <template v-if="campoSelecionado === 'info'">
               <label>Nome Completo</label>
@@ -152,13 +163,15 @@
               <input v-model="formEdit.crm" type="text" class="form-control" maxlength="6" @input="validarCRM"
                 required />
 
-              <label>CPF</label> <!-- CPF agora validado -->
+              <label>CPF</label>
+              <!-- CPF agora validado -->
               <input v-model="formEdit.cpf" type="text" class="form-control" required maxlength="14"
                 @input="formatarCPF" />
 
               <label>Valor da Consulta (R$)</label>
               <input v-model="formEdit.valorConsulta" type="text" class="form-control" @input="formatarValorConsulta"
-                required />
+                placeholder="0,00" required />
+
 
               <label>Especialidade</label>
               <select v-model="formEdit.especialidade" id="especialidade" class="form-select" required>
@@ -172,7 +185,9 @@
 
               <label>UF</label>
               <select v-model="formEdit.uf" class="form-control" required>
-                <option v-for="uf in ufOptions" :key="uf" :value="uf">{{ uf }}</option>
+                <option v-for="uf in ufOptions" :key="uf" :value="uf">
+                  {{ uf }}
+                </option>
               </select>
 
               <label>Data de Nascimento</label>
@@ -181,7 +196,9 @@
 
             <template v-if="campoSelecionado === 'horarios'">
               <div class="container">
-                <h4 class="text-center text-primary">Editar Horários de Atendimento</h4>
+                <h4 class="text-center text-primary">
+                  Editar Horários de Atendimento
+                </h4>
                 <div class="row">
                   <!-- Agora usando diasSemana para garantir a ordem correta -->
                   <div class="col-md-4 mb-3" v-for="dia in diasSemana" :key="dia">
@@ -192,14 +209,18 @@
                       <select v-model="formEdit.diasAtendimento[dia].inicio" class="form-select me-2"
                         @change="validateHorario(dia)">
                         <option value="">Início</option>
-                        <option v-for="hora in horariosDisponiveis" :key="hora" :value="hora">{{ hora }}</option>
+                        <option v-for="hora in horariosDisponiveis" :key="hora" :value="hora">
+                          {{ hora }}
+                        </option>
                       </select>
 
                       <!-- Campo para o horário de fim -->
                       <select v-model="formEdit.diasAtendimento[dia].fim" class="form-select me-2"
                         @change="validateHorario(dia)">
                         <option value="">Fim</option>
-                        <option v-for="hora in horariosDisponiveis" :key="hora" :value="hora">{{ hora }}</option>
+                        <option v-for="hora in horariosDisponiveis" :key="hora" :value="hora">
+                          {{ hora }}
+                        </option>
                       </select>
 
                       <!-- Botão para remover o horário do dia -->
@@ -214,31 +235,42 @@
             </template>
             <div class="mt-3 text-center">
               <button type="submit" class="btn btn-success">Salvar</button>
-              <button type="button" class="btn btn-secondary ms-2" @click="fecharModal">Cancelar</button>
+              <button type="button" class="btn btn-secondary ms-2" @click="fecharModal">
+                Cancelar
+              </button>
             </div>
           </form>
         </div>
       </div>
 
-
       <!-- Modal de Confirmação de Exclusão -->
-      <div v-if="showModalExclusao" class="modal-overlay d-flex justify-content-center align-items-center"
-        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);">
-        <div class="modal-content p-4 bg-white rounded shadow" style="width: 300px;">
+      <div v-if="showModalExclusao" class="modal-overlay d-flex justify-content-center align-items-center" style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+        ">
+        <div class="modal-content p-4 bg-white rounded shadow" style="width: 300px">
           <h4 class="text-center text-danger">Confirmar Exclusão</h4>
-          <p class="text-center">Insira sua senha para confirmar a exclusão da conta.</p>
+          <p class="text-center">
+            Insira sua senha para confirmar a exclusão da conta.
+          </p>
 
           <input v-model="senhaExclusao" type="password" class="form-control mb-3" placeholder="Digite sua senha"
             required />
 
           <div class="text-center">
-            <button @click="excluirConta" class="btn btn-danger">Confirmar Exclusão</button>
-            <button @click="fecharModal" class="btn btn-secondary ms-2">Cancelar</button>
+            <button @click="excluirConta" class="btn btn-danger">
+              Confirmar Exclusão
+            </button>
+            <button @click="fecharModal" class="btn btn-secondary ms-2">
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
-
-
     </div>
   </div>
   <Footer />
@@ -258,7 +290,7 @@ import {
   query,
   where,
   getDocs,
-  writeBatch
+  writeBatch,
 } from "firebase/firestore";
 
 import {
@@ -267,9 +299,8 @@ import {
   updatePassword,
   deleteUser,
   EmailAuthProvider,
-  reauthenticateWithCredential
+  reauthenticateWithCredential,
 } from "firebase/auth";
-
 
 export default {
   name: "PerfilMedico",
@@ -292,7 +323,33 @@ export default {
       duracaoConsulta: 30,
       agenda: [],
       ufOptions: [
-        "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+        "AC",
+        "AL",
+        "AP",
+        "AM",
+        "BA",
+        "CE",
+        "DF",
+        "ES",
+        "GO",
+        "MA",
+        "MT",
+        "MS",
+        "MG",
+        "PA",
+        "PB",
+        "PR",
+        "PE",
+        "PI",
+        "RJ",
+        "RN",
+        "RS",
+        "RO",
+        "RR",
+        "SC",
+        "SP",
+        "SE",
+        "TO",
       ],
       especialidades: [
         "Pediatria",
@@ -329,6 +386,18 @@ export default {
     };
   },
   methods: {
+    formatarValorConsulta(event) {
+      let valor = event.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+
+      if (valor === "" || isNaN(parseInt(valor, 10))) {
+        this.formEdit.valorConsulta = "R$ 0,00"; // Valor padrão se o campo estiver vazio ou inválido
+        return;
+      }
+
+      // Converte o número para o formato de moeda
+      valor = (parseInt(valor, 10) / 100).toFixed(2);
+      this.formEdit.valorConsulta = `R$ ${valor.replace(".", ",")}`;
+    },
     async carregarAgenda() {
       if (!this.medicoId) return;
 
@@ -336,22 +405,27 @@ export default {
         const db = getFirestore();
 
         // Buscar histórico de consultas da tabela "historicoConsultas"
-        const qHistorico = query(collection(db, "historicoConsultas"), where("medicoId", "==", this.medicoId));
+        const qHistorico = query(
+          collection(db, "historicoConsultas"),
+          where("medicoId", "==", this.medicoId)
+        );
         const snapshotHistorico = await getDocs(qHistorico);
 
-        this.agenda = snapshotHistorico.empty ? [] : snapshotHistorico.docs.map((docSnap) => {
-          const data = docSnap.data();
-          return {
-            id: docSnap.id,
-            pacienteNome: data.pacienteNome || "Não informado",
-            pacienteTelefone: data.pacienteTelefone || "Não informado",
-            data: data.data || "Sem data",
-            local: data.local || "Não informado",
-            especialidade: data.especialidade || "Não informado",
-            valorConsulta: data.valorConsulta || "Não informado",
-            situacao: data.situacao || "Sem status",
-          };
-        });
+        this.agenda = snapshotHistorico.empty
+          ? []
+          : snapshotHistorico.docs.map((docSnap) => {
+            const data = docSnap.data();
+            return {
+              id: docSnap.id,
+              pacienteNome: data.pacienteNome || "Não informado",
+              pacienteTelefone: data.pacienteTelefone || "Não informado",
+              data: data.data || "Sem data",
+              local: data.local || "Não informado",
+              especialidade: data.especialidade || "Não informado",
+              valorConsulta: data.valorConsulta || "Não informado",
+              situacao: data.situacao || "Sem status",
+            };
+          });
 
         console.log("📌 Histórico de consultas carregado:", this.agenda);
       } catch (error) {
@@ -392,19 +466,34 @@ export default {
       });
     },
     abrirModal(campo) {
-      if (!this.medico) return;
+      // Fecha todos os modais antes de abrir o novo
+      this.fecharModal();
 
-      // Criar uma cópia dos dados do médico para edição, garantindo que os valores apareçam no modal
-      this.formEdit = { ...this.medico };
+      if (!this.medico) return;
 
       this.campoSelecionado = campo;
 
+      // Abre o modal correspondente
       if (campo === "senha") {
         this.showModalSenha = true;
       } else if (campo === "exclusao") {
         this.showModalExclusao = true;
       } else {
         this.showModalEdit = true;
+
+        // Inicializa o formEdit com os dados do médico
+        this.formEdit = { ...this.medico };
+
+        if (campo === "horarios") {
+          this.formEdit.diasAtendimento = {};
+          this.diasSemana.forEach((dia) => {
+            const horarios = this.medico.diasAtendimento[dia] || [];
+            this.formEdit.diasAtendimento[dia] = {
+              inicio: horarios.length > 0 ? horarios[0] : "",
+              fim: horarios.length > 1 ? horarios[horarios.length - 1] : "",
+            };
+          });
+        }
       }
     },
     async alterarSenha() {
@@ -430,7 +519,9 @@ export default {
         console.error("Erro ao alterar a senha:", error);
 
         if (error.code === "auth/requires-recent-login") {
-          alert("Por segurança, você precisa fazer login novamente para alterar a senha.");
+          alert(
+            "Por segurança, você precisa fazer login novamente para alterar a senha."
+          );
           await auth.signOut();
           window.location.reload();
         } else {
@@ -439,9 +530,13 @@ export default {
       }
     },
     validarCPF(cpf) {
-      cpf = cpf.replace(/\D/g, '');
+      cpf = cpf.replace(/\D/g, "");
       if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-      const calc = (n) => [...cpf].slice(0, n).reduce((s, d, i) => s + d * (n + 1 - i), 0) * 10 % 11 % 10;
+      const calc = (n) =>
+        (([...cpf].slice(0, n).reduce((s, d, i) => s + d * (n + 1 - i), 0) *
+          10) %
+          11) %
+        10;
       return calc(9) === +cpf[9] && calc(10) === +cpf[10];
     },
     fecharModal() {
@@ -453,7 +548,10 @@ export default {
       this.confirmarSenha = "";
     },
     async salvarEdicao() {
-      if (this.campoSelecionado === 'info' && !this.validarCPF(this.formEdit.cpf)) {
+      if (
+        this.campoSelecionado === "info" &&
+        !this.validarCPF(this.formEdit.cpf)
+      ) {
         return alert("CPF inválido. Verifique e tente novamente.");
       }
 
@@ -461,7 +559,14 @@ export default {
         const db = getFirestore();
         const medicoRef = doc(db, "medicos", this.medicoId);
 
-        if (this.campoSelecionado === 'info') {
+        if (this.campoSelecionado === "info") {
+          const valorConsulta = this.formEdit.valorConsulta.replace(/\D/g, ""); // Remove R$ e símbolos
+
+          if (isNaN(parseInt(valorConsulta)) || parseInt(valorConsulta) <= 0) {
+            alert("O valor da consulta deve ser um número válido e maior que 0.");
+            return;
+          }
+
           await updateDoc(medicoRef, {
             nomeCompleto: this.formEdit.nomeCompleto,
             email: this.formEdit.email,
@@ -471,22 +576,24 @@ export default {
             uf: this.formEdit.uf,
             dataNascimento: this.formEdit.dataNascimento,
             cpf: this.formEdit.cpf,
-            valorConsulta: this.formEdit.valorConsulta
-
+            valorConsulta: this.formEdit.valorConsulta,
           });
           alert("Informações pessoais atualizadas com sucesso!");
-
-        } else if (this.campoSelecionado === 'horarios') {
+        } else if (this.campoSelecionado === "horarios") {
           const diasAtendimentoFiltrado = {};
           Object.keys(this.formEdit.diasAtendimento).forEach((dia) => {
             const horarios = this.formEdit.diasAtendimento[dia];
             if (horarios.inicio && horarios.fim) {
-              diasAtendimentoFiltrado[dia] = this.gerarIntervalos(horarios.inicio, horarios.fim, this.duracaoConsulta);
+              diasAtendimentoFiltrado[dia] = this.gerarIntervalos(
+                horarios.inicio,
+                horarios.fim,
+                this.duracaoConsulta
+              );
             }
           });
 
           await updateDoc(medicoRef, {
-            diasAtendimento: diasAtendimentoFiltrado
+            diasAtendimento: diasAtendimentoFiltrado,
           });
           alert("Horários de atendimento atualizados com sucesso!");
         }
@@ -507,7 +614,9 @@ export default {
       const [fimHora, fimMinuto] = fim.split(":").map(Number);
 
       while (hora < fimHora || (hora === fimHora && minuto <= fimMinuto)) {
-        intervalos.push(`${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`);
+        intervalos.push(
+          `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`
+        );
         minuto += duracao;
         if (minuto >= 60) {
           minuto -= 60;
@@ -518,7 +627,10 @@ export default {
       return intervalos;
     },
     validarNome(event) {
-      this.formEdit.nomeCompleto = event.target.value.replace(/[^a-zA-Z\s]/g, "");
+      this.formEdit.nomeCompleto = event.target.value.replace(
+        /[^a-zA-Z\s]/g,
+        ""
+      );
     },
     formatarTelefone(event) {
       let telefone = event.target.value.replace(/\D/g, "");
@@ -527,8 +639,8 @@ export default {
     },
     formatarValorConsulta(event) {
       let valor = event.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
-      valor = (parseInt(valor, 10) / 100).toFixed(2);    // Converte para formato de moeda
-      this.formEdit.valorConsulta = `R$ ${valor.replace('.', ',')}`; // Formatação final
+      valor = (parseInt(valor, 10) / 100).toFixed(2); // Converte para formato de moeda
+      this.formEdit.valorConsulta = `R$ ${valor.replace(".", ",")}`; // Formatação final
     },
     validarCRM(event) {
       this.formEdit.crm = event.target.value.replace(/\D/g, "").slice(0, 6);
@@ -540,7 +652,7 @@ export default {
         quarta: "Quarta-feira",
         quinta: "Quinta-feira",
         sexta: "Sexta-feira",
-        sabado: "Sábado"
+        sabado: "Sábado",
       };
       return dias[dia] || dia;
     },
@@ -550,7 +662,9 @@ export default {
       const [fimHora, fimMinuto] = fim.split(":").map(Number);
 
       while (hora < fimHora || (hora === fimHora && minuto <= fimMinuto)) {
-        horarios.push(`${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`);
+        horarios.push(
+          `${String(hora).padStart(2, "0")}:${String(minuto).padStart(2, "0")}`
+        );
         minuto += intervalo;
         if (minuto >= 60) {
           minuto -= 60;
@@ -559,11 +673,35 @@ export default {
       }
       return horarios;
     },
-    validateHorario(dia) {
+    async validateHorario(dia) {
       const horarios = this.formEdit.diasAtendimento[dia];
+
       if (horarios.fim <= horarios.inicio && horarios.fim !== "") {
         alert("O horário final deve ser maior que o horário inicial.");
         horarios.fim = "";
+        return;
+      }
+
+      // Atualização automática do horário no Firestore
+      try {
+        const db = getFirestore();
+        const medicoRef = doc(db, "medicos", this.medicoId);
+
+        // Gerar os intervalos de horários com base nos horários de início e fim
+        const diasAtendimentoAtualizado = {
+          ...this.medico.diasAtendimento,
+          [dia]: this.gerarIntervalos(horarios.inicio, horarios.fim, this.duracaoConsulta)
+        };
+
+        // Atualiza o banco de dados imediatamente após a mudança
+        await updateDoc(medicoRef, {
+          diasAtendimento: diasAtendimentoAtualizado
+        });
+
+        console.log(`Horário de ${dia} atualizado com sucesso.`);
+      } catch (error) {
+        console.error("Erro ao atualizar horário:", error);
+        alert("Erro ao atualizar horário. Tente novamente.");
       }
     },
     async excluirConta() {
@@ -583,14 +721,20 @@ export default {
         }
 
         // Reautenticação do usuário
-        const credential = EmailAuthProvider.credential(user.email, this.senhaExclusao);
+        const credential = EmailAuthProvider.credential(
+          user.email,
+          this.senhaExclusao
+        );
         await reauthenticateWithCredential(user, credential);
 
         // Criar um batch para operações em lote
         const batch = writeBatch(db);
 
         // Buscar todos os agendamentos do médico
-        const agendamentosQuery = query(collection(db, "agendamentos"), where("medicoId", "==", this.medicoId));
+        const agendamentosQuery = query(
+          collection(db, "agendamentos"),
+          where("medicoId", "==", this.medicoId)
+        );
         const agendamentosSnapshot = await getDocs(agendamentosQuery);
 
         if (!agendamentosSnapshot.empty) {
@@ -684,7 +828,6 @@ export default {
     /* Em telas menores, uma coluna */
   }
 }
-
 
 .modal-overlay {
   position: fixed;
