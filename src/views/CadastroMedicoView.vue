@@ -51,6 +51,7 @@
                   <label for="crm" class="form-label">CRM</label>
                   <input v-model="form.crm" type="text" id="crm" class="form-control" placeholder="Digite o CRM"
                     @input="formatCRM" required />
+
                   <small v-if="crmInvalido" class="text-danger">
                     CRM inválido. Verifique o formato ou a UF.
                   </small>
@@ -323,22 +324,11 @@ export default {
       return true;
     },
     formatCRM(event) {
-      let input = event.target.value.toUpperCase().replace(/[^0-9A-Z/]/g, "");
-      let parts = input.split("/");
+      this.form.crm = event.target.value.replace(/\D/g, ""); // Remove tudo que não for número
 
-      if (parts[0].length > 6) {
-        parts[0] = parts[0].substring(0, 6);
+      if (this.form.crm.length > 6) {
+        this.form.crm = this.form.crm.slice(0, 6); // Garante exatamente 6 dígitos
       }
-
-      if (parts.length > 1) {
-        parts[1] = parts[1].substring(0, 2);
-        if (!this.ufs.includes(parts[1])) {
-          this.crmInvalido = true;
-        } else {
-          this.crmInvalido = false;
-        }
-      }
-      this.form.crm = parts.join("/").toUpperCase();
     },
     handlePhoneInput(event) {
       let phone = event.target.value.replace(/\D/g, "");
@@ -388,6 +378,11 @@ export default {
       this.form.valorConsulta = valorFormatado;
     },
     async submitForm() {
+      if (!/^\d{6}$/.test(this.form.crm)) {
+        alert("O CRM deve conter exatamente 6 dígitos numéricos.");
+        return;
+      }
+
       if (!this.validarCPF(this.form.cpf)) {
         alert("CPF inválido. Por favor, corrija antes de prosseguir.");
         return;

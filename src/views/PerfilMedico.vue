@@ -160,8 +160,8 @@
                 required />
 
               <label>CRM</label>
-              <input v-model="formEdit.crm" type="text" class="form-control" maxlength="6" @input="validarCRM"
-                required />
+              <input v-model="formEdit.crm" type="text" class="form-control" maxlength="6" @input="formatarCRM"
+                @blur="validarCRM" required />
 
               <label>CPF</label>
               <!-- CPF agora validado -->
@@ -191,7 +191,9 @@
               </select>
 
               <label>Data de Nascimento</label>
-              <input v-model="formEdit.dataNascimento" type="date" class="form-control" :max="hoje" required />
+              <input v-model="formEdit.dataNascimento" type="date" class="form-control" :max="hoje"
+                @change="validarIdade" />
+              <small v-if="erroIdade" class="text-danger">O médico deve ter no mínimo 18 anos.</small>
             </template>
 
             <template v-if="campoSelecionado === 'horarios'">
@@ -489,24 +491,45 @@ export default {
         const auth = getAuth();
         const user = auth.currentUser;
 
-        if (user) {
-          await updatePassword(user, this.novaSenha);
-          alert("Senha atualizada com sucesso!");
-          this.novaSenha = "";
-          this.confirmarSenha = "";
-          this.fecharModal();
-        } else {
+        if (!user) {
           alert("Usuário não autenticado. Faça login novamente.");
+          return;
         }
+
+        await updatePassword(user, this.novaSenha);
+        alert("Senha atualizada com sucesso!");
+        this.novaSenha = "";
+        this.confirmarSenha = "";
+        this.fecharModal();
+
       } catch (error) {
         console.error("Erro ao alterar a senha:", error);
 
         if (error.code === "auth/requires-recent-login") {
-          alert(
-            "Por segurança, você precisa fazer login novamente para alterar a senha."
-          );
-          await auth.signOut();
-          window.location.reload();
+          // Pedir a senha para reautenticação
+          const senhaAtual = prompt("Por segurança, insira sua senha atual para continuar:");
+
+          if (!senhaAtual) {
+            alert("Alteração de senha cancelada.");
+            return;
+          }
+
+          try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            const credential = EmailAuthProvider.credential(user.email, senhaAtual);
+
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, this.novaSenha);
+            alert("Senha alterada com sucesso!");
+
+            this.novaSenha = "";
+            this.confirmarSenha = "";
+            this.fecharModal();
+          } catch (reauthError) {
+            console.error("Erro ao reautenticar:", reauthError);
+            alert("Senha incorreta. Tente novamente.");
+          }
         } else {
           alert("Erro ao alterar a senha. Tente novamente.");
         }
@@ -531,41 +554,51 @@ export default {
       this.confirmarSenha = "";
     },
     async salvarEdicao() {
-      if (
-        this.campoSelecionado === "info" &&
-        !this.validarCPF(this.formEdit.cpf)
-      ) {
-        return alert("CPF inválido. Verifique e tente novamente.");
+      if (!this.medicoId) {
+        alert("Erro: ID do médico não encontrado.");
+        return;
+      }
+
+      if (this.campoSelecionado === "info" && !this.validarCPF(this.formEdit.cpf)) {
+        alert("CPF inválido. Verifique e tente novamente.");
+        return;
       }
 
       try {
         const db = getFirestore();
         const medicoRef = doc(db, "medicos", this.medicoId);
 
-        if (this.campoSelecionado === "info") {
-          const valorConsulta = this.formEdit.valorConsulta.replace(/\D/g, "");
-          if (isNaN(parseInt(valorConsulta)) || parseInt(valorConsulta) <= 0) {
-            alert("O valor da consulta deve ser um número válido e maior que 0.");
+        // Remover campos vazios e `undefined` antes de salvar
+        const updateData = Object.fromEntries(
+          Object.entries(this.formEdit).filter(([_, value]) => value !== "" && value !== undefined)
+        );
+
+        // Garantir que `valorConsulta` seja um número válido
+        if (updateData.valorConsulta !== undefined) {
+          let valorString = String(updateData.valorConsulta);
+          valorString = valorString.replace(/[^\d,]/g, "").replace(",", ".");
+          const valorNumerico = parseFloat(valorString);
+
+          if (isNaN(valorNumerico) || valorNumerico <= 0) {
+            alert("O valor da consulta deve ser maior que R$ 0,00.");
             return;
           }
+          updateData.valorConsulta = valorNumerico; // Salvar como número no Firestore
+        }
 
-          await updateDoc(medicoRef, {
-            nomeCompleto: this.formEdit.nomeCompleto,
-            email: this.formEdit.email,
-            telefoneConsultorio: this.formEdit.telefoneConsultorio,
-            crm: this.formEdit.crm,
-            especialidade: this.formEdit.especialidade,
-            uf: this.formEdit.uf,
-            dataNascimento: this.formEdit.dataNascimento,
-            cpf: this.formEdit.cpf,
-            valorConsulta: this.formEdit.valorConsulta,
-          });
+        if (this.campoSelecionado === "info") {
+          console.log("Atualizando informações pessoais:", updateData);
+          await updateDoc(medicoRef, updateData);
           alert("Informações pessoais atualizadas com sucesso!");
+
         } else if (this.campoSelecionado === "horarios") {
           const diasAtendimentoFiltrado = {};
+
           Object.keys(this.formEdit.diasAtendimento).forEach((dia) => {
             const horarios = this.formEdit.diasAtendimento[dia];
+
             if (horarios.inicio && horarios.fim) {
+              // Somente adiciona os dias que têm horários preenchidos
               diasAtendimentoFiltrado[dia] = this.gerarIntervalos(
                 horarios.inicio,
                 horarios.fim,
@@ -574,21 +607,45 @@ export default {
             }
           });
 
-          await updateDoc(medicoRef, {
-            diasAtendimento: diasAtendimentoFiltrado,
-          });
+          console.log("Atualizando horários:", diasAtendimentoFiltrado);
+          await updateDoc(medicoRef, { diasAtendimento: diasAtendimentoFiltrado });
           alert("Horários de atendimento atualizados com sucesso!");
         }
 
-        this.medico = { ...this.formEdit };
+        // Fechar modal, atualizar os dados e recarregar a página
         this.fecharModal();
+        await this.verificarAutenticacao(); // Atualiza os dados do médico
+        window.location.reload(); // Atualiza a página para refletir as mudanças
+
       } catch (error) {
         console.error("Erro ao salvar edições:", error);
-        alert("Erro ao salvar edições. Tente novamente.");
+        alert(`Erro ao salvar edições: ${error.message}`);
       }
     },
-    removerDia(dia) {
-      delete this.formEdit.diasAtendimento[dia];
+    async removerDia(dia) {
+      if (!this.medicoId) {
+        alert("Erro: ID do médico não encontrado.");
+        return;
+      }
+
+      try {
+        const db = getFirestore();
+        const medicoRef = doc(db, "medicos", this.medicoId);
+
+        // Remove o dia da lista de horários
+        delete this.formEdit.diasAtendimento[dia];
+
+        // Atualiza no Firestore removendo o dia selecionado
+        await updateDoc(medicoRef, {
+          [`diasAtendimento.${dia}`]: deleteDoc() // Remove do Firestore
+        });
+
+        alert(`Horário de ${this.formatDia(dia)} removido com sucesso!`);
+
+      } catch (error) {
+        console.error("Erro ao remover horário:", error);
+        alert(`Erro ao remover horário: ${error.message}`);
+      }
     },
     gerarIntervalos(inicio, fim, duracao) {
       const intervalos = [];
@@ -624,8 +681,14 @@ export default {
       valor = (parseInt(valor, 10) / 100).toFixed(2);
       this.formEdit.valorConsulta = `R$ ${valor.replace(".", ",")}`; l
     },
-    validarCRM(event) {
+    formatarCRM(event) {
       this.formEdit.crm = event.target.value.replace(/\D/g, "").slice(0, 6);
+    },
+    validarCRM() {
+      if (this.formEdit.crm.length !== 6) {
+        alert("O CRM deve conter exatamente 6 dígitos.");
+        this.formEdit.crm = ""; // Limpa o campo se for inválido
+      }
     },
     formatDia(dia) {
       const dias = {
@@ -754,6 +817,26 @@ export default {
         this.fecharModal();
       }
     },
+    validarIdade() {
+      if (!this.formEdit.dataNascimento) {
+        this.erroIdade = false;
+        return;
+      }
+
+      const hoje = new Date();
+      const nascimento = new Date(this.formEdit.dataNascimento);
+      const idade = hoje.getFullYear() - nascimento.getFullYear();
+      const aniversarioJaPassou =
+        hoje.getMonth() > nascimento.getMonth() ||
+        (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() >= nascimento.getDate());
+
+      if (idade < 18 || (idade === 18 && !aniversarioJaPassou)) {
+        this.erroIdade = true;
+        this.formEdit.dataNascimento = "";
+      } else {
+        this.erroIdade = false;
+      }
+    },
   },
   mounted() {
     this.verificarAutenticacao();
@@ -788,6 +871,7 @@ export default {
 }
 
 .modal-overlay {
+  z-index: 1;
   position: fixed;
   top: 0;
   left: 0;

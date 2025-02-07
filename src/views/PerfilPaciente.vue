@@ -162,7 +162,7 @@ import {
   getDocs,
   writeBatch
 } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut, deleteUser } from "firebase/auth";
 import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
 
 
@@ -280,7 +280,10 @@ export default {
           alert("Usuário não autenticado.");
           return;
         }
+
         const batch = writeBatch(db);
+
+        // Deletar agendamentos do paciente e armazenar no histórico
         const agendamentosQuery = query(
           collection(db, "agendamentos"),
           where("pacienteId", "==", this.pacienteId)
@@ -309,26 +312,28 @@ export default {
           }
         }
 
+        // Deletar o registro do paciente no Firestore
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
         batch.delete(pacienteRef);
 
         await batch.commit();
-        await deleteUser(user);
+
+        // Reautenticação para permitir exclusão no Authentication
+        await user.delete();
 
         alert("Conta excluída com sucesso!");
         this.$router.push("/login");
+
       } catch (error) {
-        if (error.code === "auth/wrong-password") {
-          alert("Senha incorreta. Tente novamente.");
-        } else if (error.code === "auth/too-many-requests") {
-          alert("Muitas tentativas. Tente novamente mais tarde.");
-        } else if (error.code === "auth/requires-recent-login") {
-          alert("Você precisa fazer login novamente por segurança.");
+        console.error("Erro ao excluir conta:", error);
+        if (error.code === "auth/requires-recent-login") {
+          alert("Por segurança, você precisa fazer login novamente para excluir sua conta.");
+          await signOut(auth);
+          this.$router.push("/login");
         } else {
           alert(`Erro ao excluir conta: ${error.message}`);
         }
       } finally {
-        this.senhaExclusao = "";
         this.fecharModal();
       }
     },
@@ -400,6 +405,7 @@ export default {
 }
 
 .modal-overlay {
+  z-index: 1;
   position: fixed;
   top: 0;
   left: 0;

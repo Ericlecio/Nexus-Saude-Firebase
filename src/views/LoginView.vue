@@ -229,7 +229,7 @@ export default {
         const user = result.user;
 
         const userRef = doc(db, "pacientes", user.uid);
-        const docSnap = await getDoc(userRef);
+        let docSnap = await getDoc(userRef);
 
         if (!docSnap.exists()) {
           await setDoc(userRef, {
@@ -239,17 +239,25 @@ export default {
             tipo: "paciente",
             dataCadastro: new Date().toISOString(),
           });
+
+          // Aguarde a atualização do Firestore antes de recuperar os dados
+          docSnap = await getDoc(userRef);
         }
 
-        const pacienteData = await getDoc(userRef);
-        sessionStorage.setItem("user", JSON.stringify({
-          id: user.uid,
-          ...pacienteData.data(),
-          tipo: "paciente"
-        }));
+        if (docSnap.exists()) {
+          sessionStorage.setItem("user", JSON.stringify({
+            id: user.uid,
+            ...docSnap.data(),
+            tipo: "paciente"
+          }));
 
-        this.$router.push("/").then(() => window.location.reload());
+          this.$router.push("/").then(() => window.location.reload());
+        } else {
+          alert("Erro ao recuperar dados do paciente. Tente novamente.");
+          await signOut(auth);
+        }
       } catch (error) {
+        console.error("Erro ao autenticar com o Google:", error);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
     },
