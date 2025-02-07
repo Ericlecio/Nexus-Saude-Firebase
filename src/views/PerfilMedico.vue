@@ -243,6 +243,7 @@
       <!-- Modal de Confirmação de Exclusão -->
       <div v-if="showModalExclusao" class="modal-overlay d-flex justify-content-center align-items-center" style="
           position: fixed;
+          z-index: 1;
           top: 0;
           left: 0;
           width: 100%;
@@ -449,7 +450,6 @@ export default {
             this.$router.push("/login");
           }
         } else {
-          alert("Você precisa estar logado para acessar esta página.");
           this.$router.push("/login");
         }
       });

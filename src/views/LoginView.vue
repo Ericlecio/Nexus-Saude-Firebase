@@ -166,7 +166,6 @@ export default {
               }));
               this.$router.push("/");
             } else {
-              alert("Usuário não encontrado no banco de dados.");
               await signOut(auth);
             }
           } catch (error) {
@@ -216,7 +215,7 @@ export default {
         }
       } catch (error) {
         console.error("Erro ao autenticar usuário: ", error);
-        alert("Erro ao autenticar. Verifique suas credenciais.");
+        alert("Email ou Senha invalidos.");
       }
     },
 
