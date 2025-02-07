@@ -9,7 +9,7 @@ export default {
     name: "BotaoVoltar",
     methods: {
         voltarPagina() {
-            this.$router.go(-1); // Voltar para a página anterior
+            this.$router.go(-1);
         },
     },
 };
@@ -21,14 +21,11 @@ export default {
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #1E88E5, #1565C0);
-    /* Azul vibrante */
     color: white;
     font-size: 0.9rem;
-    /* Tamanho menor */
     font-weight: bold;
     border: none;
     padding: 8px 18px;
-    /* Menor e mais compacto */
     border-radius: 6px;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
     cursor: pointer;

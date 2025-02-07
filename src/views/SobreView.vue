@@ -118,7 +118,6 @@ export default {
 
 
 <style scoped>
-/* Fundo principal */
 .div-principal {
   background: linear-gradient(rgba(0, 0, 30, 0.6),
       rgba(0, 0, 30, 0.6)),
@@ -126,7 +125,6 @@ export default {
   background-size: cover;
 }
 
-/* Banner */
 .banner {
   background-size: cover;
   background-position: center;
@@ -147,7 +145,6 @@ export default {
   margin-top: 10px;
 }
 
-/* Missão */
 .mission-card {
   background-color: rgba(255, 255, 255, 0.9);
   padding: 30px;
@@ -155,7 +152,6 @@ export default {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Valores */
 .values-section .value-card {
   background-color: rgba(255, 255, 255, 0.9);
   border: none;
@@ -173,7 +169,6 @@ export default {
   color: #53ba83;
 }
 
-/* Equipe */
 .team-section img {
   width: 150px;
   height: 150px;

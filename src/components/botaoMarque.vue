@@ -11,12 +11,12 @@ export default {
     name: "BotaoMarcarConsulta",
     data() {
         return {
-            user: JSON.parse(localStorage.getItem('user')) // Simulação de um usuário autenticado
+            user: JSON.parse(localStorage.getItem('user'))
         };
     },
     methods: {
         marcarConsulta() {
-            this.$router.push('/Agendamento'); // Redireciona para a página de agendamento
+            this.$router.push('/Agendamento');
         },
     },
 };
@@ -26,10 +26,8 @@ export default {
 .btn-container {
     display: flex;
     justify-content: center;
-    /* Alinha o botão à direita */
     margin: 20px 0;
     padding-right: 20px;
-    /* Adiciona um pequeno espaçamento da borda direita */
 }
 
 .btn-marcar-consulta {

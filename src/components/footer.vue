@@ -14,7 +14,6 @@ export default {
 <template>
     <footer>
         <div class="container">
-            <!-- Seção à esquerda -->
             <div class="footer-section left">
                 <img src="/src/assets/img/NexusSaude_icon.png" alt="Nexus Saúde Logo" class="footer-logo">
                 <p><i class="bi bi-telephone"></i> (81) 3661-0000</p>
@@ -22,7 +21,6 @@ export default {
                 <p><i class="bi bi-geo-alt"></i> Rua das Palmeiras, 123 - Centro, Palmares - PE</p>
             </div>
 
-            <!-- Seção ao centro -->
             <div class="footer-section center">
                 <h5>Links úteis</h5>
                 <ul class="nav-links">
@@ -32,7 +30,6 @@ export default {
                 </ul>
             </div>
 
-            <!-- Seção à direita -->
             <div class="footer-section right">
                 <h5>Acompanhe nossas redes</h5>
                 <div class="social-media">
@@ -57,7 +54,6 @@ export default {
 </template>
 
 <style scoped>
-/* 🌙 Footer principal */
 footer {
     background: linear-gradient(135deg, #1a1a3c, #13132b);
     color: #fff;
@@ -68,7 +64,6 @@ footer {
     overflow: hidden;
 }
 
-/* 🌟 Layout Responsivo */
 .container {
     display: flex;
     justify-content: space-between;
@@ -79,14 +74,12 @@ footer {
     gap: 30px;
 }
 
-/* 🔹 Seções */
 .footer-section {
     flex: 1;
     min-width: 280px;
     max-width: 350px;
 }
 
-/* 🔹 Logo */
 .footer-logo {
     width: auto;
     max-width: 80px;
@@ -95,7 +88,6 @@ footer {
     filter: drop-shadow(0px 0px 10px rgba(0, 255, 157, 0.4));
 }
 
-/* 🔹 Centralizando elementos */
 .center {
     text-align: center;
 }
@@ -104,7 +96,6 @@ footer {
     text-align: right;
 }
 
-/* 🔗 Links modernos */
 .nav-links {
     list-style: none;
     padding: 0;
@@ -127,7 +118,6 @@ footer {
     transform: translateX(5px);
 }
 
-/* 🎨 Ícones sociais */
 .social-media {
     display: flex;
     justify-content: flex-end;
@@ -146,7 +136,6 @@ footer {
     color: #fff;
 }
 
-/* 🔝 Botão de Voltar ao Topo */
 .back-to-top {
     margin-top: 30px;
     text-align: center;
@@ -168,7 +157,6 @@ footer {
     transform: translateY(-5px);
 }
 
-/* 🔥 Animações */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -181,14 +169,12 @@ footer {
     }
 }
 
-/* 📌 Copyright */
 .copyright {
     font-size: 0.8rem;
     margin-top: 20px;
     opacity: 0.8;
 }
 
-/* 📱 Responsividade */
 @media (max-width: 992px) {
     .container {
         flex-direction: column;

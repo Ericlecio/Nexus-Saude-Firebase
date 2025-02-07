@@ -14,7 +14,6 @@
             </div>
 
             <div v-else>
-                <!-- Menu de Filtros -->
                 <ul class="nav nav-pills justify-content-center mb-4">
                     <li class="nav-item" v-for="opcao in opcoesFiltro" :key="opcao.valor">
                         <a class="nav-link" :class="{ active: filtroSituacao === opcao.valor }"
@@ -145,7 +144,6 @@ export default {
 
                 const db = getFirestore();
 
-                // Buscar consultas confirmadas na tabela 'agendamentos'
                 const qAgendamentos = query(collection(db, "agendamentos"), where("medicoId", "==", user.id));
                 const snapshotAgendamentos = await getDocs(qAgendamentos);
                 let consultasAtuais = snapshotAgendamentos.empty ? [] : snapshotAgendamentos.docs.map((docSnap) => ({
@@ -153,7 +151,6 @@ export default {
                     ...docSnap.data(),
                 }));
 
-                // Buscar consultas canceladas e finalizadas na tabela 'historicoConsultas'
                 const qHistorico = query(collection(db, "historicoConsultas"), where("medicoId", "==", user.id));
                 const snapshotHistorico = await getDocs(qHistorico);
                 let historicoConsultas = snapshotHistorico.empty ? [] : snapshotHistorico.docs.map((docSnap) => ({
@@ -161,7 +158,6 @@ export default {
                     ...docSnap.data(),
                 }));
 
-                // Combinar ambas as listas
                 this.consultas = [...consultasAtuais, ...historicoConsultas];
             } catch (error) {
                 console.error("Erro ao carregar consultas:", error);

@@ -2,7 +2,6 @@
   <div>
     <Navbar />
 
-    <!-- Banner Fale Conosco -->
     <section class="banner d-flex justify-content-center align-items-center">
       <div class="text-center banner-content">
         <h1 class="display-4">Fale Conosco</h1>
@@ -10,7 +9,6 @@
       </div>
     </section>
 
-    <!-- Formulário de Contato -->
     <section class="container my-5">
       <div class="row justify-content-center">
         <div class="col-md-8">
@@ -71,7 +69,6 @@ export default {
     handleFormSubmit(event) {
       const form = event.target;
 
-      // Enviar o formulário usando o FormSubmit
       fetch(form.action, {
         method: "POST",
         body: new FormData(form),
@@ -79,13 +76,12 @@ export default {
         .then(response => {
           if (response.ok) {
             alert("Mensagem enviada com sucesso!");
-            this.$router.push('/'); // Redireciona para a página inicial
+            this.$router.push('/');
           } else {
             alert("Ocorreu um erro ao enviar a mensagem. Tente novamente mais tarde.");
           }
         })
         .catch(error => {
-          console.error("Erro ao enviar a mensagem:", error);
           alert("Houve um problema com o envio do formulário.");
         });
     }
@@ -94,7 +90,6 @@ export default {
 </script>
 
 <style scoped>
-/* Banner com Gradiente e Sombra */
 .banner {
   background: linear-gradient(rgb(26, 26, 60), rgb(26, 26, 60)),
     url("/src/assets/img/fale_conosco_fundo.jpg") no-repeat center center;
@@ -113,7 +108,6 @@ export default {
   font-size: 1.2rem;
 }
 
-/* Formulário */
 .card {
   background-color: #f8f9fa;
   border: none;
@@ -141,7 +135,6 @@ button:hover {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
-/* Títulos */
 .section-title {
   font-size: 2rem;
   font-weight: bold;

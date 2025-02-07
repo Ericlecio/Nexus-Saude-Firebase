@@ -9,16 +9,14 @@ const PORT = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// Rota para envio de e-mail
 app.post("/send-email", async (req, res) => {
   const { name, email, message } = req.body;
 
-  // Configuração do transporter do Nodemailer
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "seuemail@gmail.com", // Substitua pelo seu e-mail
-      pass: "suasenha", // Substitua pela senha ou App Password
+      user: "seuemail@gmail.com",
+      pass: "suasenha",
     },
   });
 

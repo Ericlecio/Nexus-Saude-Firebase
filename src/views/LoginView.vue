@@ -8,7 +8,6 @@
           <h1>Nexus Saúde</h1>
         </div>
 
-        <!-- 🔹 Alterna entre Login e Redefinição de Senha -->
         <div v-if="!isResettingPassword">
           <div class="user-type-selector">
             <label>
@@ -57,7 +56,6 @@
           </form>
         </div>
 
-        <!-- 🔹 Tela de Redefinição de Senha -->
         <div v-else>
           <h2>Redefinir Senha</h2>
           <p>Digite seu e-mail cadastrado e enviaremos um link para redefinir sua senha.</p>
@@ -172,7 +170,6 @@ export default {
               await signOut(auth);
             }
           } catch (error) {
-            console.error("Erro ao verificar usuário:", error);
           }
         }
       });
@@ -254,7 +251,6 @@ export default {
 
         this.$router.push("/").then(() => window.location.reload());
       } catch (error) {
-        console.error("Erro ao autenticar com Google:", error.message);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
     },
@@ -271,15 +267,12 @@ export default {
         alert("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
         this.isResettingPassword = false;
       } catch (error) {
-        console.error("Erro ao enviar redefinição de senha:", error);
         alert("Erro ao enviar o e-mail. Verifique se o e-mail está correto.");
       }
     },
   },
 };
 </script>
-
-
 
 <style scoped>
 * {
@@ -297,14 +290,11 @@ body {
 
 .main-container {
   margin-top: 65px;
-  /* Adiciona espaçamento entre a navbar e o conteúdo */
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: calc(100vh - 80px);
-  /* Garante que o conteúdo ocupe o espaço correto */
   padding: 20px 20px;
-  /* Espaçamento interno para melhor layout */
   animation: fadeIn 1s ease-in-out;
 }
 
@@ -464,7 +454,6 @@ h2 {
   align-items: center;
   text-align: center;
   margin-bottom: 30px;
-  /* Espaçamento inferior aumentado */
 }
 
 .header h1,
@@ -479,7 +468,6 @@ h2 {
   border: none;
   border-radius: 25px;
   background-color: #28a745;
-  /* Cor verde */
   color: #fff;
   font-size: 1.2rem;
   font-weight: bold;
@@ -489,7 +477,6 @@ h2 {
 
 .btn:hover {
   background-color: #218838;
-  /* Tom mais escuro de verde ao passar o mouse */
 }
 
 .create-account {

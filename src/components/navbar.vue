@@ -9,7 +9,6 @@
       </button>
 
       <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }">
-        <!-- 🔹 Menu centralizado -->
         <ul class="navbar-nav mx-auto">
           <li class="nav-item">
             <a class="nav-link" href="/">Home</a>
@@ -22,7 +21,6 @@
           </li>
         </ul>
 
-        <!-- 🔹 Perfil do usuário alinhado à direita -->
         <div class="dropdown ms-3">
           <a href="#" class="d-flex align-items-center perfil-link" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle"></i>
@@ -120,21 +118,18 @@ export default {
 </script>
 
 <style scoped>
-/* Navbar geral */
 .navbar {
   background: transparent;
   transition: all 0.4s ease-in-out;
   padding: 15px 0;
 }
 
-/* Navbar ao rolar a página */
 .navbar.scrolled {
   background: rgba(255, 255, 255, 0.98);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   padding: 10px 0;
 }
 
-/* Responsividade */
 @media (max-width: 991px) {
   .navbar {
     background: rgba(255, 255, 255, 0.98);
@@ -142,13 +137,11 @@ export default {
   }
 }
 
-/* Logo */
 .navbar-brand .logo {
   height: 50px;
   transition: all 0.3s ease-in-out;
 }
 
-/* Links da navbar */
 .navbar-nav .nav-link {
   color: #000;
   font-weight: 600;
@@ -165,7 +158,6 @@ export default {
   transform: translateY(-2px);
 }
 
-/* Ícone de usuário */
 .bi-person-circle {
   font-size: 1.8rem;
   color: #53ba83;
@@ -219,13 +211,11 @@ export default {
   transform: scale(1.05);
 }
 
-/* Botão de logout */
 .logout-btn {
   color: red !important;
   font-weight: bold;
 }
 
-/* Botão de toggle */
 .navbar-toggler {
   border: none;
   transition: all 0.3s ease-in-out;

@@ -200,12 +200,10 @@
                   Editar Horários de Atendimento
                 </h4>
                 <div class="row">
-                  <!-- Agora usando diasSemana para garantir a ordem correta -->
                   <div class="col-md-4 mb-3" v-for="dia in diasSemana" :key="dia">
                     <div class="d-flex align-items-center">
                       <label class="me-2">{{ formatDia(dia) }}</label>
 
-                      <!-- Campo para o horário de início -->
                       <select v-model="formEdit.diasAtendimento[dia].inicio" class="form-select me-2"
                         @change="validateHorario(dia)">
                         <option value="">Início</option>
@@ -214,7 +212,6 @@
                         </option>
                       </select>
 
-                      <!-- Campo para o horário de fim -->
                       <select v-model="formEdit.diasAtendimento[dia].fim" class="form-select me-2"
                         @change="validateHorario(dia)">
                         <option value="">Fim</option>
@@ -387,14 +384,12 @@ export default {
   },
   methods: {
     formatarValorConsulta(event) {
-      let valor = event.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+      let valor = event.target.value.replace(/\D/g, "");
 
       if (valor === "" || isNaN(parseInt(valor, 10))) {
-        this.formEdit.valorConsulta = "R$ 0,00"; // Valor padrão se o campo estiver vazio ou inválido
+        this.formEdit.valorConsulta = "R$ 0,00";
         return;
       }
-
-      // Converte o número para o formato de moeda
       valor = (parseInt(valor, 10) / 100).toFixed(2);
       this.formEdit.valorConsulta = `R$ ${valor.replace(".", ",")}`;
     },
@@ -404,7 +399,6 @@ export default {
       try {
         const db = getFirestore();
 
-        // Buscar histórico de consultas da tabela "historicoConsultas"
         const qHistorico = query(
           collection(db, "historicoConsultas"),
           where("medicoId", "==", this.medicoId)
@@ -426,10 +420,7 @@ export default {
               situacao: data.situacao || "Sem status",
             };
           });
-
-        console.log("📌 Histórico de consultas carregado:", this.agenda);
       } catch (error) {
-        console.error("Erro ao carregar histórico de consultas:", error);
         alert("Erro ao carregar o histórico de consultas.");
       }
     },
@@ -452,8 +443,6 @@ export default {
           if (medicoSnap.exists()) {
             this.medicoId = user.uid;
             this.medico = medicoSnap.data();
-
-            // Após carregar os dados do médico, carregar o histórico de consultas
             await this.carregarAgenda();
           } else {
             alert("Acesso negado! Apenas médicos podem acessar esta página.");
@@ -466,14 +455,9 @@ export default {
       });
     },
     abrirModal(campo) {
-      // Fecha todos os modais antes de abrir o novo
       this.fecharModal();
-
       if (!this.medico) return;
-
       this.campoSelecionado = campo;
-
-      // Abre o modal correspondente
       if (campo === "senha") {
         this.showModalSenha = true;
       } else if (campo === "exclusao") {
@@ -481,7 +465,6 @@ export default {
       } else {
         this.showModalEdit = true;
 
-        // Inicializa o formEdit com os dados do médico
         this.formEdit = { ...this.medico };
 
         if (campo === "horarios") {
@@ -560,8 +543,7 @@ export default {
         const medicoRef = doc(db, "medicos", this.medicoId);
 
         if (this.campoSelecionado === "info") {
-          const valorConsulta = this.formEdit.valorConsulta.replace(/\D/g, ""); // Remove R$ e símbolos
-
+          const valorConsulta = this.formEdit.valorConsulta.replace(/\D/g, "");
           if (isNaN(parseInt(valorConsulta)) || parseInt(valorConsulta) <= 0) {
             alert("O valor da consulta deve ser um número válido e maior que 0.");
             return;
@@ -638,9 +620,9 @@ export default {
       this.formEdit.telefoneConsultorio = telefone.slice(0, 15);
     },
     formatarValorConsulta(event) {
-      let valor = event.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
-      valor = (parseInt(valor, 10) / 100).toFixed(2); // Converte para formato de moeda
-      this.formEdit.valorConsulta = `R$ ${valor.replace(".", ",")}`; // Formatação final
+      let valor = event.target.value.replace(/\D/g, "");
+      valor = (parseInt(valor, 10) / 100).toFixed(2);
+      this.formEdit.valorConsulta = `R$ ${valor.replace(".", ",")}`; l
     },
     validarCRM(event) {
       this.formEdit.crm = event.target.value.replace(/\D/g, "").slice(0, 6);
@@ -681,19 +663,13 @@ export default {
         horarios.fim = "";
         return;
       }
-
-      // Atualização automática do horário no Firestore
       try {
         const db = getFirestore();
         const medicoRef = doc(db, "medicos", this.medicoId);
-
-        // Gerar os intervalos de horários com base nos horários de início e fim
         const diasAtendimentoAtualizado = {
           ...this.medico.diasAtendimento,
           [dia]: this.gerarIntervalos(horarios.inicio, horarios.fim, this.duracaoConsulta)
         };
-
-        // Atualiza o banco de dados imediatamente após a mudança
         await updateDoc(medicoRef, {
           diasAtendimento: diasAtendimentoAtualizado
         });
@@ -720,17 +696,12 @@ export default {
           return;
         }
 
-        // Reautenticação do usuário
         const credential = EmailAuthProvider.credential(
           user.email,
           this.senhaExclusao
         );
         await reauthenticateWithCredential(user, credential);
-
-        // Criar um batch para operações em lote
         const batch = writeBatch(db);
-
-        // Buscar todos os agendamentos do médico
         const agendamentosQuery = query(
           collection(db, "agendamentos"),
           where("medicoId", "==", this.medicoId)
@@ -760,23 +731,15 @@ export default {
             batch.delete(agendamentoDoc.ref);
           }
         }
-
-        // Excluir o médico do Firestore
         const medicoRef = doc(db, "medicos", this.medicoId);
         batch.delete(medicoRef);
 
-        // Commit das operações em lote
         await batch.commit();
-        console.log("✅ Histórico atualizado e médico removido com sucesso.");
-
-        // Excluir a conta do Firebase Authentication
         await deleteUser(user);
 
         alert("Conta excluída com sucesso!");
-        window.location.href = "/"; // Redirecionamento após exclusão
+        window.location.href = "/";
       } catch (error) {
-        console.error("Erro ao excluir conta:", error);
-
         if (error.code === "auth/wrong-password") {
           alert("Senha incorreta. Tente novamente.");
         } else if (error.code === "auth/too-many-requests") {
@@ -787,7 +750,7 @@ export default {
           alert(`Erro ao excluir conta: ${error.message}`);
         }
       } finally {
-        this.senhaExclusao = ""; // Limpar o campo de senha após a tentativa
+        this.senhaExclusao = "";
         this.fecharModal();
       }
     },
@@ -810,22 +773,17 @@ export default {
 #informacoespessois .card-body {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  /* Duas colunas */
   gap: 15px;
-  /* Espaçamento entre as colunas */
 }
 
 #informacoespessois p {
   margin-bottom: 10px;
   word-break: break-word;
-  /* Evita quebra de layout com textos longos */
 }
 
-/* Responsividade para telas menores */
 @media (max-width: 768px) {
   #informacoespessois .card-body {
     grid-template-columns: 1fr;
-    /* Em telas menores, uma coluna */
   }
 }
 
@@ -863,7 +821,6 @@ label {
 .botoes-acao {
   display: flex;
   justify-content: space-between;
-  /* Um botão à esquerda e outro à direita */
   margin-top: 20px;
 }
 </style>

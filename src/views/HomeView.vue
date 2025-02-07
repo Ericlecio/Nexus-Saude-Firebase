@@ -181,7 +181,7 @@ export default {
       user: null,
       isPaciente: false,
       isMedico: false,
-      imagemAtual: 0, // Controla qual imagem está sendo exibida
+      imagemAtual: 0,
       imagensBanner: [
         "/img/Fundo1.png",
         "/img/Fundo2.jpg ",

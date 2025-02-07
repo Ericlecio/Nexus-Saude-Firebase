@@ -18,7 +18,6 @@
               </p>
               <form @submit.prevent="submitForm">
 
-                <!-- Linha 1 -->
                 <div class="row g-4">
                   <div class="col-md-4 col-sm-12">
                     <label for="especialidade" class="form-label text-dark fw-bold">Especialidade</label>
@@ -50,7 +49,6 @@
                   </div>
                 </div>
 
-                <!-- Linha 2 -->
                 <div class="row g-4 mt-3">
                   <div class="col-md-4 col-sm-12">
                     <label for="pacienteNome" class="form-label text-dark fw-bold">Paciente</label>
@@ -68,7 +66,6 @@
                   </div>
                 </div>
 
-                <!-- Linha 3 -->
                 <div class="row g-4 mt-3">
                   <div class="col-md-4 col-sm-12">
                     <label for="pacienteTelefone" class="form-label text-dark fw-bold">Telefone</label>
@@ -81,7 +78,6 @@
                   </div>
                 </div>
 
-                <!-- Botões -->
 
                 <div class="text-center mt-4">
                   <button type="submit" class="btn btn-primary btn-lg">
@@ -114,7 +110,7 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
+import BotaoVoltar from "@/components/BotaoVoltar.vue";
 
 
 export default {
@@ -157,17 +153,12 @@ export default {
           this.$router.push("/login");
           return;
         }
-
         try {
-          console.log("✅ Usuário autenticado:", firebaseUser.uid);
-
-          // 🔹 Busca o paciente pelo UID no Firestore
           const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
           const pacienteSnap = await getDoc(pacienteRef);
 
           if (pacienteSnap.exists()) {
             const pacienteData = pacienteSnap.data();
-            console.log("🔹 Dados do paciente carregados:", pacienteData);
 
             this.pacienteLogado = {
               id: firebaseUser.uid,
@@ -177,12 +168,10 @@ export default {
             this.form.pacienteNome = pacienteData.nomeCompleto || "Nome não informado";
             this.form.pacienteTelefone = pacienteData.telefone || "Não informado";
           } else {
-            console.error("❌ Paciente não encontrado no Firestore.");
             alert("Paciente não cadastrado no sistema.");
             this.$router.push("/login");
           }
         } catch (error) {
-          console.error("🚨 Erro ao carregar dados do paciente:", error);
           alert("Erro ao carregar dados do paciente.");
         }
       });
@@ -206,9 +195,7 @@ export default {
 
         this.especialidades = [...new Set(this.medicos.map((medico) => medico.especialidade))];
 
-        console.log("✅ Médicos carregados:", this.medicos); // Para verificar se os dados estão sendo carregados corretamente
       } catch (error) {
-        console.error("❌ Erro ao carregar médicos:", error);
         alert("Erro ao carregar médicos. Tente novamente.");
       }
     },
@@ -230,8 +217,6 @@ export default {
         this.form.telefoneConsultorio = medicoSelecionado.telefoneConsultorio || "Não informado";
         this.form.valorConsulta = medicoSelecionado.valorConsulta ? `${medicoSelecionado.valorConsulta},00` : "Não informado";
 
-        console.log("✅ Dados do médico selecionado:", medicoSelecionado); // Para verificar se os dados estão sendo carregados corretamente
-
         this.carregarHorarios(medicoSelecionado);
       } else {
         this.horariosDisponiveis = [];
@@ -247,29 +232,28 @@ export default {
       }
 
       const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0); // Remove horas para comparação correta
+      hoje.setHours(0, 0, 0, 0);
 
       const duasSemanasDepois = new Date();
-      duasSemanasDepois.setDate(hoje.getDate() + 14); // Definir limite de 2 semanas
+      duasSemanasDepois.setDate(hoje.getDate() + 14);
 
       const diasSemana = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
       const horarios = [];
 
-      for (let i = 0; i < 14; i++) { // Iterar pelos próximos 14 dias
+      for (let i = 0; i < 14; i++) {
         const dataConsulta = new Date(hoje);
         dataConsulta.setDate(hoje.getDate() + i);
-        dataConsulta.setHours(0, 0, 0, 0); // Resetando horário
+        dataConsulta.setHours(0, 0, 0, 0);
 
         const nomeDiaSemana = diasSemana[dataConsulta.getDay()];
 
-        if (!medico.diasAtendimento[nomeDiaSemana]) continue; // Se o médico não atende nesse dia, pula para o próximo
+        if (!medico.diasAtendimento[nomeDiaSemana]) continue;
 
         for (const horario of medico.diasAtendimento[nomeDiaSemana]) {
           const [hora, minuto] = horario.split(":").map(Number);
           const horarioCompleto = new Date(dataConsulta);
           horarioCompleto.setHours(hora, minuto, 0, 0);
 
-          // Remover horários passados
           if (horarioCompleto < new Date()) continue;
 
           const horarioFormatado = `${horarioCompleto.toLocaleDateString("pt-BR")} ${horario}`;
@@ -289,7 +273,6 @@ export default {
     async verificarDisponibilidade(medicoId, horarioCompleto) {
       const db = getFirestore();
 
-      // Verifica se já existe um agendamento para esse horário
       const q = query(
         collection(db, "agendamentos"),
         where("medicoId", "==", medicoId),
@@ -297,7 +280,7 @@ export default {
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.empty; // Retorna `true` se o horário está disponível, `false` se já estiver ocupado
+      return querySnapshot.empty;
     },
 
     async submitForm() {
@@ -320,8 +303,8 @@ export default {
           especialidade: this.form.especialidade,
           medicoId: this.form.medicoId,
           medicoNome: this.form.medicoNome,
-          telefoneConsultorio: this.form.telefoneConsultorio, // ✅ Adicionando telefone do consultório
-          valorConsulta: this.form.valorConsulta, // ✅ Adicionando valor da consulta
+          telefoneConsultorio: this.form.telefoneConsultorio,
+          valorConsulta: this.form.valorConsulta,
           local: this.form.local,
           data: this.form.data,
           pacienteId: this.pacienteLogado.id,
@@ -333,14 +316,12 @@ export default {
         alert("Consulta agendada com sucesso!");
         this.$router.push("/");
       } catch (error) {
-        console.error("❌ Erro ao agendar consulta:", error);
         alert("Não foi possível agendar a consulta. Tente novamente.");
       }
     },
   },
 
   async mounted() {
-    console.log("📌 Página de Agendamento carregada...");
     await this.verificarPacienteLogado();
     await this.fetchMedicos();
   }
@@ -377,7 +358,6 @@ export default {
   background-color: #fff;
 }
 
-/* 🔹 Tornando os campos responsivos */
 @media (max-width: 768px) {
   .col-md-4 {
     flex: 0 0 100%;

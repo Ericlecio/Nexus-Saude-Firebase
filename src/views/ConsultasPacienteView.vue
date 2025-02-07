@@ -31,8 +31,8 @@
                 <th>Profissional</th>
                 <th>Local</th>
                 <th>Data e Hora</th>
-                <th>Telefone do Consultório</th> <!-- 🔹 Novo -->
-                <th>Valor da Consulta</th> <!-- 🔹 Novo -->
+                <th>Telefone do Consultório</th>
+                <th>Valor da Consulta</th>
                 <th>Situação</th>
                 <th class="text-center">Ações</th>
               </tr>
@@ -45,8 +45,8 @@
                 <td>{{ agendamento.medicoNome }}</td>
                 <td>{{ agendamento.local }}</td>
                 <td>{{ agendamento.data }}</td>
-                <td>{{ agendamento.telefoneConsultorio }}</td> <!-- 🔹 Novo -->
-                <td>{{ agendamento.valorConsulta }}</td> <!-- 🔹 Novo -->
+                <td>{{ agendamento.telefoneConsultorio }}</td>
+                <td>{{ agendamento.valorConsulta }}</td>
                 <td>{{ agendamento.situacao }}</td>
                 <td class="text-center">
                   <button v-if="agendamento.situacao === 'Confirmada'" class="btn btn-sm btn-warning"
@@ -145,7 +145,6 @@ export default {
 
         const db = getFirestore();
 
-        // Buscar consultas confirmadas na tabela 'agendamentos'
         const qAgendamentos = query(collection(db, "agendamentos"), where("pacienteId", "==", user.id));
         const snapshotAgendamentos = await getDocs(qAgendamentos);
         let agendamentosAtuais = snapshotAgendamentos.empty ? [] : snapshotAgendamentos.docs.map((docSnap) => ({
@@ -153,7 +152,6 @@ export default {
           ...docSnap.data(),
         }));
 
-        // Buscar consultas canceladas e finalizadas na tabela 'historicoConsultas'
         const qHistorico = query(collection(db, "historicoConsultas"), where("pacienteId", "==", user.id));
         const snapshotHistorico = await getDocs(qHistorico);
         let historicoConsultas = snapshotHistorico.empty ? [] : snapshotHistorico.docs.map((docSnap) => ({
@@ -161,10 +159,8 @@ export default {
           ...docSnap.data(),
         }));
 
-        // Combinar ambas as listas
         this.agendamentos = [...agendamentosAtuais, ...historicoConsultas];
       } catch (error) {
-        console.error("Erro ao carregar agendamentos:", error);
         alert("Erro ao carregar agendamentos.");
       } finally {
         this.carregando = false;
@@ -190,26 +186,21 @@ export default {
         if (consultaSnap.exists()) {
           const consulta = consultaSnap.data();
 
-          // Criar um histórico da consulta cancelada
           await addDoc(collection(db, "historicoConsultas"), {
             ...consulta,
             situacao: "Cancelada pelo paciente",
             dataCancelamento: new Date().toISOString()
           });
-
-          // Remover a consulta da tabela agendamentos
           await deleteDoc(consultaRef);
-
           alert("Consulta cancelada com sucesso e movida para o histórico.");
         } else {
           alert("Consulta não encontrada.");
         }
       } catch (error) {
-        console.error("Erro ao cancelar consulta:", error);
         alert("Erro ao cancelar consulta. Tente novamente.");
       } finally {
         this.showModal = false;
-        this.carregarAgendamentos(); // Recarregar a lista para refletir a alteração
+        this.carregarAgendamentos();
       }
     },
 

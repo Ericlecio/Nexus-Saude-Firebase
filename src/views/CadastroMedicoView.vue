@@ -267,7 +267,7 @@ export default {
         valorConsulta: "R$ 0,00",
         tempoConsulta: "",
       },
-      valorInvalido: false, // Para exibir a mensagem de erro
+      valorInvalido: false,
       showPassword: false,
       crmInvalido: false,
     };
@@ -371,14 +371,14 @@ export default {
       return horarios;
     },
     formatarValorConsulta(event) {
-      let valor = event.target.value.replace(/\D/g, ""); // Remove tudo que não for número
+      let valor = event.target.value.replace(/\D/g, "");
       if (valor === "" || parseFloat(valor) === 0) {
         this.form.valorConsulta = "R$ 0,00";
         this.valorInvalido = true; // Exibe o erro caso o valor seja 0
         return;
       }
 
-      this.valorInvalido = false; // Se for válido, remove o erro
+      this.valorInvalido = false;
 
       let valorFormatado = (parseFloat(valor) / 100).toLocaleString("pt-BR", {
         style: "currency",
@@ -456,7 +456,6 @@ export default {
           return;
         }
 
-        // 🔹 Criar usuário no Firebase Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, this.form.email, this.form.senha);
         const userId = userCredential.user.uid;
 
@@ -467,7 +466,6 @@ export default {
           }
         });
 
-        // 🔹 Inserir no Firestore com UID do Authentication
         const medicoRef = doc(db, "medicos", userId);
         await setDoc(medicoRef, {
           id: userId,
@@ -488,13 +486,12 @@ export default {
 
         alert("Médico cadastrado com sucesso!");
 
-        // 🔹 Redireciona para a página de login com os campos preenchidos
         this.$router.push({
           path: "/login",
           query: {
             userType: "medico",
             email: this.form.email,
-            senha: this.form.senha, // 🔹 Senha preenchida automaticamente na tela de login
+            senha: this.form.senha,
           },
         });
 

@@ -214,21 +214,15 @@ export default {
           }
         });
       } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
         alert("Erro ao carregar perfil do paciente.");
       }
     },
 
     abrirModal() {
       if (!this.paciente) return;
-
-      // Criar uma cópia dos dados do paciente para edição, garantindo que os valores apareçam no modal
       this.formEdit = { ...this.paciente };
-
-      // Exibir o modal
       this.showModalEdit = true;
-    }
-    ,
+    },
 
     fecharModal() {
       this.showModalEdit = false;
@@ -259,13 +253,11 @@ export default {
         this.cpfInvalido = true;
         return;
       }
-
       const calcularDigito = (base) =>
         Array.from(
           { length: base },
           (_, i) => parseInt(cpf[i]) * (base + 1 - i)
         ).reduce((a, b) => a + b) % 11;
-
       const digito1 = calcularDigito(9) < 2 ? 0 : 11 - calcularDigito(9);
       const digito2 = calcularDigito(10) < 2 ? 0 : 11 - calcularDigito(10);
 
@@ -288,11 +280,7 @@ export default {
           alert("Usuário não autenticado.");
           return;
         }
-
-        // Criar um batch para operações em lote
         const batch = writeBatch(db);
-
-        // Buscar todos os agendamentos do paciente
         const agendamentosQuery = query(
           collection(db, "agendamentos"),
           where("pacienteId", "==", this.pacienteId)
@@ -303,7 +291,6 @@ export default {
           for (const agendamentoDoc of agendamentosSnapshot.docs) {
             const agendamento = agendamentoDoc.data();
 
-            // Criar um novo documento no histórico de consultas
             const historicoRef = doc(collection(db, "historicoConsultas"));
             batch.set(historicoRef, {
               pacienteId: agendamento.pacienteId,
@@ -318,27 +305,19 @@ export default {
               situacao: "Paciente removido do sistema",
             });
 
-            // Excluir o agendamento original
             batch.delete(agendamentoDoc.ref);
           }
         }
 
-        // Excluir a conta do paciente no Firestore
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
         batch.delete(pacienteRef);
 
-        // Executar todas as operações em lote
         await batch.commit();
-        console.log("✅ Histórico atualizado e paciente removido com sucesso.");
-
-        // Excluir a conta do Firebase Authentication
         await deleteUser(user);
 
         alert("Conta excluída com sucesso!");
-        this.$router.push("/login"); // Redirecionamento após exclusão
+        this.$router.push("/login");
       } catch (error) {
-        console.error("Erro ao excluir conta:", error);
-
         if (error.code === "auth/wrong-password") {
           alert("Senha incorreta. Tente novamente.");
         } else if (error.code === "auth/too-many-requests") {
@@ -349,7 +328,7 @@ export default {
           alert(`Erro ao excluir conta: ${error.message}`);
         }
       } finally {
-        this.senhaExclusao = ""; // Limpar o campo de senha após a tentativa
+        this.senhaExclusao = "";
         this.fecharModal();
       }
     },
@@ -381,7 +360,6 @@ export default {
 
         console.log("📌 Histórico de consultas carregado:", this.paciente.consultas);
       } catch (error) {
-        console.error("Erro ao carregar histórico de consultas:", error);
         alert("Erro ao carregar o histórico de consultas.");
       }
     },
@@ -393,23 +371,15 @@ export default {
           alert("Erro ao atualizar dados. ID do paciente não encontrado.");
           return;
         }
-
         const db = getFirestore();
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
-
-        // Criação de uma cópia dos dados, removendo o e-mail
         const dadosAtualizados = { ...this.formEdit };
-        delete dadosAtualizados.email;  // 🚫 Remove o campo de e-mail para que não seja atualizado
-
+        delete dadosAtualizados.email;
         await updateDoc(pacienteRef, dadosAtualizados);
-
-        // Atualizar localmente os dados do paciente, mantendo o e-mail original
         this.paciente = { ...this.paciente, ...dadosAtualizados };
-
         alert("Informações atualizadas com sucesso!");
         this.fecharModal();
       } catch (error) {
-        console.error("Erro ao atualizar paciente:", error);
         alert("Erro ao atualizar paciente. Tente novamente.");
       }
     },
@@ -429,7 +399,6 @@ export default {
   cursor: pointer;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   top: 0;
