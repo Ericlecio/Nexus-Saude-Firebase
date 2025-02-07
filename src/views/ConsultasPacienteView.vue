@@ -218,13 +218,30 @@ export default {
 
 
 <style scoped>
+/* Ajuste do espaçamento da página */
 .div-principal {
   margin-top: 5%;
+}
+
+/* Filtros responsivos */
+.nav-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.nav-pills .nav-item {
+  flex-grow: 1;
+  text-align: center;
 }
 
 .nav-pills .nav-link {
   color: #53ba83;
   cursor: pointer;
+  font-size: 1rem;
+  padding: 10px;
+  white-space: nowrap;
 }
 
 .nav-pills .nav-link.active {
@@ -232,16 +249,74 @@ export default {
   color: white;
 }
 
+/* Tornando a tabela responsiva */
+.table-responsive {
+  overflow-x: auto;
+}
+
 .table {
   border: 1px solid #ddd;
   border-radius: 10px;
+  white-space: nowrap;
 }
 
+/* Ajuste das colunas para telas menores */
+@media (max-width: 991px) {
+
+  .table th,
+  .table td {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 767px) {
+
+  .table th,
+  .table td {
+    font-size: 0.8rem;
+    padding: 6px;
+  }
+
+  .table th:nth-child(4),
+  .table td:nth-child(4),
+  .table th:nth-child(5),
+  .table td:nth-child(5) {
+    display: none;
+    /* Esconde colunas menos importantes */
+  }
+}
+
+@media (max-width: 575px) {
+  .table {
+    font-size: 0.75rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 5px;
+  }
+
+  .table th:nth-child(6),
+  .table td:nth-child(6) {
+    display: none;
+    /* Esconde mais uma coluna para telas muito pequenas */
+  }
+}
+
+/* Diferencia consultas canceladas */
 .consulta-cancelada td {
   text-decoration: line-through;
   background: rgba(0, 0, 30, 0.1);
 }
 
+/* Ajuste dos botões */
+.btn {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+}
+
+/* Modal responsivo */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -252,6 +327,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 10px;
 }
 
 .modal-content {
@@ -261,5 +337,13 @@ export default {
   width: 90%;
   max-width: 500px;
   text-align: center;
+}
+
+/* Ajuste para modal em telas menores */
+@media (max-width: 480px) {
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+  }
 }
 </style>
