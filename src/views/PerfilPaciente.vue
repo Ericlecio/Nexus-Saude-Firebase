@@ -1,10 +1,8 @@
 <template>
   <div>
     <Navbar />
-    <br /><br />
     <div class="container py-5">
       <BotaoVoltar />
-
       <h1 class="text-center mb-4 text-primary">
         {{ paciente ? paciente.nomeCompleto : "Carregando..." }}
       </h1>

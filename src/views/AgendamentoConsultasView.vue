@@ -3,13 +3,13 @@
   <div class="container-fluid py-5 mt-5">
     <div class="row justify-content-center align-items-center">
       <div class="col-lg-10 col-md-12">
-        <BotaoVoltar />
         <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
           <div class="row g-0">
             <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center bg-light">
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem Nexus Saúde" class="img-fluid logo" />
             </div>
             <div class="col-md-8 p-5 bg-white">
+              <BotaoVoltar />
               <h1 class="text-center text-primary mb-3 font-weight-bold">
                 Nexus Saúde
               </h1>

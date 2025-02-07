@@ -4,11 +4,14 @@
       <a class="navbar-brand" href="/">
         <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Nexus Saúde" class="logo" />
       </a>
+
+      <!-- Botão do menu responsivo -->
       <button class="navbar-toggler" type="button" @click="toggleCollapse">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <div :class="['collapse navbar-collapse', { show: !isCollapsed }]">
+      <!-- Menu de navegação -->
+      <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }">
         <ul class="navbar-nav mx-auto">
           <li class="nav-item">
             <a class="nav-link" href="/">Home</a>
@@ -21,6 +24,7 @@
           </li>
         </ul>
 
+        <!-- Menu do usuário -->
         <div class="dropdown ms-3">
           <a href="#" class="d-flex align-items-center perfil-link" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle"></i>
@@ -121,10 +125,14 @@ export default {
     this.verificarUsuario();
     window.addEventListener("scroll", this.handleScroll);
   },
+  beforeUnmount() {
+    window.removeEventListener("scroll", this.handleScroll);
+  },
 };
 </script>
 
 <style scoped>
+/* Estilos gerais */
 .navbar {
   background: transparent;
   transition: all 0.4s ease-in-out;
@@ -137,6 +145,7 @@ export default {
   padding: 10px 0;
 }
 
+/* Garantindo responsividade */
 @media (max-width: 991px) {
   .navbar {
     background: rgba(255, 255, 255, 0.98);
@@ -165,6 +174,7 @@ export default {
   transform: translateY(-2px);
 }
 
+/* Ícone de perfil */
 .bi-person-circle {
   font-size: 1.8rem;
   color: #53ba83;
@@ -193,8 +203,6 @@ export default {
   padding: 10px 15px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   animation: fadeIn 0.3s ease-in-out;
-  position: absolute !important;
-  z-index: 1050;
 }
 
 @keyframes fadeIn {
@@ -220,11 +228,13 @@ export default {
   transform: scale(1.05);
 }
 
+/* Botão logout */
 .logout-btn {
   color: red !important;
   font-weight: bold;
 }
 
+/* Responsividade para menu mobile */
 .navbar-toggler {
   border: none;
   transition: all 0.3s ease-in-out;
@@ -240,5 +250,14 @@ export default {
 
 .navbar-toggler:hover .navbar-toggler-icon {
   transform: rotate(90deg);
+}
+
+@media (max-width: 991px) {
+  .collapse.navbar-collapse {
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  }
 }
 </style>

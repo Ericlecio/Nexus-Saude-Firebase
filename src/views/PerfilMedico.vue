@@ -1,7 +1,6 @@
 <template>
   <div>
     <Navbar />
-    <br /><br />
     <div class="container py-5">
       <BotaoVoltar />
 

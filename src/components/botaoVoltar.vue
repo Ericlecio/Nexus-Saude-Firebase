@@ -32,6 +32,7 @@ export default {
     transition: all 0.3s ease-in-out;
     text-transform: uppercase;
     letter-spacing: 0.8px;
+    margin-top: 8%;
 }
 
 .btn-voltar i {
@@ -48,5 +49,14 @@ export default {
 .btn-voltar:active {
     transform: translateY(1px);
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+    .btn-voltar {
+        width: 100%;
+        margin-top: 30%;
+        margin-bottom: 5%;
+    }
 }
 </style>

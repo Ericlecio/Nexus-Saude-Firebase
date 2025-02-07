@@ -150,13 +150,12 @@ body {
 .banner {
   background-size: cover;
   background-position: center;
-  height: 60vh;
+  width: 100%;
+  height: 50vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
   text-align: center;
-  padding: 0 20px;
 }
 
 .banner-content h1 {
@@ -178,12 +177,10 @@ body {
 }
 
 /* SEÇÃO VALORES */
-.values-section .value-card {
-  background-color: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 12px;
-  padding: 20px;
-  transition: transform 0.3s ease-in-out;
+.mission-card,
+.value-card {
+  max-width: 90%;
+  margin: 0 auto;
 }
 
 .values-section .value-card:hover {
@@ -233,7 +230,6 @@ body {
 @media (max-width: 768px) {
   .banner {
     height: 40vh;
-    padding: 15px;
   }
 
   .banner-content h1 {
@@ -250,6 +246,7 @@ body {
 
   .mission-card {
     padding: 20px;
+    font-size: 0.9rem;
   }
 
   .values-section .row {
