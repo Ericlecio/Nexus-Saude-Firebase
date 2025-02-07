@@ -45,7 +45,7 @@
           <div class="card-body">
             <h5 class="card-title mb-3">
               <i class="fas fa-clock me-2 text-primary"></i>
-              <strong>Horários de Atend imento</strong>
+              <strong>Horários de Atendimento</strong>
               <i class="fas fa-edit ms-2 text-primary cursor-pointer" @click="abrirModal('horarios')"></i>
             </h5>
             <ul class="list-unstyled">
@@ -163,6 +163,7 @@
               <input v-model="formEdit.crm" type="text" class="form-control" maxlength="6" @input="formatarCRM"
                 @blur="validarCRM" required />
 
+
               <label>CPF</label>
               <!-- CPF agora validado -->
               <input v-model="formEdit.cpf" type="text" class="form-control" required maxlength="14"
@@ -225,7 +226,7 @@
                       <!-- Botão para remover o horário do dia -->
                       <button class="btn btn-danger btn-sm ms-2" @click="removerDia(dia)"
                         v-if="formEdit.diasAtendimento[dia].inicio">
-                        Remover
+                        Limpar
                       </button>
                     </div>
                   </div>
@@ -291,7 +292,9 @@ import {
   where,
   getDocs,
   writeBatch,
+  deleteField,
 } from "firebase/firestore";
+
 
 import {
   getAuth,
@@ -622,29 +625,10 @@ export default {
         alert(`Erro ao salvar edições: ${error.message}`);
       }
     },
-    async removerDia(dia) {
-      if (!this.medicoId) {
-        alert("Erro: ID do médico não encontrado.");
-        return;
-      }
-
-      try {
-        const db = getFirestore();
-        const medicoRef = doc(db, "medicos", this.medicoId);
-
-        // Remove o dia da lista de horários
-        delete this.formEdit.diasAtendimento[dia];
-
-        // Atualiza no Firestore removendo o dia selecionado
-        await updateDoc(medicoRef, {
-          [`diasAtendimento.${dia}`]: deleteDoc() // Remove do Firestore
-        });
-
-        alert(`Horário de ${this.formatDia(dia)} removido com sucesso!`);
-
-      } catch (error) {
-        console.error("Erro ao remover horário:", error);
-        alert(`Erro ao remover horário: ${error.message}`);
+    removerDia(dia) {
+      if (this.formEdit.diasAtendimento[dia]) {
+        this.formEdit.diasAtendimento[dia].inicio = "";
+        this.formEdit.diasAtendimento[dia].fim = "";
       }
     },
     gerarIntervalos(inicio, fim, duracao) {
@@ -682,7 +666,11 @@ export default {
       this.formEdit.valorConsulta = `R$ ${valor.replace(".", ",")}`; l
     },
     formatarCRM(event) {
-      this.formEdit.crm = event.target.value.replace(/\D/g, "").slice(0, 6);
+      let crm = event.target.value.replace(/\D/g, ""); // Remove caracteres não numéricos
+      if (crm.length > 6) {
+        crm = crm.slice(0, 6); // Garante que não tenha mais que 6 dígitos
+      }
+      this.formEdit.crm = crm;
     },
     validarCRM() {
       if (this.formEdit.crm.length !== 6) {
