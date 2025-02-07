@@ -23,8 +23,9 @@
           <form @submit.prevent="login">
             <div v-if="userType === 'paciente'">
               <div class="btn-container">
-                <button type="button" @click="loginWithGoogle" class="btn-google">
-                  <i class="fab fa-google"></i> Login com Google
+                <button type="button" @click="loginWithGoogle" class="btn-google" :disabled="loadingGoogleLogin">
+                  <i class="fab fa-google"></i>
+                  {{ loadingGoogleLogin ? "Autenticando..." : "Login com Google" }}
                 </button>
               </div>
             </div>
@@ -118,6 +119,7 @@ export default {
       password: "",
       showPassword: false,
       isResettingPassword: false,
+      loadingGoogleLogin: false,
     };
   },
   created() {
@@ -220,6 +222,9 @@ export default {
     },
 
     async loginWithGoogle() {
+      if (this.loadingGoogleLogin) return; // Impede múltiplos cliques
+
+      this.loadingGoogleLogin = true; // Inicia o carregamento
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
       const db = getFirestore();
@@ -240,7 +245,7 @@ export default {
             dataCadastro: new Date().toISOString(),
           });
 
-          // Aguarde a atualização do Firestore antes de recuperar os dados
+          // Buscar os dados novamente após salvar
           docSnap = await getDoc(userRef);
         }
 
@@ -259,8 +264,11 @@ export default {
       } catch (error) {
         console.error("Erro ao autenticar com o Google:", error);
         alert("Erro ao autenticar com o Google. Tente novamente.");
+      } finally {
+        this.loadingGoogleLogin = false; // Finaliza o carregamento
       }
     },
+
 
     async resetPassword() {
       if (!this.email) {

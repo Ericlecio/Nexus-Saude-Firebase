@@ -116,7 +116,6 @@ export default {
   },
 };
 </script>
-
 <style scoped>
 .navbar {
   background: transparent;
@@ -134,14 +133,95 @@ export default {
   .navbar {
     background: rgba(255, 255, 255, 0.98);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    padding: 10px 15px;
+  }
+
+  .navbar-collapse {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    border-radius: 0 0 10px 10px;
+    z-index: 1000;
+  }
+
+  .navbar-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .navbar-nav .nav-item {
+    width: 100%;
+    text-align: center;
+  }
+
+  .navbar-nav .nav-link {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+  /* Ajuste no dropdown */
+  .dropdown {
+    width: 100%;
+    text-align: center;
+  }
+
+  .dropdown-menu {
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 0 0 10px 10px;
+  }
+
+  /* Perfil responsivo */
+  .perfil-link {
+    flex-direction: column;
+    text-align: center;
+    font-size: 1rem;
   }
 }
 
+/* ====== AJUSTES PARA TELAS MUITO PEQUENAS (≤ 575px) ====== */
+@media (max-width: 575px) {
+  .navbar {
+    padding: 8px 10px;
+  }
+
+  .navbar-brand .logo {
+    height: 40px;
+  }
+
+  .navbar-toggler {
+    padding: 5px;
+  }
+
+  .navbar-nav .nav-link {
+    font-size: 0.9rem;
+  }
+
+  .perfil-link {
+    font-size: 0.9rem;
+  }
+
+  .bi-person-circle {
+    font-size: 1.6rem;
+  }
+}
+
+/* ====== ESTILO DA LOGO ====== */
 .navbar-brand .logo {
   height: 50px;
   transition: all 0.3s ease-in-out;
 }
 
+/* ====== LINKS DO MENU ====== */
 .navbar-nav .nav-link {
   color: #000;
   font-weight: 600;
@@ -149,6 +229,7 @@ export default {
   padding: 10px 15px;
   border-radius: 30px;
   transition: all 0.3s ease-in-out;
+  text-align: center;
 }
 
 .navbar-nav .nav-link:hover {
@@ -158,6 +239,7 @@ export default {
   transform: translateY(-2px);
 }
 
+/* ====== ÍCONE DO USUÁRIO ====== */
 .bi-person-circle {
   font-size: 1.8rem;
   color: #53ba83;
@@ -178,7 +260,7 @@ export default {
   color: #1565C0;
 }
 
-/* Menu suspenso */
+/* ====== MENU SUSPENSO ====== */
 .dropdown-menu {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 8px;
@@ -211,11 +293,13 @@ export default {
   transform: scale(1.05);
 }
 
+/* ====== BOTÃO DE LOGOUT ====== */
 .logout-btn {
   color: red !important;
   font-weight: bold;
 }
 
+/* ====== BOTÃO DO MENU MOBILE ====== */
 .navbar-toggler {
   border: none;
   transition: all 0.3s ease-in-out;
@@ -225,11 +309,46 @@ export default {
   box-shadow: none;
 }
 
+/* Ícone do botão do menu */
 .navbar-toggler-icon {
-  transition: 0.3s ease-in-out;
+  width: 30px;
+  height: 3px;
+  background-color: #333;
+  display: block;
+  position: relative;
+  transition: all 0.3s ease-in-out;
 }
 
-.navbar-toggler:hover .navbar-toggler-icon {
-  transform: rotate(90deg);
+.navbar-toggler-icon::before,
+.navbar-toggler-icon::after {
+  content: "";
+  width: 30px;
+  height: 3px;
+  background-color: #333;
+  position: absolute;
+  left: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.navbar-toggler-icon::before {
+  top: -8px;
+}
+
+.navbar-toggler-icon::after {
+  top: 8px;
+}
+
+.navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
+  background-color: transparent;
+}
+
+.navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::before {
+  transform: rotate(45deg);
+  top: 0;
+}
+
+.navbar-toggler[aria-expanded="true"] .navbar-toggler-icon::after {
+  transform: rotate(-45deg);
+  top: 0;
 }
 </style>

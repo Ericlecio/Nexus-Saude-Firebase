@@ -1,5 +1,5 @@
 <template>
-  <Navbar />
+  <Navbar /><br><br>
   <div class="div-principal">
     <div class="container my-5">
       <BotaoVoltar />
