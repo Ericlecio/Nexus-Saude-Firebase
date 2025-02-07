@@ -907,4 +907,109 @@ label {
   justify-content: space-between;
   margin-top: 20px;
 }
+
+/* Estilos para telas menores */
+@media (max-width: 768px) {
+
+  /* Ajuste do modal para ocupar um espaço melhor */
+  .modal-content {
+    width: 90%;
+    max-width: 450px;
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  /* Ajustando o título do modal */
+  .container h4.text-center {
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    font-weight: bold;
+  }
+
+  /* Melhorando layout do formulário */
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .col-md-4 {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  /* Ajustando o alinhamento dos inputs e botões */
+  .d-flex {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .d-flex label {
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 6px;
+    font-size: 1rem;
+  }
+
+  /* Inputs de seleção de horário */
+  .form-select {
+    width: 100%;
+    max-width: 250px;
+    padding: 10px;
+    font-size: 1rem;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: border-color 0.3s ease;
+  }
+
+  .form-select:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  /* Botão de remover horário com melhor acessibilidade */
+  .btn-danger {
+    width: 100%;
+    max-width: 200px;
+    margin-top: 8px;
+    padding: 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+  }
+
+  .btn-danger:hover {
+    background: #dc3545;
+    color: white;
+  }
+}
+
+/* Ajustes adicionais para telas muito pequenas */
+@media (max-width: 480px) {
+
+  /* Reduzindo padding do modal para melhor visualização */
+  .modal-content {
+    padding: 15px;
+    max-width: 95%;
+  }
+
+  /* Reduzindo tamanho dos títulos */
+  h4.text-center {
+    font-size: 1.2rem;
+  }
+
+  /* Inputs compactos para caberem bem na tela */
+  .form-select {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+
+  /* Ajustando botão de remover */
+  .btn-danger {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+}
 </style>
