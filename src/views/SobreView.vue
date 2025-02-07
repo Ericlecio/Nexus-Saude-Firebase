@@ -131,12 +131,19 @@ body {
   overflow-x: hidden;
 }
 
-/* Ajuste para o container principal */
 .div-principal {
   background: linear-gradient(rgba(0, 0, 30, 0.6),
       rgba(0, 0, 30, 0.6)),
     url("@/assets/img/img_fundo.png") no-repeat center center fixed;
   background-size: cover;
+  padding-top: 80px;
+
+}
+
+@media (max-width: 991px) {
+  .div-principal {
+    padding-top: 100px;
+  }
 }
 
 /* BANNER */
