@@ -391,7 +391,7 @@ export default {
       const hoje = new Date();
       const nascimento = new Date(this.form.dataNascimento);
       const idade = hoje.getFullYear() - nascimento.getFullYear();
-      if (idade < 18 || (idade === 18 && hoje < new Date(nascimento.setFullYear(hoje.getFullYear())))) {
+      if (idade < 18) {
         alert("Apenas médicos acima de 18 anos podem ser cadastrados.");
         return;
       }
@@ -403,57 +403,56 @@ export default {
       ];
       for (const campo of camposObrigatorios) {
         if (!this.form[campo]) {
-          alert(`O campo "${campo}" é obrigatório. Por favor, preencha.`);
+          alert(`O campo "${campo}" é obrigatório.`);
           return;
         }
       }
 
-      const valorNumerico = parseFloat(
-        this.form.valorConsulta.replace("R$", "").replace(/\./g, "").replace(",", ".")
-      );
-
+      const valorNumerico = parseFloat(this.form.valorConsulta.replace("R$", "").replace(/\./g, "").replace(",", "."));
       if (isNaN(valorNumerico) || valorNumerico <= 0) {
         alert("O valor da consulta deve ser maior que R$ 0,00.");
         return;
       }
 
-      const algumHorarioPreenchido = Object.values(this.diasAtendimento).some(
-        (dia) => dia.inicio && dia.fim
-      );
+      const algumHorarioPreenchido = Object.values(this.diasAtendimento).some(dia => dia.inicio && dia.fim);
       if (!algumHorarioPreenchido) {
-        alert("Você deve informar pelo menos um dia e horário de atendimento antes de cadastrar.");
+        alert("Você deve informar pelo menos um dia e horário de atendimento.");
         return;
       }
 
       try {
-        const db = getFirestore();
         const auth = getAuth();
-        const medicosRef = collection(db, "medicos");
+        const db = getFirestore();
 
-        const consultaCPF = query(medicosRef, where("cpf", "==", this.form.cpf));
-        const consultaCRM = query(medicosRef, where("crm", "==", this.form.crm));
-        const consultaEmail = query(medicosRef, where("email", "==", this.form.email));
+        // 🔹 **VERIFICA SE O E-MAIL JÁ EXISTE NO FIREBASE AUTHENTICATION**
+        const usersRef = collection(db, "users");
+        const userQuery = query(usersRef, where("email", "==", this.form.email));
+        const existingUser = await getDocs(userQuery);
 
-        const [resultadoCPF, resultadoCRM, resultadoEmail] = await Promise.all([
-          getDocs(consultaCPF), getDocs(consultaCRM), getDocs(consultaEmail),
+        if (!existingUser.empty) {
+          alert("Já existe um usuário cadastrado com este e-mail no sistema.");
+          return;
+        }
+
+        // 🔹 **VERIFICA SE O E-MAIL JÁ EXISTE NA COLEÇÃO 'MEDICOS' OU 'PACIENTES'**
+        const medicoQuery = query(collection(db, "medicos"), where("email", "==", this.form.email));
+        const pacienteQuery = query(collection(db, "pacientes"), where("email", "==", this.form.email));
+
+        const [medicoSnap, pacienteSnap] = await Promise.all([
+          getDocs(medicoQuery),
+          getDocs(pacienteQuery)
         ]);
 
-        if (!resultadoCPF.empty) {
-          alert("Já existe um médico cadastrado com este CPF.");
-          return;
-        }
-        if (!resultadoCRM.empty) {
-          alert("Já existe um médico cadastrado com este CRM.");
-          return;
-        }
-        if (!resultadoEmail.empty) {
-          alert("Já existe um médico cadastrado com este E-mail.");
+        if (!medicoSnap.empty || !pacienteSnap.empty) {
+          alert("Já existe um usuário cadastrado com este e-mail.");
           return;
         }
 
+        // Criando a conta no Firebase Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, this.form.email, this.form.senha);
         const userId = userCredential.user.uid;
 
+        // Criando os horários de atendimento formatados
         const diasComHorarios = {};
         Object.entries(this.diasAtendimento).forEach(([dia, { inicio, fim }]) => {
           if (inicio && fim) {
@@ -461,6 +460,7 @@ export default {
           }
         });
 
+        // Adicionando o médico ao Firestore
         const medicoRef = doc(db, "medicos", userId);
         await setDoc(medicoRef, {
           id: userId,
@@ -480,23 +480,11 @@ export default {
         });
 
         alert("Médico cadastrado com sucesso!");
-
-        this.$router.push({
-          path: "/login",
-          query: {
-            userType: "medico",
-            email: this.form.email,
-            senha: this.form.senha,
-          },
-        });
+        this.$router.push({ path: "/login", query: { userType: "medico", email: this.form.email, senha: this.form.senha } });
 
       } catch (error) {
         console.error("Erro ao cadastrar médico: ", error);
-        if (error.code === "auth/weak-password") {
-          alert("A senha deve ter no mínimo 6 dígitos.");
-        } else {
-          alert("Erro ao cadastrar médico. Tente novamente.");
-        }
+        alert("Erro ao cadastrar médico. Tente novamente.");
       }
     },
   },
