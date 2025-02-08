@@ -222,9 +222,9 @@ export default {
     },
 
     async loginWithGoogle() {
-      if (this.loadingGoogleLogin) return; // Impede múltiplos cliques
+      if (this.loadingGoogleLogin) return; // Evita múltiplos cliques
 
-      this.loadingGoogleLogin = true; // Inicia o carregamento
+      this.loadingGoogleLogin = true;
       const auth = getAuth();
       const provider = new GoogleAuthProvider();
       const db = getFirestore();
@@ -232,12 +232,27 @@ export default {
       try {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
+        const uid = user.uid; // Pegando o UID do usuário autenticado
 
-        const userRef = doc(db, "pacientes", user.uid);
-        let docSnap = await getDoc(userRef);
+        // Verifica se o UID já está cadastrado como médico
+        const medicoRef = doc(db, "medicos", uid);
+        const medicoSnap = await getDoc(medicoRef);
 
-        if (!docSnap.exists()) {
-          await setDoc(userRef, {
+        if (medicoSnap.exists()) {
+          // Se for um médico, NÃO PERMITIR login e manter na tela de login
+          alert("Este e-mail já está cadastrado como médico. Utilize a opção de login para médicos.");
+          await signOut(auth); // Desloga o usuário para evitar que ele continue autenticado
+          this.loadingGoogleLogin = false;
+          return; // Finaliza a função sem permitir login
+        }
+
+        // Se não for médico, verificar se já existe como paciente
+        const pacienteRef = doc(db, "pacientes", uid);
+        let pacienteSnap = await getDoc(pacienteRef);
+
+        if (!pacienteSnap.exists()) {
+          // Criar paciente se não existir
+          await setDoc(pacienteRef, {
             nomeCompleto: user.displayName || "Nome não informado",
             email: user.email,
             telefone: user.phoneNumber || "Não informado",
@@ -246,20 +261,19 @@ export default {
           });
 
           // Buscar os dados novamente após salvar
-          docSnap = await getDoc(userRef);
+          pacienteSnap = await getDoc(pacienteRef);
         }
 
-        if (docSnap.exists()) {
+        if (pacienteSnap.exists()) {
           sessionStorage.setItem("user", JSON.stringify({
-            id: user.uid,
-            ...docSnap.data(),
+            id: uid,
+            ...pacienteSnap.data(),
             tipo: "paciente"
           }));
 
           this.$router.push("/").then(() => window.location.reload());
         } else {
           alert("Erro ao recuperar dados do paciente. Tente novamente.");
-          await signOut(auth);
         }
       } catch (error) {
         console.error("Erro ao autenticar com o Google:", error);
@@ -268,7 +282,6 @@ export default {
         this.loadingGoogleLogin = false; // Finaliza o carregamento
       }
     },
-
 
     async resetPassword() {
       if (!this.email) {
