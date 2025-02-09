@@ -197,7 +197,6 @@
               <template v-if="campoSelecionado === 'horarios'">
                 <div class="container">
                   <h4 class="text-center text-primary">
-                    Editar Horários de Atendimento
                   </h4>
                   <div class="row">
                     <div class="col-md-4 mb-3" v-for="dia in diasSemana" :key="dia">
@@ -834,7 +833,7 @@ export default {
 .modal-overlay {
   z-index: 1000;
   position: fixed;
-  top: 0;
+  top: 5%;
   left: 0;
   width: 100%;
   height: 100%;
@@ -859,8 +858,7 @@ export default {
 
 /* Inputs e elementos alinhados */
 .container {
-  width: 100%;
-  max-width: 100%;
+  max-width: 90%;
 }
 
 .row {
