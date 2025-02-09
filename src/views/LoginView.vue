@@ -225,24 +225,25 @@ export default {
       const db = getFirestore();
 
       try {
-        // 🔹 Obtém o email sem alterar o provedor da conta Google
+        // 🔹 Primeiro, autentica temporariamente para obter o UID e email
         const tempResult = await signInWithPopup(auth, provider);
         const tempUser = tempResult.user;
-        const email = tempUser.email;
+        const uid = tempUser.uid;
 
-        // 🔹 Encerra a sessão temporária, sem modificar provedores
-        await signOut(auth);
+        // 🔹 Verifica se este UID já está na coleção `medicos`
+        const medicoRef = doc(db, "medicos", uid);
+        const medicoSnap = await getDoc(medicoRef);
 
-        // 🔹 Verifica se o email já pertence a um médico
-        const medicoQuery = await getDocs(query(collection(db, "medicos"), where("email", "==", email)));
-
-        if (!medicoQuery.empty) {
+        if (medicoSnap.exists()) {
           alert("Este e-mail já está cadastrado como médico. O login com Google é exclusivo para pacientes.");
-          return;
+
+          // 🔹 Cancela a tentativa de login antes que o Firebase mescle os provedores
+          await signOut(auth);
+          return; // 🔹 Garante que o código pare aqui
         }
 
-        // 🔹 Se não for um médico, continuar com a criação/autenticação do paciente
-        const pacienteRef = doc(db, "pacientes", tempUser.uid);
+        // 🔹 Se for um paciente, continuar com o login normalmente
+        const pacienteRef = doc(db, "pacientes", uid);
         const pacienteSnap = await getDoc(pacienteRef);
 
         if (!pacienteSnap.exists()) {
@@ -254,19 +255,22 @@ export default {
           });
         }
 
+        // 🔹 Salva o paciente na sessão
         const pacienteData = await getDoc(pacienteRef);
         sessionStorage.setItem("user", JSON.stringify({
-          id: tempUser.uid,
+          id: uid,
           ...pacienteData.data(),
           tipo: "paciente"
         }));
 
-        this.$router.push("/");
+        // 🔹 Apenas pacientes são redirecionados
+        this.$router.push("/").then(() => window.location.reload());
+
       } catch (error) {
-        alert("Erro ao autenticar com o Google Email já cadastrado.");
+        console.error("Erro ao autenticar com o Google:", error);
+        alert("Erro ao autenticar com o Google. Tente novamente.");
       }
-    }
-    ,
+    },
 
     async resetPassword() {
       if (!this.email) {
