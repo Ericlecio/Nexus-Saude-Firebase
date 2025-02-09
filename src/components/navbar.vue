@@ -1,3 +1,5 @@
+navbar 2
+
 <template>
   <nav class="navbar navbar-expand-lg fixed-top" :class="{ scrolled: isScrolled }">
     <div class="container">
@@ -57,7 +59,7 @@
 
 <script>
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
 
 export default {
   data() {
@@ -75,17 +77,31 @@ export default {
       this.isCollapsed = !this.isCollapsed;
     },
     async logout() {
-      const auth = getAuth();
-      await signOut(auth);
-      sessionStorage.removeItem("user");
-      this.user = null;
-      this.$router.push("/login").then(() => window.location.reload());
+      try {
+        // 🔹 Apenas desloga o usuário do Firebase, sem excluir sua conta
+        const auth = getAuth();
+        await signOut(auth);
+
+        // 🔹 Apaga todos os dados do navegador (mas mantém a conta no Firebase)
+        sessionStorage.clear();
+        localStorage.clear();
+
+        // 🔹 Remove o usuário do estado Vue
+        this.user = null;
+
+        // 🔹 Redireciona para a tela de login sem deixar rastros
+        this.$router.push("/login").then(() => window.location.reload());
+
+      } catch (error) {
+        console.error("Erro ao fazer logout:", error);
+        alert("Erro ao sair. Tente novamente.");
+      }
     },
     async verificarUsuario() {
       const auth = getAuth();
       const db = getFirestore();
 
-      onAuthStateChanged(auth, async (firebaseUser) => {
+      auth.onAuthStateChanged(async (firebaseUser) => {
         if (firebaseUser) {
           try {
             const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
@@ -101,15 +117,18 @@ export default {
                 ...pacienteSnap.data(),
                 tipo: "paciente",
               };
+              sessionStorage.setItem("user", JSON.stringify(this.user));
             } else if (medicoSnap.exists()) {
               this.user = {
                 id: firebaseUser.uid,
                 ...medicoSnap.data(),
                 tipo: "medico",
               };
+              sessionStorage.setItem("user", JSON.stringify(this.user));
             } else {
               this.user = null;
-              await signOut(auth);
+              sessionStorage.clear();
+              localStorage.clear();
             }
           } catch (error) {
             console.error("Erro ao verificar usuário na Navbar:", error);
@@ -130,6 +149,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 /* Estilos gerais */
