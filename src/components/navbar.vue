@@ -1,5 +1,3 @@
-navbar 2
-
 <template>
   <nav class="navbar navbar-expand-lg fixed-top" :class="{ scrolled: isScrolled }">
     <div class="container">
