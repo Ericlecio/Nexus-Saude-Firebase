@@ -132,6 +132,7 @@ export default {
     togglePassword() {
       this.showPassword = !this.showPassword;
     },
+
     goToCadastro() {
       this.$router.push("/cadastro");
     },
@@ -152,6 +153,7 @@ export default {
             ]);
 
             if (pacienteSnap.exists()) {
+              // ✅ Redireciona paciente
               sessionStorage.setItem("user", JSON.stringify({
                 id: firebaseUser.uid,
                 ...pacienteSnap.data(),
@@ -159,6 +161,7 @@ export default {
               }));
               this.$router.push("/");
             } else if (medicoSnap.exists()) {
+              // ✅ Redireciona médico
               sessionStorage.setItem("user", JSON.stringify({
                 id: firebaseUser.uid,
                 ...medicoSnap.data(),
@@ -166,58 +169,50 @@ export default {
               }));
               this.$router.push("/");
             } else {
+              // ❌ Usuário inválido, faz logout
               await signOut(auth);
             }
           } catch (error) {
+            console.error("Erro ao verificar usuário logado:", error);
           }
         }
       });
-    },
+    }
+    ,
 
     async login() {
       try {
         const auth = getAuth();
         const db = getFirestore();
 
+        // 🔹 Autentica normalmente com email/senha
         const userCredential = await signInWithEmailAndPassword(auth, this.email, this.password);
         const userId = userCredential.user.uid;
 
-        if (this.userType === "medico") {
-          const medicoRef = doc(db, "medicos", userId);
-          const medicoSnap = await getDoc(medicoRef);
+        // 🔹 Verifica se o usuário é médico
+        const medicoRef = doc(db, "medicos", userId);
+        const medicoSnap = await getDoc(medicoRef);
 
-          if (medicoSnap.exists()) {
-            sessionStorage.setItem("user", JSON.stringify({
-              id: userId,
-              ...medicoSnap.data(),
-              tipo: "medico"
-            }));
-            this.$router.push("/").then(() => window.location.reload());
-          } else {
-            alert("Dados do médico não encontrados no sistema.");
-            await signOut(auth);
-          }
-        } else if (this.userType === "paciente") {
-          const pacienteRef = doc(db, "pacientes", userId);
-          const pacienteSnap = await getDoc(pacienteRef);
-
-          if (pacienteSnap.exists()) {
-            sessionStorage.setItem("user", JSON.stringify({
-              id: userId,
-              ...pacienteSnap.data(),
-              tipo: "paciente"
-            }));
-            this.$router.push("/").then(() => window.location.reload());
-          } else {
-            alert("Dados do paciente não encontrados no sistema.");
-            await signOut(auth);
-          }
+        if (medicoSnap.exists()) {
+          // ✅ Login permitido
+          sessionStorage.setItem("user", JSON.stringify({
+            id: userId,
+            ...medicoSnap.data(),
+            tipo: "medico"
+          }));
+          this.$router.push("/").then(() => window.location.reload());
+        } else {
+          // ❌ Se não for médico, bloquear
+          alert("Erro: Apenas médicos podem fazer login com email e senha.");
+          await signOut(auth);
         }
+
       } catch (error) {
-        console.error("Erro ao autenticar usuário: ", error);
-        alert("Email ou Senha invalido.");
+        console.error("Erro ao autenticar médico:", error);
+        alert("Email ou senha inválidos.");
       }
-    },
+    }
+    ,
 
     async loginWithGoogle() {
       const auth = getAuth();
@@ -225,52 +220,49 @@ export default {
       const db = getFirestore();
 
       try {
-        // 🔹 Primeiro, autentica temporariamente para obter o UID e email
-        const tempResult = await signInWithPopup(auth, provider);
-        const tempUser = tempResult.user;
-        const uid = tempUser.uid;
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        const userId = user.uid;
 
-        // 🔹 Verifica se este UID já está na coleção `medicos`
-        const medicoRef = doc(db, "medicos", uid);
+        // 🔹 Verifica se o usuário já está na coleção de médicos (médico não pode usar Google)
+        const medicoRef = doc(db, "medicos", userId);
         const medicoSnap = await getDoc(medicoRef);
 
         if (medicoSnap.exists()) {
-          alert("Este e-mail já está cadastrado como médico. O login com Google é exclusivo para pacientes.");
-
-          // 🔹 Cancela a tentativa de login antes que o Firebase mescle os provedores
+          alert("Erro: Médicos não podem fazer login com o Google.");
           await signOut(auth);
-          return; // 🔹 Garante que o código pare aqui
+          return;
         }
 
-        // 🔹 Se for um paciente, continuar com o login normalmente
-        const pacienteRef = doc(db, "pacientes", uid);
+        // 🔹 Verifica se o usuário já está na coleção de pacientes
+        const pacienteRef = doc(db, "pacientes", userId);
         const pacienteSnap = await getDoc(pacienteRef);
 
         if (!pacienteSnap.exists()) {
+          // Se ainda não estiver cadastrado, adiciona no banco de dados
           await setDoc(pacienteRef, {
-            nomeCompleto: tempUser.displayName || "Nome não informado",
-            email: tempUser.email,
-            telefone: tempUser.phoneNumber || "Não informado",
+            nomeCompleto: user.displayName || "Nome não informado",
+            email: user.email,
+            telefone: user.phoneNumber || "Não informado",
             dataCadastro: new Date().toISOString(),
           });
         }
 
-        // 🔹 Salva o paciente na sessão
-        const pacienteData = await getDoc(pacienteRef);
+        // ✅ Login permitido para pacientes
         sessionStorage.setItem("user", JSON.stringify({
-          id: uid,
-          ...pacienteData.data(),
-          tipo: "paciente"
+          id: userId,
+          tipo: "paciente",
+          email: user.email
         }));
 
-        // 🔹 Apenas pacientes são redirecionados
         this.$router.push("/").then(() => window.location.reload());
 
       } catch (error) {
         console.error("Erro ao autenticar com o Google:", error);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
-    },
+    }
+    ,
 
     async resetPassword() {
       if (!this.email) {
@@ -287,6 +279,7 @@ export default {
         alert("Erro ao enviar o e-mail. Verifique se o e-mail está correto.");
       }
     },
+
   },
 };
 </script>
