@@ -11,9 +11,9 @@
         <div class="text-center">
           <h1>Cuide da sua Saúde com Profissionais de Confiança</h1>
           <p>Consultas rápidas e seguras ao alcance de um clique</p>
-          <a v-if="user && user.tipo === 'paciente'" href="/Agendamento" class="btn btn-success btn-lg">
+          <router-link v-if="user && user.tipo === 'paciente'" to="/Agendamento" class="btn btn-success btn-lg">
             MARQUE SUA CONSULTA
-          </a>
+          </router-link>
         </div>
       </section>
       <br>
@@ -22,7 +22,7 @@
         <div class="container text-center">
           <h2>Quer saber mais?</h2>
           <p>Nosso time de profissionais está pronto para ajudá-lo!</p>
-          <a href="/contato" class="btn btn-primary btn-lg">Fale Conosco</a>
+          <router-link to="/contato" class="btn btn-primary btn-lg">Fale Conosco</router-link>
         </div>
       </section>
 

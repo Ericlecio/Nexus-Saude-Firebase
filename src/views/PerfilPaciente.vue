@@ -189,28 +189,26 @@ export default {
       try {
         const auth = getAuth();
         const db = getFirestore();
+        const firebaseUser = auth.currentUser;
 
-        onAuthStateChanged(auth, async (firebaseUser) => {
-          if (firebaseUser) {
-            const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
-            const pacienteSnap = await getDoc(pacienteRef);
+        if (firebaseUser) {
+          const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
+          const pacienteSnap = await getDoc(pacienteRef);
 
-            if (pacienteSnap.exists()) {
-              this.pacienteId = firebaseUser.uid;
-              this.paciente = pacienteSnap.data();
+          if (pacienteSnap.exists()) {
+            this.pacienteId = firebaseUser.uid;
+            this.paciente = pacienteSnap.data();
 
-              // Após carregar os dados do paciente, carregar o histórico de consultas
-              await this.carregarHistoricoConsultas();
-            } else {
-              alert("Paciente não encontrado no sistema.");
-              await signOut(auth);
-              this.$router.push("/login");
-            }
+            // Após carregar os dados do paciente, carregar o histórico de consultas
+            await this.carregarHistoricoConsultas();
           } else {
-            alert("Apenas pacientes podem acessar esta página. Faça login.");
+            await signOut(auth);
+            alert("Email verificado, Faça login Novamente.");
             this.$router.push("/login");
           }
-        });
+        } else {
+          this.$router.push("/login");
+        }
       } catch (error) {
         alert("Erro ao carregar perfil do paciente.");
       }
@@ -281,7 +279,6 @@ export default {
 
         const batch = writeBatch(db);
 
-        // Deletar agendamentos do paciente e armazenar no histórico
         const agendamentosQuery = query(
           collection(db, "agendamentos"),
           where("pacienteId", "==", this.pacienteId)
@@ -342,7 +339,6 @@ export default {
       try {
         const db = getFirestore();
 
-        // Buscar histórico de consultas da tabela "historicoConsultas"
         const qHistorico = query(collection(db, "historicoConsultas"), where("pacienteId", "==", this.pacienteId));
         const snapshotHistorico = await getDocs(qHistorico);
 
@@ -357,11 +353,8 @@ export default {
             situacao: data.situacao || "Sem status",
           };
         });
-
-        // Atualiza o histórico de consultas dentro do objeto paciente
         this.paciente.consultas = consultas;
 
-        console.log("📌 Histórico de consultas carregado:", this.paciente.consultas);
       } catch (error) {
         alert("Erro ao carregar o histórico de consultas.");
       }

@@ -477,6 +477,7 @@ export default {
           tempoConsulta: this.form.tempoConsulta,
           diasAtendimento: diasComHorarios,
           dataCadastro: new Date().toISOString(),
+          tipo: "médico",
         });
 
         alert("Médico cadastrado com sucesso!");

@@ -79,7 +79,7 @@
 
       <div class="logo-container">
         <img src="@/assets/img/NexusSaude_vertical.png" alt="Logo Nexus Saúde" class="logo" />
-        <a href="#" class="create-account" @click.prevent="goToCadastro">Criar Conta Médica</a>
+        <router-link to="/cadastro" class="create-account">Criar Conta Médica</router-link>
       </div>
     </div>
   </div>
@@ -132,6 +132,7 @@ export default {
     togglePassword() {
       this.showPassword = !this.showPassword;
     },
+
     goToCadastro() {
       this.$router.push("/cadastro");
     },
@@ -140,7 +141,10 @@ export default {
       const auth = getAuth();
       const db = getFirestore();
 
-      onAuthStateChanged(auth, async (firebaseUser) => {
+      // Aguarda um pequeno tempo para garantir que o Firebase já atualizou o estado do usuário
+      setTimeout(async () => {
+        const firebaseUser = auth.currentUser;
+
         if (firebaseUser) {
           try {
             const pacienteRef = doc(db, "pacientes", firebaseUser.uid);
@@ -169,9 +173,10 @@ export default {
               await signOut(auth);
             }
           } catch (error) {
+            console.error("Erro ao verificar usuário:", error);
           }
         }
-      });
+      }, 500); // Pequeno delay para garantir que `currentUser` foi atualizado
     },
 
     async login() {
@@ -182,40 +187,47 @@ export default {
         const userCredential = await signInWithEmailAndPassword(auth, this.email, this.password);
         const userId = userCredential.user.uid;
 
-        if (this.userType === "medico") {
-          const medicoRef = doc(db, "medicos", userId);
-          const medicoSnap = await getDoc(medicoRef);
+        // Aguardar um tempo antes de buscar os dados para garantir que a autenticação foi concluída
+        setTimeout(async () => {
+          if (this.userType === "medico") {
+            const medicoRef = doc(db, "medicos", userId);
+            const medicoSnap = await getDoc(medicoRef);
 
-          if (medicoSnap.exists()) {
-            sessionStorage.setItem("user", JSON.stringify({
-              id: userId,
-              ...medicoSnap.data(),
-              tipo: "medico"
-            }));
-            this.$router.push("/").then(() => window.location.reload());
-          } else {
-            alert("Dados do médico não encontrados no sistema.");
-            await signOut(auth);
-          }
-        } else if (this.userType === "paciente") {
-          const pacienteRef = doc(db, "pacientes", userId);
-          const pacienteSnap = await getDoc(pacienteRef);
+            if (medicoSnap.exists()) {
+              sessionStorage.setItem("user", JSON.stringify({
+                id: userId,
+                ...medicoSnap.data(),
+                tipo: "medico"
+              }));
+              this.$router.push("/");
+            } else {
+              alert("Dados do médico não encontrados no sistema.");
+              await signOut(auth);
+            }
+          } else if (this.userType === "paciente") {
+            const pacienteRef = doc(db, "pacientes", userId);
+            const pacienteSnap = await getDoc(pacienteRef);
 
-          if (pacienteSnap.exists()) {
-            sessionStorage.setItem("user", JSON.stringify({
-              id: userId,
-              ...pacienteSnap.data(),
-              tipo: "paciente"
-            }));
-            this.$router.push("/").then(() => window.location.reload());
-          } else {
-            alert("Dados do paciente não encontrados no sistema.");
-            await signOut(auth);
+            if (pacienteSnap.exists()) {
+              sessionStorage.setItem("user", JSON.stringify({
+                id: userId,
+                ...pacienteSnap.data(),
+                tipo: "paciente"
+              }));
+
+              // Pequeno atraso antes do redirecionamento para evitar problemas de sincronização
+              setTimeout(() => {
+                this.$router.push("/");
+              }, 300);
+            } else {
+              alert("Dados do paciente não encontrados no sistema.");
+              await signOut(auth);
+            }
           }
-        }
+        }, 500); // Aguarda meio segundo antes de buscar os dados
       } catch (error) {
         console.error("Erro ao autenticar usuário: ", error);
-        alert("Email ou Senha invalido.");
+        alert("Email ou Senha inválido.");
       }
     },
 
@@ -308,10 +320,7 @@ export default {
         console.error("Erro ao autenticar com o Google:", error);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
-    }
-
-
-    ,
+    },
 
     async resetPassword() {
       if (!this.email) {

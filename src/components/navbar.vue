@@ -1,9 +1,9 @@
 <template>
   <nav class="navbar navbar-expand-lg fixed-top" :class="{ scrolled: isScrolled }">
     <div class="container">
-      <a class="navbar-brand" href="/">
+      <router-link class="navbar-brand" to="/">
         <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Nexus Saúde" class="logo" />
-      </a>
+      </router-link>
 
       <!-- Botão do menu responsivo -->
       <button class="navbar-toggler" type="button" @click="toggleCollapse">
@@ -14,13 +14,13 @@
       <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }">
         <ul class="navbar-nav mx-auto">
           <li class="nav-item">
-            <a class="nav-link" href="/">Home</a>
+            <router-link class="nav-link" to="/">Home</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/sobre">Quem Somos</a>
+            <router-link class="nav-link" to="/sobre">Quem Somos</router-link>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/contato">Fale Conosco</a>
+            <router-link class="nav-link" to="/contato">Fale Conosco</router-link>
           </li>
         </ul>
 
@@ -32,21 +32,23 @@
           </a>
           <ul class="dropdown-menu dropdown-menu-end animate-dropdown">
             <li v-if="!user">
-              <a class="dropdown-item" href="/login">Login</a>
+              <router-link class="dropdown-item" to="/login">Login</router-link>
             </li>
 
             <li v-if="user && user.tipo === 'paciente'">
-              <a class="dropdown-item" href="/perfilPaciente">Meu Perfil</a>
-              <a class="dropdown-item" href="/consultasAgendadas">Minhas Consultas</a>
+              <router-link class="dropdown-item" to="/perfilPaciente">Meu Perfil</router-link>
+              <router-link class="dropdown-item" to="/consultasAgendadas">Minhas Consultas</router-link>
             </li>
 
             <li v-if="user && user.tipo === 'medico'">
-              <a class="dropdown-item" href="/perfilMedico">Meu Perfil</a>
-              <a class="dropdown-item" href="/agendaMedica">Minha Agenda</a>
+              <router-link class="dropdown-item" to="/perfilMedico">Meu Perfil</router-link>
+              <router-link class="dropdown-item" to="/agendaMedica">Minha Agenda</router-link>
             </li>
 
             <li v-if="user">
-              <a class="dropdown-item logout-btn" href="#" @click="logout">Sair</a>
+              <router-link class="dropdown-item logout-btn" to="/" @click.prevent="logout">
+                Sair
+              </router-link>
             </li>
           </ul>
         </div>
@@ -76,19 +78,15 @@ export default {
     },
     async logout() {
       try {
-        // 🔹 Apenas desloga o usuário do Firebase, sem excluir sua conta
         const auth = getAuth();
         await signOut(auth);
 
-        // 🔹 Apaga todos os dados do navegador (mas mantém a conta no Firebase)
         sessionStorage.clear();
         localStorage.clear();
 
-        // 🔹 Remove o usuário do estado Vue
         this.user = null;
 
-        // 🔹 Redireciona para a tela de login sem deixar rastros
-        this.$router.push("/login").then(() => window.location.reload());
+        this.$router.push("/login");
 
       } catch (error) {
         console.error("Erro ao fazer logout:", error);
@@ -148,9 +146,7 @@ export default {
 };
 </script>
 
-
 <style scoped>
-/* Estilos gerais */
 .navbar {
   background: transparent;
   transition: all 0.4s ease-in-out;
@@ -163,7 +159,6 @@ export default {
   padding: 10px 0;
 }
 
-/* Garantindo responsividade */
 @media (max-width: 991px) {
   .navbar {
     background: rgba(255, 255, 255, 0.98);
@@ -192,7 +187,6 @@ export default {
   transform: translateY(-2px);
 }
 
-/* Ícone de perfil */
 .bi-person-circle {
   font-size: 1.8rem;
   color: #53ba83;
@@ -213,7 +207,6 @@ export default {
   color: #1565c0;
 }
 
-/* Menu suspenso */
 .dropdown-menu {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 8px;
@@ -246,13 +239,11 @@ export default {
   transform: scale(1.05);
 }
 
-/* Botão logout */
 .logout-btn {
   color: red !important;
   font-weight: bold;
 }
 
-/* Responsividade para menu mobile */
 .navbar-toggler {
   border: none;
   transition: all 0.3s ease-in-out;
