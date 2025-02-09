@@ -650,6 +650,7 @@ h2 {
 .back-login {
   margin-top: 15px;
   text-align: center;
+
 }
 
 .back-login a {
