@@ -225,41 +225,79 @@ export default {
       const db = getFirestore();
 
       try {
-        // 🔹 Primeiro, autentica temporariamente para obter o UID e email
+        // 🔹 Captura os dados do usuário ANTES de autenticar no Firebase Authentication
         const tempResult = await signInWithPopup(auth, provider);
         const tempUser = tempResult.user;
-        const uid = tempUser.uid;
+        const email = tempUser.email;
 
-        // 🔹 Verifica se este UID já está na coleção `medicos`
-        const medicoRef = doc(db, "medicos", uid);
-        const medicoSnap = await getDoc(medicoRef);
+        // 🔹 VERIFICA SE O EMAIL JÁ EXISTE NO FIREBASE AUTHENTICATION
+        const fetchUsers = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${auth.config.apiKey}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            idToken: (await auth.currentUser?.getIdToken()) || null,
+          }),
+        }).then(res => res.json());
+
+        let existingUser = null;
+        if (fetchUsers.users) {
+          existingUser = fetchUsers.users.find(user => user.email === email);
+        }
+
+        // 🔹 SE O EMAIL JÁ EXISTIR NO FIREBASE AUTHENTICATION COM EMAIL/SENHA, BLOQUEIA O LOGIN COM GOOGLE
+        if (existingUser && existingUser.providerUserInfo.some(p => p.providerId === "password")) {
+          alert("Este e-mail já está cadastrado com e-mail e senha. O login com Google não é permitido.");
+
+          // 🔹 Cancela qualquer sessão ativa e impede login
+          await signOut(auth);
+          return;
+        }
+
+        // 🔹 VERIFICA SE O EMAIL JÁ ESTÁ NA COLEÇÃO `MEDICOS`
+        const medicoQuery = doc(db, "medicos", email);
+        const medicoSnap = await getDoc(medicoQuery);
 
         if (medicoSnap.exists()) {
-          alert("Este e-mail já está cadastrado como médico. O login com Google é exclusivo para pacientes.");
+          alert("Este e-mail já está cadastrado como MÉDICO e não pode ser usado para login com Google.");
 
-          // 🔹 Cancela a tentativa de login antes que o Firebase mescle os provedores
+          // 🔹 Cancela qualquer sessão ativa sem redirecionar o usuário
           await signOut(auth);
-          return; // 🔹 Garante que o código pare aqui
+          return;
         }
 
-        // 🔹 Se for um paciente, continuar com o login normalmente
-        const pacienteRef = doc(db, "pacientes", uid);
-        const pacienteSnap = await getDoc(pacienteRef);
+        // 🔹 VERIFICA SE O EMAIL JÁ EXISTE NA COLEÇÃO `PACIENTES`
+        const pacienteQuery = doc(db, "pacientes", email);
+        const pacienteSnap = await getDoc(pacienteQuery);
 
-        if (!pacienteSnap.exists()) {
-          await setDoc(pacienteRef, {
-            nomeCompleto: tempUser.displayName || "Nome não informado",
-            email: tempUser.email,
-            telefone: tempUser.phoneNumber || "Não informado",
-            dataCadastro: new Date().toISOString(),
-          });
+        if (pacienteSnap.exists()) {
+          // 🔹 Se o usuário já é um paciente, permite o login normalmente
+          const pacienteData = pacienteSnap.data();
+          sessionStorage.setItem("user", JSON.stringify({
+            id: tempUser.uid,
+            ...pacienteData,
+            tipo: "paciente"
+          }));
+
+          this.$router.push("/").then(() => window.location.reload());
+          return;
         }
 
-        // 🔹 Salva o paciente na sessão
-        const pacienteData = await getDoc(pacienteRef);
+        // 🔹 SE O EMAIL NÃO EXISTIR, CRIA UM NOVO PACIENTE
+        const pacienteRef = doc(db, "pacientes", tempUser.uid);
+        await setDoc(pacienteRef, {
+          nomeCompleto: tempUser.displayName || "Nome não informado",
+          email: email,
+          telefone: tempUser.phoneNumber || "Não informado",
+          tipo: "paciente",
+          dataCadastro: new Date().toISOString(),
+        });
+
+        // 🔹 Salva o novo paciente na sessão
         sessionStorage.setItem("user", JSON.stringify({
-          id: uid,
-          ...pacienteData.data(),
+          id: tempUser.uid,
+          email: email,
           tipo: "paciente"
         }));
 
@@ -270,7 +308,10 @@ export default {
         console.error("Erro ao autenticar com o Google:", error);
         alert("Erro ao autenticar com o Google. Tente novamente.");
       }
-    },
+    }
+
+
+    ,
 
     async resetPassword() {
       if (!this.email) {
