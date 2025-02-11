@@ -172,7 +172,6 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
-import DAOService from "@/Services/DAOService";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, collection, query, where, getDocs, doc, setDoc } from "firebase/firestore";
 
