@@ -26,7 +26,7 @@
     <!-- História -->
     <section class="history-section py-5 bg-light">
       <div class="container">
-        <h2 class="section-title text-center">Nossa História</h2><br>
+        <h2 class="section-title text-center">Nossa História</h2>
         <div class="row align-items-center">
           <div class="col-md-6" data-aos="fade-right">
             <p>
@@ -44,7 +44,7 @@
     <!-- Valores -->
     <section class="values-section py-5">
       <div class="container text-center">
-        <h2 class="section-title">Nossos Valores</h2><br>
+        <h2 class="section-title">Nossos Valores</h2>
         <div class="row">
           <div class="col-md-4" data-aos="zoom-in" data-aos-delay="200">
             <div class="card value-card shadow">
@@ -118,44 +118,22 @@ export default {
 
 
 <style scoped>
-/* Garante que não haja quebra lateral */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body {
-  width: 100%;
-  overflow-x: hidden;
-}
-
 .div-principal {
-  background: linear-gradient(rgba(0, 0, 30, 0.6),
-      rgba(0, 0, 30, 0.6)),
+  background: linear-gradient(rgba(0, 0, 30, 0.6), rgba(0, 0, 30, 0.6)),
     url("@/assets/img/img_fundo.png") no-repeat center center fixed;
   background-size: cover;
-  padding-top: 80px;
-
 }
 
-@media (max-width: 991px) {
-  .div-principal {
-    padding-top: 100px;
-  }
-}
-
-/* BANNER */
 .banner {
   background-size: cover;
   background-position: center;
-  width: 100%;
-  height: 50vh;
+  height: 60vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  color: white;
   text-align: center;
+  padding: 20px;
 }
 
 .banner-content h1 {
@@ -168,7 +146,6 @@ body {
   margin-top: 10px;
 }
 
-/* SEÇÃO MISSÃO */
 .mission-card {
   background-color: rgba(255, 255, 255, 0.9);
   padding: 30px;
@@ -176,11 +153,12 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* SEÇÃO VALORES */
-.mission-card,
-.value-card {
-  max-width: 90%;
-  margin: 0 auto;
+.values-section .value-card {
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.3s ease-in-out;
 }
 
 .values-section .value-card:hover {
@@ -192,7 +170,6 @@ body {
   color: #53ba83;
 }
 
-/* SEÇÃO EQUIPE */
 .team-section img {
   width: 150px;
   height: 150px;
@@ -205,28 +182,6 @@ body {
   font-weight: bold;
 }
 
-/* AJUSTES PARA TELAS MENORES */
-@media (max-width: 1024px) {
-  .banner {
-    height: 50vh;
-    padding: 20px;
-  }
-
-  .banner-content h1 {
-    font-size: 2.5rem;
-  }
-
-  .banner-content p {
-    font-size: 1.3rem;
-  }
-
-  .team-section img {
-    width: 130px;
-    height: 130px;
-  }
-}
-
-/* AJUSTES PARA TABLETS */
 @media (max-width: 768px) {
   .banner {
     height: 40vh;
@@ -237,115 +192,11 @@ body {
   }
 
   .banner-content p {
-    font-size: 1.2rem;
-  }
-
-  .container {
-    padding: 0 15px;
-  }
-
-  .mission-card {
-    padding: 20px;
-    font-size: 0.9rem;
-  }
-
-  .values-section .row {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .values-section .col-md-4 {
-    width: 80%;
-    margin-bottom: 15px;
-  }
-
-  .team-section .row {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .team-section .col-md-4 {
-    width: 80%;
-    margin-bottom: 20px;
-  }
-
-  .team-section img {
-    width: 120px;
-    height: 120px;
-  }
-}
-
-/* AJUSTES PARA CELULARES */
-@media (max-width: 480px) {
-  .banner {
-    height: 35vh;
-    padding: 10px;
-  }
-
-  .banner-content h1 {
-    font-size: 1.8rem;
-  }
-
-  .banner-content p {
     font-size: 1rem;
   }
 
-  .section-title {
-    font-size: 1.5rem;
-  }
-
-  .mission-card {
-    padding: 15px;
-    font-size: 0.9rem;
-  }
-
-  .values-section .col-md-4,
-  .team-section .col-md-4 {
-    width: 100%;
-    text-align: center;
-  }
-
-  .team-section img {
-    width: 100px;
-    height: 100px;
-  }
-
-  .values-section .value-card {
-    padding: 15px;
-  }
-
-  .history-section .row {
-    flex-direction: column;
-  }
-
-  .history-section .col-md-6 {
-    text-align: center;
-  }
-
-  .history-section img {
-    width: 100%;
-    height: auto;
-  }
-}
-
-/* REMOVENDO QUALQUER SCROLL LATERAL */
-@media (max-width: 360px) {
-  body {
-    overflow-x: hidden;
-  }
-
-  .container {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  .banner-content h1 {
-    font-size: 1.6rem;
-  }
-
-  .banner-content p {
-    font-size: 0.9rem;
+  .values-section .col-12 {
+    margin-bottom: 20px;
   }
 }
 </style>

@@ -33,8 +33,8 @@ export default {
             <div class="footer-section right">
                 <h5>Acompanhe nossas redes</h5>
                 <div class="social-media">
+                    <a href="https://github.com/Ericlecio/Nexus-Saude" target="blank"><i class="bi bi-github"></i></a>
                     <a href="#"><i class="bi bi-instagram"></i></a>
-                    <a href="#"><i class="bi bi-linkedin"></i></a>
                     <a href="#"><i class="bi bi-whatsapp"></i></a>
                     <a href="#"><i class="bi bi-x"></i></a>
                 </div>

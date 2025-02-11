@@ -13,6 +13,7 @@
       </div>
 
       <div v-else>
+
         <!-- Menu de Filtros -->
         <ul class="nav nav-pills justify-content-center mb-4">
           <li class="nav-item" v-for="opcao in opcoesFiltro" :key="opcao.valor">
@@ -218,12 +219,10 @@ export default {
 
 
 <style scoped>
-/* Ajuste do espaçamento da página */
 .div-principal {
   margin-top: 5%;
 }
 
-/* Filtros responsivos */
 .nav-pills {
   display: flex;
   flex-wrap: wrap;
@@ -249,7 +248,6 @@ export default {
   color: white;
 }
 
-/* Tornando a tabela responsiva */
 .table-responsive {
   overflow-x: auto;
 }
@@ -260,7 +258,6 @@ export default {
   white-space: nowrap;
 }
 
-/* Ajuste das colunas para telas menores */
 @media (max-width: 991px) {
 
   .table th,
@@ -283,7 +280,6 @@ export default {
   .table th:nth-child(5),
   .table td:nth-child(5) {
     display: none;
-    /* Esconde colunas menos importantes */
   }
 }
 
@@ -300,23 +296,19 @@ export default {
   .table th:nth-child(6),
   .table td:nth-child(6) {
     display: none;
-    /* Esconde mais uma coluna para telas muito pequenas */
   }
 }
 
-/* Diferencia consultas canceladas */
 .consulta-cancelada td {
   text-decoration: line-through;
   background: rgba(0, 0, 30, 0.1);
 }
 
-/* Ajuste dos botões */
 .btn {
   font-size: 0.9rem;
   padding: 6px 10px;
 }
 
-/* Modal responsivo */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -339,7 +331,6 @@ export default {
   text-align: center;
 }
 
-/* Ajuste para modal em telas menores */
 @media (max-width: 480px) {
   .modal-content {
     width: 95%;

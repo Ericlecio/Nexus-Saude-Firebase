@@ -3,13 +3,21 @@
   <div class="container-fluid py-5 mt-5">
     <div class="row justify-content-center align-items-center">
       <div class="col-lg-10 col-md-12">
-        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden position-relative">
+
+          <!-- Botão Voltar POSICIONADO ACIMA -->
+          <div class="voltar-container">
+            <BotaoVoltar />
+          </div>
+
           <div class="row g-0">
-            <div class="col-md-4 d-none d-md-flex align-items-center justify-content-center bg-light">
+            <!-- Coluna da Imagem -->
+            <div class="col-md-4 d-flex align-items-center justify-content-center bg-light">
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem Nexus Saúde" class="img-fluid logo" />
             </div>
+
+            <!-- Coluna do Formulário -->
             <div class="col-md-8 p-5 bg-white">
-              <BotaoVoltar />
               <h1 class="text-center text-primary mb-3 font-weight-bold">
                 Nexus Saúde
               </h1>
@@ -20,7 +28,9 @@
 
                 <div class="row g-4">
                   <div class="col-md-4 col-sm-12">
-                    <label for="especialidade" class="form-label text-dark fw-bold">Especialidade</label>
+                    <label for="especialidade" class="form-label text-dark fw-bold">
+                      <i class="fas fa-user-md"></i> Especialidade
+                    </label>
                     <select v-model="form.especialidade" id="especialidade" class="form-select"
                       @change="filterMedicosByEspecialidade" required>
                       <option value="" disabled selected>Selecione</option>
@@ -30,7 +40,9 @@
                     </select>
                   </div>
                   <div class="col-md-4 col-sm-12">
-                    <label for="medicoNome" class="form-label text-dark fw-bold">Médico</label>
+                    <label for="medicoNome" class="form-label text-dark fw-bold">
+                      <i class="fas fa-stethoscope"></i> Médico
+                    </label>
                     <select v-model="form.medicoId" id="medico" class="form-select" required @change="medicoChanged">
                       <option value="" disabled selected>Selecione</option>
                       <option v-for="medico in medicosFiltrados" :key="medico.id" :value="medico.id">
@@ -39,7 +51,9 @@
                     </select>
                   </div>
                   <div class="col-md-4 col-sm-12">
-                    <label for="data" class="form-label text-dark fw-bold">Horários Disponíveis</label>
+                    <label for="data" class="form-label text-dark fw-bold">
+                      <i class="fas fa-clock"></i> Horários Disponíveis
+                    </label>
                     <select v-model="form.data" id="data" class="form-select" required>
                       <option value="" disabled selected>Selecione</option>
                       <option v-for="horario in horariosDisponiveis" :key="horario.horario" :value="horario.horario">
@@ -51,37 +65,45 @@
 
                 <div class="row g-4 mt-3">
                   <div class="col-md-4 col-sm-12">
-                    <label for="pacienteNome" class="form-label text-dark fw-bold">Paciente</label>
+                    <label for="pacienteNome" class="form-label text-dark fw-bold">
+                      <i class="fas fa-user"></i> Paciente
+                    </label>
                     <input type="text" id="pacienteNome" v-model="form.pacienteNome" class="form-control" readonly />
                   </div>
                   <div class="col-md-4 col-sm-12">
-                    <label for="telefoneConsultorio" class="form-label text-dark fw-bold">Telefone do
-                      Consultório</label>
+                    <label for="telefoneConsultorio" class="form-label text-dark fw-bold">
+                      <i class="fas fa-phone-alt"></i> Telefone do Consultório
+                    </label>
                     <input type="text" id="telefoneConsultorio" v-model="form.telefoneConsultorio" class="form-control"
                       readonly />
                   </div>
                   <div class="col-md-4 col-sm-12">
-                    <label for="valorConsulta" class="form-label text-dark fw-bold">Valor da Consulta</label>
+                    <label for="valorConsulta" class="form-label text-dark fw-bold">
+                      <i class="fas fa-money-bill-wave"></i> Valor da Consulta
+                    </label>
                     <input type="text" id="valorConsulta" v-model="form.valorConsulta" class="form-control" readonly />
                   </div>
                 </div>
 
                 <div class="row g-4 mt-3">
                   <div class="col-md-4 col-sm-12">
-                    <label for="pacienteTelefone" class="form-label text-dark fw-bold">Telefone</label>
+                    <label for="pacienteTelefone" class="form-label text-dark fw-bold">
+                      <i class="fas fa-mobile-alt"></i> Telefone
+                    </label>
                     <input type="text" id="pacienteTelefone" v-model="form.pacienteTelefone" class="form-control"
                       readonly />
                   </div>
                   <div class="col-md-4 col-sm-12">
-                    <label for="local" class="form-label text-dark fw-bold">Local</label>
+                    <label for="local" class="form-label text-dark fw-bold">
+                      <i class="fas fa-map-marker-alt"></i> Local
+                    </label>
                     <input type="text" id="local" v-model="form.local" class="form-control" readonly />
                   </div>
                 </div>
 
-
                 <div class="text-center mt-4">
-                  <button type="submit" class="btn btn-primary btn-lg">
-                    Agendar Consulta
+                  <button type="submit" class="btn btn-primary btn-lg btn-shadow">
+                    <i class="fas fa-calendar-check"></i> Agendar Consulta
                   </button>
                 </div>
 
@@ -99,6 +121,8 @@
 <script>
 import Navbar from "@/components/Navbar.vue";
 import Footer from "@/components/Footer.vue";
+import BotaoVoltar from "@/components/BotaoVoltar.vue";
+
 import {
   getFirestore,
   collection,
@@ -110,7 +134,6 @@ import {
   addDoc,
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import BotaoVoltar from "@/components/BotaoVoltar.vue";
 
 
 export default {
@@ -328,40 +351,121 @@ export default {
 };
 </script>
 
+
 <style scoped>
 .card {
-  border-radius: 20px;
+  border-radius: 15px;
   overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.voltar-container {
+  position: absolute;
+  top: 20px;
+  left: 150px;
+  z-index: 10;
 }
 
 .logo {
-  max-width: 80%;
+  max-width: 70%;
 }
 
 .form-label {
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .form-select,
 .form-control {
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 12px;
+  font-size: 16px;
+  transition: border 0.3s ease-in-out;
+}
+
+.form-select:focus,
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
 }
 
 .btn-lg {
-  padding: 12px 30px;
+  padding: 14px 36px;
   font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 8px;
+  transition: 0.3s ease-in-out;
 }
 
-.bg-white {
-  background-color: #fff;
+.btn-shadow {
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-lg:hover {
+  background-color: #0056b3;
+  box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 1024px) {
+  .voltar-container {
+    left: 50px;
+  }
 }
 
 @media (max-width: 768px) {
+  .voltar-container {
+    left: 20px;
+    top: 10px;
+  }
+
+  .card {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .logo {
+    max-width: 50%;
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  .btn-lg {
+    width: 100%;
+    font-size: 1rem;
+    padding: 12px;
+  }
+
   .col-md-4 {
     flex: 0 0 100%;
     max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .voltar-container {
+    left: 10px;
+    top: 5px;
+  }
+
+  .logo {
+    max-width: 60%;
+  }
+
+  .form-label {
+    font-size: 0.85rem;
+  }
+
+  .btn-lg {
+    font-size: 0.9rem;
+    padding: 10px;
   }
 }
 </style>

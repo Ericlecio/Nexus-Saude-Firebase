@@ -28,7 +28,9 @@
 
       <section class="container my-5">
         <h2 class="section-title text-center" data-aos="fade-up">Nossos Serviços</h2><br>
+
         <div class="row text-center">
+          <!-- Primeira linha -->
           <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200">
             <div class="card service-card shadow-lg">
               <i class="fa fa-user-md fa-3x icon-animate"></i>
@@ -55,6 +57,68 @@
               <div class="card-body">
                 <h5 class="card-title">Cardiologia</h5>
                 <p class="card-text">Cuide da saúde do seu coração com nossos especialistas.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Segunda linha -->
+          <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="800">
+            <div class="card service-card shadow-lg">
+              <i class="fa fa-teeth fa-3x icon-animate"></i>
+              <div class="card-body">
+                <h5 class="card-title">Odontologia</h5>
+                <p class="card-text">Cuidado completo para sua saúde bucal e estética.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="1000">
+            <div class="card service-card shadow-lg">
+              <i class="fa fa-eye fa-3x icon-animate"></i>
+              <div class="card-body">
+                <h5 class="card-title">Oftalmologia</h5>
+                <p class="card-text">Exames e tratamentos para a saúde dos seus olhos.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="1200">
+            <div class="card service-card shadow-lg">
+              <i class="fa fa-brain fa-3x icon-animate"></i>
+              <div class="card-body">
+                <h5 class="card-title">Neurologia</h5>
+                <p class="card-text">Diagnóstico e acompanhamento de doenças neurológicas.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Terceira linha -->
+          <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="1400">
+            <div class="card service-card shadow-lg">
+              <i class="fa fa-bone fa-3x icon-animate"></i>
+              <div class="card-body">
+                <h5 class="card-title">Ortopedia</h5>
+                <p class="card-text">Tratamento de lesões ósseas e musculares.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="1600">
+            <div class="card service-card shadow-lg">
+              <i class="fa fa-user-nurse fa-3x icon-animate"></i>
+              <div class="card-body">
+                <h5 class="card-title">Enfermagem</h5>
+                <p class="card-text">Cuidados médicos e suporte hospitalar qualificado.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="1800">
+            <div class="card service-card shadow-lg">
+              <i class="fa fa-user-psychologist fa-3x icon-animate"></i>
+              <div class="card-body">
+                <h5 class="card-title">Psicologia</h5>
+                <p class="card-text">Apoio emocional e acompanhamento psicológico.</p>
               </div>
             </div>
           </div>
@@ -264,7 +328,6 @@ html {
   justify-content: center;
   position: relative;
   transition: background-image 1s ease-in-out;
-  /* Transição suave para a troca das imagens */
 }
 
 
@@ -281,7 +344,6 @@ html {
   padding: 20px;
   border-radius: 10px;
   height: 100%;
-  /* Faz com que todas as cartas tenham o mesmo tamanho */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -289,7 +351,6 @@ html {
 
 .service-card .card-body {
   flex-grow: 1;
-  /* Faz com que o corpo da carta ocupe o máximo de espaço possível */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -312,7 +373,6 @@ html {
 
 .service-card .card-text {
   flex-grow: 1;
-  /* Garante que o texto se expanda para equilibrar o tamanho */
   font-size: 1rem;
 }
 

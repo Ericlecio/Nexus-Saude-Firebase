@@ -68,7 +68,7 @@
             </div>
         </div>
 
-        <!-- Modal de confirmação de cancelamento/exclusão -->
+        <!-- Modal de confirmação de cancelamento -->
         <div v-if="showModal" class="modal-overlay">
             <div class="modal-content">
                 <h4 class="text-center text-danger fw-bold">{{ modalMensagem.titulo }}</h4>

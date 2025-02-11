@@ -5,12 +5,10 @@
         <img src="/src/assets/img/NexusSaude_horizontal.png" alt="Nexus Saúde" class="logo" />
       </router-link>
 
-      <!-- Botão do menu responsivo -->
       <button class="navbar-toggler" type="button" @click="toggleCollapse">
         <span class="navbar-toggler-icon"></span>
       </button>
 
-      <!-- Menu de navegação -->
       <div class="collapse navbar-collapse" :class="{ show: !isCollapsed }">
         <ul class="navbar-nav mx-auto">
           <li class="nav-item">
@@ -24,7 +22,6 @@
           </li>
         </ul>
 
-        <!-- Menu do usuário -->
         <div class="dropdown ms-3">
           <a href="#" class="d-flex align-items-center perfil-link" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle"></i>

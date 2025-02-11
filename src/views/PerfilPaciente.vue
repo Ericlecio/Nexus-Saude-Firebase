@@ -3,11 +3,16 @@
     <Navbar />
     <div class="container py-5">
       <BotaoVoltar />
-      <h1 class="text-center mb-4 text-primary">
-        {{ paciente ? paciente.nomeCompleto : "Carregando..." }}
-      </h1>
+      <h1 class="text-center mb-4 text-primary"></h1>
 
       <div v-if="paciente">
+        <!-- Seção de Identidade do Paciente -->
+        <!-- <div class="card shadow-sm p-4 text-center">
+          <img :src="profilePicture" alt="Foto do Paciente" class="profile-img mb-3">
+          <h1 class="text-primary fw-bold">{{ paciente ? paciente.nomeCompleto : "Carregando..." }}</h1>
+          <p class="text-muted">Paciente cadastrado no Nexus Saúde</p>
+        </div> -->
+
         <!-- Informações Pessoais -->
         <div class="card shadow-sm mb-4">
           <div class="card-body">
@@ -55,19 +60,26 @@
                     <td>{{ consulta.medicoNome }}</td>
                     <td>{{ consulta.especialidade }}</td>
                     <td>{{ consulta.local }}</td>
-                    <td>{{ consulta.situacao }}</td>
+                    <td>
+                      <span :class="statusClass(consulta.situacao)">
+                        <i :class="statusIcon(consulta.situacao)"></i> {{ consulta.situacao }}
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
+
             </div>
             <p v-else class="text-muted">Nenhuma consulta encontrada.</p>
           </div>
         </div>
 
         <!-- Botão de Exclusão -->
-        <button class="btn btn-danger" @click="confirmarExclusao">
-          Excluir Conta
-        </button>
+        <div class="text-center mt-4">
+          <button class="btn btn-danger btn-lg shadow-sm" @click="confirmarExclusao">
+            <i class="fas fa-trash-alt"></i> Excluir Conta
+          </button>
+        </div>
 
       </div>
 
@@ -161,7 +173,7 @@ import {
   writeBatch
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged, signOut, deleteUser } from "firebase/auth";
-import BotaoVoltar from "@/components/BotaoVoltar.vue"; // 🔹 Importando o componente
+import BotaoVoltar from "@/components/BotaoVoltar.vue";
 
 
 
@@ -182,9 +194,25 @@ export default {
       formEdit: {},
       hoje: new Date().toISOString().split("T")[0],
       cpfInvalido: false,
+      // profilePicture: "https://via.placeholder.com/100", // Aqui pode ser a URL real da foto do paciente
+
     };
   },
   methods: {
+    statusClass(status) {
+      return {
+        "text-danger": status.includes("Cancelada"),
+        "text-success": status.includes("Confirmada"),
+        "text-warning": status.includes("Pendente")
+      };
+    },
+    statusIcon(status) {
+      return {
+        "Cancelada pelo paciente": "fas fa-times-circle",
+        "Confirmada": "fas fa-check-circle",
+        "Pendente": "fas fa-clock"
+      }[status] || "fas fa-info-circle";
+    },
     async carregarPerfil() {
       try {
         const auth = getAuth();
@@ -307,13 +335,11 @@ export default {
           }
         }
 
-        // Deletar o registro do paciente no Firestore
         const pacienteRef = doc(db, "pacientes", this.pacienteId);
         batch.delete(pacienteRef);
 
         await batch.commit();
 
-        // Reautenticação para permitir exclusão no Authentication
         await user.delete();
 
         alert("Conta excluída com sucesso!");
@@ -391,6 +417,13 @@ export default {
   max-width: 90%;
 }
 
+/* .profile-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #007bff;
+} */
+
 .cursor-pointer {
   cursor: pointer;
 }
@@ -414,5 +447,30 @@ export default {
   border-radius: 8px;
   width: 90%;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.text-success {
+  color: #28a745;
+}
+
+.text-warning {
+  color: #ffc107;
+}
+
+.btn-danger {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  transition: 0.3s ease-in-out;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+  box-shadow: 0px 4px 8px rgba(255, 0, 0, 0.3);
 }
 </style>
