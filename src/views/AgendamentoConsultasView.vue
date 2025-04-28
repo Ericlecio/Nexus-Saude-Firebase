@@ -5,15 +5,18 @@
       <div class="col-lg-10 col-md-12">
         <div class="card shadow-lg border-0 rounded-4 overflow-hidden position-relative">
 
+          <!-- Botão Voltar POSICIONADO ACIMA -->
           <div class="voltar-container">
             <BotaoVoltar />
           </div>
 
           <div class="row g-0">
+            <!-- Coluna da Imagem -->
             <div class="col-md-4 d-flex align-items-center justify-content-center bg-light">
               <img src="@/assets/img/NexusSaude_vertical.png" alt="Imagem Nexus Saúde" class="img-fluid logo" />
             </div>
 
+            <!-- Coluna do Formulário -->
             <div class="col-md-8 p-5 bg-white">
               <h1 class="text-center text-primary mb-3 font-weight-bold">
                 Nexus Saúde
